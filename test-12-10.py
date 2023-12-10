@@ -34,7 +34,7 @@ def check_latest_price_for_breakout(stock_symbol, date):
     
     latest_price = stock_data.iloc[-1]['Close']  # Get the latest price
     
-    breakout_message_printed = False
+    breakout_message = False
     
     for level in resistance_levels:
         if (latest_price - level) / level > 0.03:
@@ -47,10 +47,10 @@ def check_latest_price_for_breakout(stock_symbol, date):
                     print(message)
                     text(message)
                     last_text_time[stock_symbol] = datetime.now()  # Update last text time
-                    breakout_message_printed = True
+                    breakout_message = True
                     break  # Exit the loop after printing breakout message once
         
-    if not breakout_message_printed:
+    if not breakout_message:
         print(f"{stock_symbol} hasn't broken any resistance levels.")
 
 # Example usage
@@ -60,7 +60,7 @@ if __name__ == '__main__':
 
     try:
         resistances, supports, retail, alarm_plays = get_briefing(today_date)  # get briefing
-        print("resistances: ", resistances)
+        print("supports: ", supports)
     
         while True:
             for stock in list(supports.keys()) + alarm_plays:
