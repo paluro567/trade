@@ -62,10 +62,10 @@ if __name__ == '__main__':
         resistances, supports, retail, alarm_plays = get_briefing(today_date)  # get briefing
         print("resistances: ", resistances)
     
-    while True:
-        for stock in list(supports.keys()) + alarm_plays:
-            check_latest_price_for_breakout(stock, today_date)
-        time.sleep(60)
+        while True:
+            for stock in list(supports.keys()) + alarm_plays:
+                check_latest_price_for_breakout(stock, today_date)
+            time.sleep(60)
     except Exception as e:
         print(f"unable to get briefing or some error: {e}")
 
