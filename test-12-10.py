@@ -25,7 +25,7 @@ def get_stock_data_for_date(stock_symbol, date):
     stock_data = yf.download(stock_symbol, start=start_date, end=end_date, interval='5m')
     return stock_data
 
-def check_latest_price_for_breakout(stock_symbol, date):
+def check_latest_price_for_breakout(stock_symbol, date, stock_type):
     stock_data = get_stock_data_for_date(stock_symbol, date)
     if stock_data is None or len(stock_data) == 0:
         return
@@ -42,7 +42,7 @@ def check_latest_price_for_breakout(stock_symbol, date):
             current_volume = stock_data.iloc[-1]['Volume']
             
             if current_volume > 2.5 * average_volume:
-                message=f"{stock_symbol} is breaking through resistance {round(level, 2)} by {round((latest_price - level) / level * 100, 2)}% and has unusual volume."
+                message=f"{stock_type} - {stock_symbol} is breaking through resistance {round(level, 2)} by {round((latest_price - level) / level * 100, 2)}% and has unusual volume."
                 if stock_symbol not in last_text_time or (datetime.now() - last_text_time[stock_symbol]).total_seconds() >= 600:
                     print(message)
                     text(message)
@@ -78,7 +78,12 @@ if __name__ == '__main__':
             print("checking stocks!")
             for stock in supports + alarm_plays+other_on_radar:
                 try:
-                    check_latest_price_for_breakout(stock, curr_date)
+                    if stock in supports:
+                        check_latest_price_for_breakout(stock, curr_date, 'NORMAL PLAY')
+                    elif stock in alarm_plays:
+                        check_latest_price_for_breakout(stock, curr_date, 'ALARM PLAY')
+                    elif stock in other_on_radar:
+                        check_latest_price_for_breakout(stock, curr_date, 'OTHER ON RADAR')
                 except Exception as e:
                     print(f"unable to check {stock} and error: {e}")
             print("sleeping a minute")
