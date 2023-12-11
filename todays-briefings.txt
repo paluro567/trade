@@ -1,1 +1,64 @@
-[]
+[
+    {
+        "id": "1181951894004961310",
+        "type": 0,
+        "content": "@everyone good morning folks!",
+        "channel_id": "634554429689036830",
+        "author": {
+            "id": "534898794945576961",
+            "username": "zipcharlie",
+            "avatar": "ae3960508fbfad3c6b44b41f403ad911",
+            "discriminator": "0",
+            "public_flags": 0,
+            "premium_type": 2,
+            "flags": 0,
+            "banner": null,
+            "accent_color": null,
+            "global_name": "ZipCharlie",
+            "avatar_decoration_data": null,
+            "banner_color": null
+        },
+        "attachments": [],
+        "embeds": [],
+        "mentions": [],
+        "mention_roles": [],
+        "pinned": false,
+        "mention_everyone": true,
+        "tts": false,
+        "timestamp": "2023-12-06T13:34:51.135000+00:00",
+        "edited_timestamp": null,
+        "flags": 0,
+        "components": []
+    },
+    {
+        "id": "1181951836895313933",
+        "type": 0,
+        "content": "\u2600\ufe0fMorning Briefing\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\n\ud83d\udd2eS&P Futures are currently trading +0.19%, NASDAQ +0.24%, Dow +0.11%\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\n \u26a0\ufe0fMorning Briefings are daily published newsletters for explaining news catalysts, setups, and are all composed of ZipTrader\u2019s opinions for informational and research purposes. These are not any kind of investment advice, nor do we offer personalized investment advice as an educational publisher. \n\n\ud83d\udc4d\ud83c\udffbAlways do your own due diligence & always have your own plan! \n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nGood Morning!\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\n\u2705Stocks head for green open\n\n\ud83d\udea8Market froth temperature: medium (but high in biotech)\n\nHigh Implied Volatility: \n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\n\ud83d\udcc6This Week: BIVI, EYPT, MOR, NUB, SKIN, SAVE\n\nShort Squeeze Candidates \n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\n\u26a0\ufe0fSPEC, BKYI, EBIX, FSR, BYND, ABVC, UPST, NVAX, SAVA, ICU, GCT, SPWR, AI\n\nUnusually High Volume (is frequently a strong indicator of future trade setups) \n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\n\u2705MLGO\n\u2705GBNH\n\u2705ZVSA\n\u2705AULT\n\u2705CLIN\n\nMorning Catalysts \n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\n\u2b07\ufe0fthis is the section referenced in the public videos when we say \u201cbriefed on it\u201d \n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\n\ud83d\udea8GBNH: trending on successful debt financing raise  \n\n\u2705AULT: crypto miner that just said they made progress and mined 133 Bitcoin in November \n-Bull setup (long?) if it holds/retakes support @0.10 and especially wins and holds breakout of resistance @0.14.\n-Bear setup (avoid? short?) if it fails below effective support @0.10 A later rebound above would bring us back to bull setup.\n\n\u2705CYTO: trying to breakout in the premarket \n-Bull setup (long?) if it holds/retakes support @0.36 and especially wins and holds breakout of resistance @0.47.\n-Bear setup (avoid? short?) if it fails below effective support @0.36. A later rebound above would bring us back to bull setup.\n\n\u2705MLGO: trending after announcing plans for postgraduate training base \n-Bull setup (long?) if it holds/retakes support @3.52 and especially wins and holds breakout of resistance @4.40.\n-Bear setup (avoid? short?) if it fails below effective support @3.52. A later rebound above would bring us back to bull setup.\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\n\ud83d\udcc8IF UPWARD DIRECTION: SPXL, TQQQ, FNGU, LABU, YINN\n\n\ud83d\udea8IF DOWNWARD DIRECTION, FOCUS ON: SPXS, SQQQ, FNGD, LABD, YANG\n\nJNUG/JDST: Gold fluctuations\n\nUVXY/SVXY: Volatility ETF \n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014-",
+        "channel_id": "634554429689036830",
+        "author": {
+            "id": "534898794945576961",
+            "username": "zipcharlie",
+            "avatar": "ae3960508fbfad3c6b44b41f403ad911",
+            "discriminator": "0",
+            "public_flags": 0,
+            "premium_type": 2,
+            "flags": 0,
+            "banner": null,
+            "accent_color": null,
+            "global_name": "ZipCharlie",
+            "avatar_decoration_data": null,
+            "banner_color": null
+        },
+        "attachments": [],
+        "embeds": [],
+        "mentions": [],
+        "mention_roles": [],
+        "pinned": false,
+        "mention_everyone": false,
+        "tts": false,
+        "timestamp": "2023-12-06T13:34:37.519000+00:00",
+        "edited_timestamp": null,
+        "flags": 0,
+        "components": []
+    }
+]

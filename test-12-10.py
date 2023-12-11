@@ -53,19 +53,36 @@ def check_latest_price_for_breakout(stock_symbol, date):
     if not breakout_message:
         print(f"{stock_symbol} hasn't broken any resistance levels.")
 
-# Example usage
+# Main  Execution
 if __name__ == '__main__':
     
-    today_date = datetime.now().strftime('%Y-%m-%d')
+    curr_date = datetime.now().strftime('%Y-%m-%d')
+    curr_date = datetime.strptime('2023-12-06', '%Y-%m-%d').strftime('%Y-%m-%d')
 
+    # Morning briefing
     try:
-        resistances, supports, retail, alarm_plays = get_briefing(today_date)  # get briefing
-        print("supports: ", supports)
-    
-        while True:
-            for stock in list(supports.keys()) + alarm_plays:
-                check_latest_price_for_breakout(stock, today_date)
-            time.sleep(60)
+        resistances, supports, retail, alarm_plays = get_briefing(curr_date)  # get briefing
+        alarm_plays=[stock for stock in alarm_plays if ' ' not in stock]
+        supports=list(supports.keys())
+
+        print("today's alarm_plays: ", alarm_plays )
+        print("today's retail: ", retail)
+        print("today's supports: ", supports)
     except Exception as e:
         print(f"unable to get briefing or some error: {e}")
+
+    # Minute iteration
+    try:
+        while True:
+            print("checking stocks!")
+            for stock in supports + alarm_plays:
+                try:
+                    check_latest_price_for_breakout(stock, curr_date)
+                except Exception as e:
+                    print(f"unable to check {stock} and error: {e}")
+            print("sleeping a minute")
+            time.sleep(60)
+    except Exception as e:
+        print("unable to minute iterate with error: ", e)
+    
 
