@@ -57,7 +57,7 @@ def check_latest_price_for_breakout(stock_symbol, date):
 if __name__ == '__main__':
     
     curr_date = datetime.now().strftime('%Y-%m-%d')
-    curr_date = datetime.strptime('2023-12-06', '%Y-%m-%d').strftime('%Y-%m-%d')
+    # curr_date = datetime.strptime('2023-12-06', '%Y-%m-%d').strftime('%Y-%m-%d')
 
     # Morning briefing
     try:
