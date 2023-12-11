@@ -22,7 +22,8 @@ def get_stock_data_for_date(stock_symbol, date):
         return None
     start_date = date.strftime('%Y-%m-%d')
     end_date = (date + timedelta(days=1)).strftime('%Y-%m-%d')
-    stock_data = yf.download(stock_symbol, start=start_date, end=end_date, interval='5m')
+    stock_data = yf.download(stock_symbol, start=start_date, end=end_date, interval='5m', prepost=True)
+    print("stock_data:", stock_data)
     return stock_data
 
 def check_latest_price_for_breakout(stock_symbol, date, stock_type):
