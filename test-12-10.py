@@ -23,7 +23,6 @@ def get_stock_data_for_date(stock_symbol, date):
     start_date = date.strftime('%Y-%m-%d')
     end_date = (date + timedelta(days=1)).strftime('%Y-%m-%d')
     stock_data = yf.download(stock_symbol, start=start_date, end=end_date, interval='5m', prepost=True)
-    print("stock_data:", stock_data)
     return stock_data
 
 def check_latest_price_for_breakout(stock_symbol, date, stock_type):
@@ -40,13 +39,15 @@ def check_latest_price_for_breakout(stock_symbol, date, stock_type):
     
     for level in resistance_levels:
         if (close_latest_price - level) / level > 0.03 and open_latest_price<level and close_latest_price>level:
+            
             average_volume = stock_data['Volume'].mean()
             current_volume = stock_data.iloc[-1]['Volume']
             
             if current_volume > 2.5 * average_volume:
+                print(f"{stock} breaking out!")
                 message=f"{stock_type} - {stock_symbol} is breaking through resistance {round(level, 2)} by {round((close_latest_price - level) / level * 100, 2)}% and has unusual volume."
                 if stock_symbol not in last_text_time or (datetime.now() - last_text_time[stock_symbol]).total_seconds() >= 600:
-                    print(message)
+                    print("texting:",message)
                     text(message)
                     last_text_time[stock_symbol] = datetime.now()  # Update last text time
                     breakout_message = True
