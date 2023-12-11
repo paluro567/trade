@@ -33,17 +33,18 @@ def check_latest_price_for_breakout(stock_symbol, date, stock_type):
     
     resistance_levels = calculate_resistance(stock_data)
     
-    latest_price = stock_data.iloc[-1]['Close']  # Get the latest price
+    open_latest_price = stock_data.iloc[-1]['Open'] 
+    close_latest_price = stock_data.iloc[-1]['Close']  # Get the latest price
     
     breakout_message = False
     
     for level in resistance_levels:
-        if (latest_price - level) / level > 0.03:
+        if (close_latest_price - level) / level > 0.03 and open_latest_price<level and close_latest_price>level:
             average_volume = stock_data['Volume'].mean()
             current_volume = stock_data.iloc[-1]['Volume']
             
             if current_volume > 2.5 * average_volume:
-                message=f"{stock_type} - {stock_symbol} is breaking through resistance {round(level, 2)} by {round((latest_price - level) / level * 100, 2)}% and has unusual volume."
+                message=f"{stock_type} - {stock_symbol} is breaking through resistance {round(level, 2)} by {round((close_latest_price - level) / level * 100, 2)}% and has unusual volume."
                 if stock_symbol not in last_text_time or (datetime.now() - last_text_time[stock_symbol]).total_seconds() >= 600:
                     print(message)
                     text(message)
@@ -56,6 +57,7 @@ def check_latest_price_for_breakout(stock_symbol, date, stock_type):
 
 # Main  Execution
 if __name__ == '__main__':
+    print("running main")
     
     curr_date = datetime.now().strftime('%Y-%m-%d')
     # curr_date = datetime.strptime('2023-12-06', '%Y-%m-%d').strftime('%Y-%m-%d')
