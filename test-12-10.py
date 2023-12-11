@@ -64,6 +64,7 @@ if __name__ == '__main__':
         resistances, supports, retail, alarm_plays = get_briefing(curr_date)  # get briefing
         alarm_plays=[stock for stock in alarm_plays if ' ' not in stock]
         supports=list(supports.keys())
+        other_on_radar=['SLNH']
 
         print("today's alarm_plays: ", alarm_plays )
         print("today's retail: ", retail)
@@ -75,7 +76,7 @@ if __name__ == '__main__':
     try:
         while True:
             print("checking stocks!")
-            for stock in supports + alarm_plays:
+            for stock in supports + alarm_plays+other_on_radar:
                 try:
                     check_latest_price_for_breakout(stock, curr_date)
                 except Exception as e:
