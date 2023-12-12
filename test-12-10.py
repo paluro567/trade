@@ -57,7 +57,7 @@ def check_latest_price_for_breakout(stock_symbol, date, stock_type):
         print(f"{stock_symbol} hasn't broken any resistance levels.")
 
 # Main  Execution
-if __name__ == '__main__':
+def run_main():
     print("running main")
     
     curr_date = datetime.now().strftime('%Y-%m-%d')
@@ -74,7 +74,9 @@ if __name__ == '__main__':
         print("today's retail: ", retail)
         print("today's supports: ", supports)
     except Exception as e:
+        time.sleep(300)  # Sleep for 5 minutes
         print(f"unable to get briefing or some error: {e}")
+        run_main()
 
     # Minute iteration
     try:
@@ -90,9 +92,12 @@ if __name__ == '__main__':
                         check_latest_price_for_breakout(stock, curr_date, 'OTHER ON RADAR')
                 except Exception as e:
                     print(f"unable to check {stock} and error: {e}")
-            print("sleeping a minute")
+            print("Iteration complete - sleeping a minute")
             time.sleep(60)
     except Exception as e:
         print("unable to minute iterate with error: ", e)
+
+if __name__ == '__main__':
+    run_main()
     
 
