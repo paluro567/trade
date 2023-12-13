@@ -116,7 +116,7 @@ def get_briefing(date):
 
             # print(f"plays: {list(supports.keys())}", "\nresistances: ", resistances, "\nsupports: ", supports)
     try:
-        return resistances, supports, retail, alarm_plays
+        return resistances, supports, retail, alarm_plays if alarm_plays else []
     except Exception as e:
         print("NO BRIEFING YET!")
         print(f"Exception is: {e}")
@@ -137,7 +137,7 @@ def getnum(original):
 
 # run a test
 if __name__ == "__main__":
-    resistances, supports, retail, alarm_plays = get_briefing("2022-12-16")
+    resistances, supports, retail, alarm_plays = get_briefing("2023-12-12")
     print('alarm_plays: ', alarm_plays)
     print('resistances: ', resistances)
     print("supports: ", supports)
