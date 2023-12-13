@@ -37,6 +37,7 @@ def get_briefing(date):
     supports = {}
     resistances = {}
     retail=[]
+    alarm_plays=[]
 
     for briefing in today:
         if "Most talked about stocks on retail forums include" in briefing['content']:
