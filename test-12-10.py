@@ -9,7 +9,7 @@ last_text_time = {}  # Dictionary to keep track of last text time for each stock
 
 def calculate_resistance(data):
     resistance_levels = []
-    for i in range(2, len(data) - 2):
+    for i in range(1, len(data) - 1):
         if data['High'].iloc[i] > data['High'].iloc[i - 1] and data['High'].iloc[i] > data['High'].iloc[i + 1]:
             resistance_levels.append(data['High'].iloc[i])
     return resistance_levels
