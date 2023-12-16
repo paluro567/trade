@@ -74,6 +74,8 @@ def check_latest_price_for_breakout(stock_symbol, date, stock_type):
 
 def run_main():
     print("running main")
+    from datetime import datetime
+
     
     curr_date = datetime.now().strftime('%Y-%m-%d')
     # curr_date = datetime.datetime.strptime('2023-12-15', '%Y-%m-%d').strftime('%Y-%m-%d')
