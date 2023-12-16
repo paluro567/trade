@@ -75,8 +75,8 @@ def check_latest_price_for_breakout(stock_symbol, date, stock_type):
 def run_main():
     print("running main")
     
-    # curr_date = datetime.now().strftime('%Y-%m-%d')
-    curr_date = datetime.datetime.strptime('2023-12-15', '%Y-%m-%d').strftime('%Y-%m-%d')
+    curr_date = datetime.now().strftime('%Y-%m-%d')
+    # curr_date = datetime.datetime.strptime('2023-12-15', '%Y-%m-%d').strftime('%Y-%m-%d')
 
 
     # Morning briefing
@@ -98,23 +98,22 @@ def run_main():
     try:
         while True:
             print("checking stocks!")
-            for stock in supports + alarm_plays+other_on_radar:
-                if stock in supports:
-                    try:
-                        check_latest_price_for_breakout(stock, curr_date, 'NORMAL PLAY')
-                    except Exception as e:
-                        print(f"unable to check {stock} with error: {e}")
-                elif stock in alarm_plays:
-                    try:
-                        check_latest_price_for_breakout(stock, curr_date, 'ALARM PLAY')
-                    except Exception as e:
-                        print(f"unable to check {stock} with error: {e}")
+            for stock in supports:
+                try:
+                    check_latest_price_for_breakout(stock, curr_date, 'NORMAL PLAY')
+                except Exception as e:
+                    print(f"unable to check {stock} with error: {e}")
+            for stock in alarm_plays:
+                try:
+                    check_latest_price_for_breakout(stock, curr_date, 'ALARM PLAY')
+                except Exception as e:
+                    print(f"unable to check {stock} with error: {e}")
 
-                elif stock in other_on_radar:
-                    try:
-                        check_latest_price_for_breakout(stock, curr_date, 'OTHER ON RADAR')
-                    except Exception as e:
-                        print(f"unable to check {stock} with error: {e}")
+            for stock in other_on_radar:
+                try:
+                    check_latest_price_for_breakout(stock, curr_date, 'OTHER ON RADAR')
+                except Exception as e:
+                    print(f"unable to check {stock} with error: {e}")
             print("Iteration complete - sleeping a minute")
             time.sleep(60)
     except Exception as e:
