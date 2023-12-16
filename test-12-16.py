@@ -61,7 +61,7 @@ def check_latest_price_for_breakout(stock_symbol, date, stock_type):
                 message=f"{stock_type} - {stock_symbol} is breaking through resistance {round(level, 2)} by {round((latest_price - level) / level * 100, 2)}% and has unusual volume."
                 if stock_symbol not in last_text_time or (datetime.now() - last_text_time[stock_symbol]).total_seconds() >= 600:
                     print("texting:",message)
-                    # text(message)
+                    text(message)
                     last_text_time[stock_symbol] = datetime.now()  # Update last text time
                     breakout_message = True
                     break  # Exit the loop after printing breakout message once
@@ -69,9 +69,6 @@ def check_latest_price_for_breakout(stock_symbol, date, stock_type):
     if not breakout_message:
         print(f"{stock_symbol} hasn't broken any resistance levels.")
    
-    
-
-
 def run_main():
     print("running main")
     from datetime import datetime
