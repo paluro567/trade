@@ -4,38 +4,38 @@ from Discord import get_briefing
 from sms import text
 import datetime
 import pandas as pd
+import numpy as np
 
 
 import time
 import pandas as pandas
 from alpha_vantage.timeseries import TimeSeries
 
-api_key='XB2M6HD2DQMJA5Z1'
+#  Declarations
+ALPHA_VINTAGE_API_KEY='XB2M6HD2DQMJA5Z1'
 last_text_time={}
 
-
-def calculate_resistance(data):
+def calculate_resistance(data, stock_symbol):
     resistance_levels = []
-    # Adjust how you access high prices in your data
-    for i in range(1, len(data) - 1):
-        if data['2. high'].iloc[i] > data['2. high'].iloc[i - 1] and data['2. high'].iloc[i] > data['2. high'].iloc[i + 1]:
-            resistance_levels.append(data['2. high'].iloc[i])
+    high_prices = data['2. high'].values
+    for i in range(1, len(high_prices) - 1):
+        if high_prices[i] > high_prices[i - 1] and high_prices[i] > high_prices[i + 1]:
+            resistance_levels.append(high_prices[i])
             print("resistance at time:", data.iloc[i])
-    print("resistances: ", resistance_levels)
+    print(f"{stock_symbol} resistances: ", resistance_levels)
     return resistance_levels
 
 
 def get_stock_data_for_date(stock_symbol, date):
-    ts = TimeSeries(key=api_key, output_format='pandas')
+    ts = TimeSeries(key=ALPHA_VINTAGE_API_KEY, output_format='pandas')
     data, meta_data = ts.get_intraday(symbol=stock_symbol, interval='5min', outputsize='full')
-    
     
     print(f"{stock_symbol} - accessed data: ", data.loc[date])
     return data.loc[date]
 
 def check_latest_price_for_breakout(stock_symbol, date, stock_type):
     stock_data = get_stock_data_for_date(stock_symbol, date)
-    resistance_levels=calculate_resistance(stock_data)
+    resistance_levels=calculate_resistance(stock_data, stock_symbol)
 
     try:
         print("--------------------")
@@ -63,7 +63,7 @@ def check_latest_price_for_breakout(stock_symbol, date, stock_type):
             if current_volume > 2.5 * average_volume:
                 print(f"{stock_symbol} breaking out!")
                 message=f"{stock_type} - {stock_symbol} is breaking through resistance {round(level, 2)} by {round((latest_price - level) / level * 100, 2)}% and has {round((current_volume - average_volume) / average_volume * 100, 2)}% unusual volume."
-                if stock_symbol not in last_text_time or (datetime.now() - last_text_time[stock_symbol]).total_seconds() >= 600:
+                if stock_symbol not in last_text_time or (datetime.now() - last_text_time[stock_symbol]).total_seconds() >= 600: # check that the stock was not texted for the last 10 minutes
                     print("texting:",message)
                     text(message)
                     last_text_time[stock_symbol] = datetime.now()  # Update last text time
@@ -90,7 +90,7 @@ def run_main():
         resistances, supports, retail, alarm_plays = get_briefing(curr_date)  # get briefing
         alarm_plays=[stock for stock in alarm_plays if ' ' not in stock]
         green_plays=list(supports.keys())
-        other_on_radar=['SLNH']
+        other_on_radar=['SLNH','PLTR','AI']
 
         print("today's alarm_plays: ", alarm_plays )
         print("today's retail: ", retail)
