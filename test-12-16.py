@@ -38,9 +38,13 @@ def check_latest_price_for_breakout(stock_symbol, date, stock_type):
     resistance_levels=calculate_resistance(stock_data)
 
     try:
+        print("--------------------")
+        print("stock_data: ", stock_data)
         print("0 index: ", stock_data.iloc[0])
         latest_price = stock_data.iloc[0]['4. close']  # Get the latest price
         second_latest_price = stock_data.iloc[1]['4. close']
+        print("latest_price: ", latest_price)
+        print("second_latest_price: ", second_latest_price)
     except:
         print("too small stock_data")
         latest_price = stock_data.iloc[0]['4. close']  # Get the latest price
@@ -58,7 +62,7 @@ def check_latest_price_for_breakout(stock_symbol, date, stock_type):
             
             if current_volume > 2.5 * average_volume:
                 print(f"{stock_symbol} breaking out!")
-                message=f"{stock_type} - {stock_symbol} is breaking through resistance {round(level, 2)} by {round((latest_price - level) / level * 100, 2)}% and has unusual volume."
+                message=f"{stock_type} - {stock_symbol} is breaking through resistance {round(level, 2)} by {round((latest_price - level) / level * 100, 2)}% and has {round((current_volume - average_volume) / average_volume * 100, 2)}% unusual volume."
                 if stock_symbol not in last_text_time or (datetime.now() - last_text_time[stock_symbol]).total_seconds() >= 600:
                     print("texting:",message)
                     text(message)
@@ -69,6 +73,9 @@ def check_latest_price_for_breakout(stock_symbol, date, stock_type):
     if not breakout_message:
         print(f"{stock_symbol} hasn't broken any resistance levels.")
    
+
+
+
 def run_main():
     print("running main")
     from datetime import datetime
