@@ -44,7 +44,7 @@ def check_latest_price_for_breakout(stock_symbol, date, stock_type):
     except:
         print("too small stock_data")
         latest_price = stock_data.iloc[0]['4. close']  # Get the latest price
-        second_latest_price = stock_data.iloc[0]['4. close']
+        second_latest_price = stock_data.iloc[1]['4. close']
         
     breakout_message = False
     
@@ -53,8 +53,8 @@ def check_latest_price_for_breakout(stock_symbol, date, stock_type):
         if (latest_price - level) / level > 0.03 and second_latest_price<level and latest_price>level:
             print(f"{stock} is breaking past {level}")
             #check volume
+            current_volume = stock_data.iloc[0]['5. volume']
             average_volume = stock_data['5. volume'].mean()
-            current_volume = stock_data.iloc[-1]['5. volume']
             
             if current_volume > 2.5 * average_volume:
                 print(f"{stock_symbol} breaking out!")
@@ -75,29 +75,30 @@ def run_main():
 
     
     curr_date = datetime.now().strftime('%Y-%m-%d')
-    # curr_date = datetime.datetime.strptime('2023-12-15', '%Y-%m-%d').strftime('%Y-%m-%d')
+    # curr_date = datetime.strptime('2023-12-15', '%Y-%m-%d').strftime('%Y-%m-%d')
 
 
     # Morning briefing
     try:
         resistances, supports, retail, alarm_plays = get_briefing(curr_date)  # get briefing
         alarm_plays=[stock for stock in alarm_plays if ' ' not in stock]
-        supports=list(supports.keys())
+        green_plays=list(supports.keys())
         other_on_radar=['SLNH']
 
         print("today's alarm_plays: ", alarm_plays )
         print("today's retail: ", retail)
-        print("today's supports: ", supports)
+        print("today's green_plays: ", green_plays)
     except Exception as e:
-        time.sleep(300)  # Sleep for 5 minutes
         print(f"unable to get briefing or some error: {e}")
+        print("sleeping 5 minutes...")
+        time.sleep(300)  # Sleep for 5 minutes
         run_main()
 
     # Minute iteration
     try:
         while True:
             print("checking stocks!")
-            for stock in supports:
+            for stock in green_plays:
                 try:
                     check_latest_price_for_breakout(stock, curr_date, 'NORMAL PLAY')
                 except Exception as e:
@@ -113,7 +114,7 @@ def run_main():
                     check_latest_price_for_breakout(stock, curr_date, 'OTHER ON RADAR')
                 except Exception as e:
                     print(f"unable to check {stock} with error: {e}")
-            print("Iteration complete - sleeping a minute")
+            print("Iteration complete - sleeping 1 minute...")
             time.sleep(60)
     except Exception as e:
         print("unable to minute iterate with error: ", e)
