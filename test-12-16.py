@@ -17,7 +17,7 @@ last_text_time={}
 
 def calculate_resistance(data, stock_symbol):
     resistance_levels = []
-    high_prices = data['2. high'].values
+    high_prices = data['High'].values
     for i in range(1, len(high_prices) - 1):
         if high_prices[i] > high_prices[i - 1] and high_prices[i] > high_prices[i + 1]:
             resistance_levels.append(high_prices[i])
@@ -35,20 +35,23 @@ def get_stock_data_for_date(stock_symbol, date):
 
 def check_latest_price_for_breakout(stock_symbol, date, stock_type):
     stock_data = get_stock_data_for_date(stock_symbol, date)
+    # Rename columns
+    new_columns = {'1. open': 'Open', '2. high': 'High', '3. low': 'Low', '4. close': 'Close', '5. volume': 'Volume'}
+    stock_data.rename(columns=new_columns, inplace=True)
     resistance_levels=calculate_resistance(stock_data, stock_symbol)
 
     try:
         print("--------------------")
         print("stock_data: ", stock_data)
         print("0 index: ", stock_data.iloc[0])
-        latest_price = stock_data.iloc[0]['4. close']  # Get the latest price
-        second_latest_price = stock_data.iloc[1]['4. close']
+        latest_price = stock_data.iloc[0]['Close']  # Get the latest price
+        second_latest_price = stock_data.iloc[1]['Close']
         print("latest_price: ", latest_price)
         print("second_latest_price: ", second_latest_price)
     except:
         print("too small stock_data")
-        latest_price = stock_data.iloc[0]['4. close']  # Get the latest price
-        second_latest_price = stock_data.iloc[1]['4. close']
+        latest_price = stock_data.iloc[0]['Close']  # Get the latest price
+        second_latest_price = stock_data.iloc[1]['Close']
         
     breakout_message = False
     
@@ -57,8 +60,8 @@ def check_latest_price_for_breakout(stock_symbol, date, stock_type):
         if (latest_price - level) / level > 0.03 and second_latest_price<level and latest_price>level:
             print(f"{stock} is breaking past {level}")
             #check volume
-            current_volume = stock_data.iloc[0]['5. volume']
-            average_volume = stock_data['5. volume'].mean()
+            current_volume = stock_data.iloc[0]['Volume']
+            average_volume = stock_data['Volume'].mean()
             
             if current_volume > 2.5 * average_volume:
                 print(f"{stock_symbol} breaking out!")
@@ -73,7 +76,7 @@ def check_latest_price_for_breakout(stock_symbol, date, stock_type):
     if not breakout_message:
         print(f"{stock_symbol} hasn't broken any resistance levels.")
    
-
+    
 
 
 def run_main():
