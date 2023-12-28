@@ -27,11 +27,19 @@ def calculate_resistance(data, stock_symbol):
 
 
 def get_stock_data_for_date(stock_symbol, date):
+    import pytz
     ts = TimeSeries(key=ALPHA_VINTAGE_API_KEY, output_format='pandas')
     data, meta_data = ts.get_intraday(symbol=stock_symbol, interval='5min', outputsize='full')
-    
-    print(f"{stock_symbol} - accessed data: ", data.loc[date])
-    return data.loc[date]
+    # utc_timezone = pytz.timezone('UTC')
+    # eastern_timezone = pytz.timezone('US/Eastern')
+
+    # Convert index (timestamps) to UTC timezone
+    # data.index = data.index.tz_localize(utc_timezone)
+
+    # # Convert timestamps from UTC to Eastern Time
+    # data.index = data.index.tz_convert(eastern_timezone)
+    print(data)
+    return data
 
 def check_latest_price_for_breakout(stock_symbol, date, stock_type):
     stock_data = get_stock_data_for_date(stock_symbol, date)
@@ -45,13 +53,16 @@ def check_latest_price_for_breakout(stock_symbol, date, stock_type):
         print("stock_data: ", stock_data)
         print("0 index: ", stock_data.iloc[0])
         latest_price = stock_data.iloc[0]['Close']  # Get the latest price
+        print(f" {stock_symbol} - latest_price: ", latest_price)
         second_latest_price = stock_data.iloc[1]['Close']
-        print("latest_price: ", latest_price)
-        print("second_latest_price: ", second_latest_price)
+        print(f" {stock_symbol} - second_latest_price: ", second_latest_price)
     except:
         print("too small stock_data")
         latest_price = stock_data.iloc[0]['Close']  # Get the latest price
+        
         second_latest_price = stock_data.iloc[1]['Close']
+        print("second_latest_price: ", second_latest_price )
+
         
     breakout_message = False
     
@@ -131,3 +142,5 @@ def run_main():
 
 if __name__ == '__main__':
     run_main()
+    # curr_date = datetime.datetime.now().strftime('%Y-%m-%d')
+    # get_stock_data_for_date("ai", curr_date)

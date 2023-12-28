@@ -10,38 +10,45 @@ last_text_time = {}  # Dictionary to keep track of last text time for each stock
 def calculate_resistance(data):
     resistance_levels = []
     for i in range(1, len(data) - 1):
-        if data['High'].iloc[i] > data['High'].iloc[i - 1] and data['High'].iloc[i] > data['High'].iloc[i + 1]:
-            resistance_levels.append(data['High'].iloc[i])
+        if data['Close'].iloc[i] > data['Close'].iloc[i - 1] and data['Close'].iloc[i] > data['Close'].iloc[i + 1]:
+            resistance_levels.append(data['Close'].iloc[i])
+    
     return resistance_levels
 
-def get_stock_data_for_date(stock_symbol, date):
-    date = datetime.strptime(date, '%Y-%m-%d')
-    today = datetime.now()
-    if (today - date).days > 60:
-        print("Data for the requested date is not available within the last 60 days.")
-        return None
-    start_date = date.strftime('%Y-%m-%d')
-    end_date = (date + timedelta(days=1)).strftime('%Y-%m-%d')
-    stock_data = yf.download(stock_symbol, start=start_date, end=end_date, interval='5m', prepost=True)
-    return stock_data
 
-def check_latest_price_for_breakout(stock_symbol, date, stock_type):
-    stock_data = get_stock_data_for_date(stock_symbol, date)
+def get_stock_data_for_date(stock_symbol):
+    # Get the current date
+    current_date = datetime.now().date().strftime('%Y-%m-%d')
+
+    # Fetch the data
+    data = yf.download(stock_symbol, start=current_date, interval='2m')
+    data['Percent Change'] = data['Close'].pct_change() * 100
+    print(f"data for {stock_symbol}:", data)
+
+    return data
+
+
+def check_latest_price_for_breakout(stock_symbol,  stock_type):
+    stock_data = get_stock_data_for_date(stock_symbol)
     if stock_data is None or len(stock_data) == 0:
         return
     
     resistance_levels = calculate_resistance(stock_data)
+    print(f"{stock_symbol} - resistance levels: {resistance_levels}")
     
-    open_latest_price = stock_data.iloc[-1]['Open'] 
-    close_latest_price = stock_data.iloc[-1]['Close']  # Get the latest price
+    open_latest_price = stock_data.iloc[-1]['Open']
+    close_latest_price = stock_data.iloc[-1]['Close']
+    average_volume = stock_data['Volume'].mean()
+    current_volume = stock_data.iloc[-1]['Volume']
+    Percent_change = round(stock_data.iloc[-1]['Percent Change'],2)
     
     breakout_message = False
     
     for level in resistance_levels:
-        if (close_latest_price - level) / level > 0.03 and open_latest_price<level and close_latest_price>level:
+        if (close_latest_price - level) / level > 0.03 and open_latest_price<level:
+            print(f"{stock_symbol} moving up by {Percent_change}% and broke resistance {level}")
             
-            average_volume = stock_data['Volume'].mean()
-            current_volume = stock_data.iloc[-1]['Volume']
+            
             
             if current_volume > 2.5 * average_volume:
                 print(f"{stock} breaking out!")
@@ -52,9 +59,11 @@ def check_latest_price_for_breakout(stock_symbol, date, stock_type):
                 last_text_time[stock_symbol] = datetime.now()  # Update last text time
                 breakout_message = True
                 break  # Exit the loop after printing breakout message once
+    if current_volume > 2.5 * average_volume and not breakout_message:
+        message=f"{stock_type} - {stock_symbol} has{round((current_volume-average_volume)/current_volume*100,2)}% unusual volume."
+        text(message)
         
-    if not breakout_message:
-        print(f"{stock_symbol} hasn't broken any resistance levels.")
+
 
 # Main  Execution
 def run_main():
@@ -85,11 +94,11 @@ def run_main():
             for stock in supports + alarm_plays+other_on_radar:
                 try:
                     if stock in supports:
-                        check_latest_price_for_breakout(stock, curr_date, 'NORMAL PLAY')
+                        check_latest_price_for_breakout(stock,  'NORMAL PLAY')
                     elif stock in alarm_plays:
-                        check_latest_price_for_breakout(stock, curr_date, 'ALARM PLAY')
+                        check_latest_price_for_breakout(stock, 'ALARM PLAY')
                     elif stock in other_on_radar:
-                        check_latest_price_for_breakout(stock, curr_date, 'OTHER ON RADAR')
+                        check_latest_price_for_breakout(stock, 'OTHER ON RADAR')
                 except Exception as e:
                     print(f"unable to check {stock} and error: {e}")
             print("Iteration complete - sleeping a minute")

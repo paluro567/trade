@@ -138,7 +138,7 @@ def getnum(original):
 
 # run a test
 if __name__ == "__main__":
-    resistances, supports, retail, alarm_plays = get_briefing("2023-12-12")
+    resistances, supports, retail, alarm_plays = get_briefing("2023-12-28")
     print('alarm_plays: ', alarm_plays)
     print('resistances: ', resistances)
     print("supports: ", supports)
