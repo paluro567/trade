@@ -47,5 +47,3 @@ def place_sell(symbol, buy_qty):
 if __name__=='__main__':
     place_buy("CING", 1000)
     # place_sell("pltr", 5)
-
-
