@@ -235,7 +235,7 @@ def run_main():
             print("run_main - unable to minute iterate with error: ", e)
 
         print("Iteration complete - sleeping 15 seconds...")
-        time.sleep(20)
+        time.sleep(15)
         iteration+= 1
 
         #reset iteration dict after 5 minutes
