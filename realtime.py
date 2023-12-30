@@ -17,7 +17,7 @@ import ta
 API_KEY  =  'XB2M6HD2DQMJA5Z1'
 too_close_thresh = 1.5 #resistances are duplicates if within 1.5% of one another
 texted_plays  =  []  
-crossed_n=10
+crossed_n=20
 
 
 def remove_close_values(arr):
@@ -93,7 +93,7 @@ def get_data(stock, time, date=None):
 
     return df
 
-# check if the stock has crossed the 180 EMA in the last crossed_n(5) minutes
+# check if the stock has crossed the 180 EMA in the last crossed_n(20) minutes
 def crossed_180(df):
 
     for index, row in df.head(crossed_n).iterrows():
@@ -103,6 +103,7 @@ def crossed_180(df):
         cur_time=str(row['timestamp'])
 
         if open_p<ema and close_p>ema:
+            print("EMA crossed at", cur_time)
             return True
     return False
 
@@ -135,49 +136,48 @@ def check_play(ticker, play_type, priority):
     close_price = df.iloc[0]['close']
     cur_volume = df.iloc[0]['volume']
     ema_5 = df.iloc[0]['ema_5']
-    recent_crossed_180=crossed_180(df)
+    recent_crossed_180=crossed_180(df) #returns true if 180 EMA crossed within past 20 minutes
 
     # -----------------------------------------CONDITIONS TO BUY--------------------------------------------------------------------------
-    for cur_res in resistances:
+    # only check resistances if the 180 EMA has recently been crossed within past 20 minutes
+    if recent_crossed_180:
+        for cur_res in resistances:
 
-        # only check resistances if the 180 EMA has recently been crossed
-        if not recent_crossed_180:
-            break
+            if cur_volume>3*average_volume and open_price<cur_res \
+            and close_price>cur_res and cur_pct_change > 1.5 \
+            and (ticker not in texted_plays):
+                
+                # send text alert
+                message = f"{play_type} - {priority} -  {ticker} is breaking out by {round(cur_pct_change,2)}% beyond resistance of {cur_res} \
+                and crossed 180 EMA on 1 minute chart!"
+                print(f"texting: {message}")
+                text(message)
 
-        if cur_volume>3*average_volume and open_price<cur_res \
-        and close_price>cur_res and cur_pct_change > 1.5 \
-        and (ticker not in texted_plays):
-            
-            # send text alert
-            message = f"{play_type} - {priority} -  {ticker} is breaking out by {round(cur_pct_change,2)}% beyond resistance of {cur_res} \
-            and crossed 180 EMA on 1 minute chart!"
-            print(f"texting: {message}")
-            text(message)
+                # place Alpaca buy orders
+                print("buying ticker: ",ticker)
+                try:
+                    if play_type  ==  'ALARM PLAY':
+                        qty =  10  #10000//close_price
+                        place_buy(str(ticker), qty)
+                        print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
+                    else:
+                        qty =  5    #5000//close_price
+                        place_buy(ticker, qty)
+                        print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
+                    bought_below_five = close_price<ema_5
+                    separate_process  =  multiprocessing.Process(target = monitor_bought_stock(ticker, qty, close_price, bought_below_five))
+                    separate_process.start()
+                except Exception as e:
+                    print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
 
-            # place Alpaca buy orders
-            print("buying ticker: ",ticker)
-            print("type of ticker: ", type(ticker))
-
-            try:
-                if play_type  ==  'ALARM PLAY':
-                    qty =  10  #10000//close_price
-                    place_buy(str(ticker), qty)
-                    print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
-                else:
-                    qty =  5    #5000//close_price
-                    place_buy(ticker, qty)
-                    print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
-                bought_below_five = close_price<ema_5
-                separate_process  =  multiprocessing.Process(target = monitor_bought_stock(ticker, qty, close_price, bought_below_five))
-                separate_process.start()
-            except Exception as e:
-                print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
-
-            # record ticker as being texted/bought
-            texted_plays.append(ticker)
-            break
-
-
+                # record ticker as being texted/bought
+                texted_plays.append(ticker)
+                break
+        if ticker not in texted_plays:
+            msg=f"{play_type} - {priority} -  {ticker} has crossed the 180 EMA"
+            text(msg)
+        texted_plays.append(ticker)
+        
 
 def try_check(stock,  type_string, priority):
     try:
@@ -233,40 +233,15 @@ def run_main():
                 
         except Exception as e:
             print("run_main - unable to minute iterate with error: ", e)
+
         print("Iteration complete - sleeping 15 seconds...")
-        time.sleep(15)
+        time.sleep(20)
         iteration+= 1
-        #reset iteration dict after 10 minutes
+
+        #reset iteration dict after 5 minutes
         if iteration  == 20:
             texted_plays = []
         print("texted plays: ", texted_plays)
-
-def sleep_to_nine_fifteen():
-    #sleep until 9:15AM
-    from datetime import datetime, time
-    import time as t
-
-    # Get the current time
-    current_time  =  datetime.now().time()
-
-    # Define the target time (9:15 AM)
-    target_time  =  time(9, 15)
-
-    # Calculate the number of seconds until 9:15 AM
-    if current_time < target_time:
-        delta  =  datetime.combine(datetime.today(), target_time) - datetime.now()
-        seconds  =  delta.total_seconds()
-    else:
-        # If it's already past 9:15 AM, calculate the seconds until the next day's 9:15 AM
-        tomorrow  =  datetime.combine(datetime.today(), target_time)
-        tomorrow +=  timedelta(days = 1)
-        delta  =  tomorrow - datetime.now()
-        seconds  =  delta.total_seconds()
-
-    # Sleep until 9:15 AM
-    print(f"sleeping {seconds} seconds")
-    t.sleep(seconds)
-    print("Wake up at 9:15 AM!")
 
 if __name__  ==  '__main__':
     # sleep_to_nine_fifteen()

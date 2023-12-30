@@ -29,17 +29,21 @@ def has_crossed_ma(df):
             formatted_time = row['timestamp'].strftime('%I:%M %p')
             print("Crossed the 180 ema at:", formatted_time)
 
-def crossed_180(df):
+def crossed_180(df, resistances, crossed_n=10):
+    for index, row in df.iterrows():
+        if index >= crossed_n:
+            open_p = row['open']
+            close_p = row['close']
+            ema = row['ema_180']
+            cur_time = str(row['timestamp'])
 
-    for index, row in df.head(crossed_n).iterrows():
-        open_p=row['open']
-        close_p=row['close']
-        ema=row['ema_180']
-        cur_time=str(row['timestamp'])
+            # Check for EMA crossover within 10 indices
+            if df.loc[index - crossed_n]['ema_180'] > df.loc[index - 1]['ema_180'] and ema < df.loc[index - 1]['ema_180']:
+                for resist in resistances:
+                    if open_p < resist and close_p > resist:
+                        print("Breakout at:", row['timestamp'].strftime('%I:%M %p'))
 
-        if open_p<ema and close_p>ema:
-            return True
-    return False
+            
 
 
 def get_data(stock, time, date=None):
@@ -84,7 +88,7 @@ def calculate_resistance(data, stock_symbol):
     high_prices = data['high'].values
     percent_changes=data['percent_change'].values
     for i in range(1, len(high_prices) - 1):
-        if high_prices[i] > high_prices[i - 1] and high_prices[i] > high_prices[i + 1] and percent_changes[i]>3:
+        if high_prices[i] > high_prices[i - 1] and high_prices[i] > high_prices[i + 1]:
             resistance_levels.append(high_prices[i])
             print("resistance at time:", data.iloc[i])
     # clean resistances array
@@ -92,15 +96,15 @@ def calculate_resistance(data, stock_symbol):
     print(f"{stock_symbol} resistances: ", resistance_levels)
     return resistance_levels
 
-def convert_to_hh_mm(time_stamp):
-    return time_stamp.strftime('%I:%M %p')
-
 
 
 if __name__=="__main__":
+
     stock='flj'
     df=get_data(stock, '1min')
     print("accessed data: ", df)
-    print("crossed: ", crossed_180(df))
+    resistances=calculate_resistance(df, stock)
+    print("resistances: ", resistances)
+    crossed_180(df, resistances)
 
 
