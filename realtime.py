@@ -17,7 +17,7 @@ import ta
 API_KEY  =  'XB2M6HD2DQMJA5Z1'
 too_close_thresh = 1.5 #resistances are duplicates if within 1.5% of one another
 texted_plays  =  []  
-crossed_n=5
+crossed_n=10
 
 
 def remove_close_values(arr):
@@ -119,9 +119,9 @@ def monitor_bought_stock(ticker, qty, bought_price, bought_below_five):
         # sell position
         if((currently_below_five and not bought_below_five) or percent_gain<-2):
             place_sell(ticker, qty)
-            print(f"selling position {ticker} of {qty} shares at a price of {current_price} made {percent_gain}%")
+            print(f"selling position {ticker} of {qty} shares at a price of {current_price} made {round(percent_gain,2)}%")
             break
-        time.sleep(5)
+        time.sleep(5) #sleep 5 seconds
 
 def check_play(ticker, play_type, priority):
     df = get_data(ticker, '1min')
