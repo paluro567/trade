@@ -17,7 +17,7 @@ import ta
 API_KEY  =  'XB2M6HD2DQMJA5Z1'
 too_close_thresh = 1.5 #resistances are duplicates if within 1.5% of one another
 texted_plays  =  []  
-crossed_n=20
+crossed_n=25
 
 
 def remove_close_values(arr):
