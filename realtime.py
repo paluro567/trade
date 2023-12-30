@@ -15,8 +15,9 @@ import ta
 
 # constants
 API_KEY  =  'XB2M6HD2DQMJA5Z1'
-too_close_thresh = 0.015 #resistances are duplicates if within 0.5% of one another
-texted_plays  =  {}  # Initializing texted_plays dictionary here
+too_close_thresh = 1.5 #resistances are duplicates if within 1.5% of one another
+texted_plays  =  []  
+crossed_n=5
 
 
 def remove_close_values(arr):
@@ -31,7 +32,7 @@ def remove_close_values(arr):
         
         # Compare the current value with all previous values
         for j in range(i):
-            if abs(arr[i] - arr[j]) / max(arr[i], arr[j]) <=  too_close_thresh:
+            if abs(arr[i] - arr[j]) / max(arr[i], arr[j])*100 <=  too_close_thresh:
                 too_close  =  True
                 break
         
@@ -76,19 +77,34 @@ def get_data(stock, time, date=None):
 
     # Create DataFrame
     df = pd.DataFrame(data_list)
-    df['timestamp'] = pd.to_datetime(df['timestamp'])  # Convert timestamp column to datetime
+    df['timestamp'] = pd.to_datetime(df['timestamp'])  
     df['percent_change'] = (df['close']-df['open'])/df['open'] * 100
 
-    # Calculate 5-period EMA
+    # Calculate EMA's
     reversed_df = df.iloc[::-1].copy()  # Creating a copy to prevent view-copy issues
     reversed_df.loc[:, 'ema_5'] = ta.trend.ema_indicator(close=reversed_df['close'], window=5)
+    reversed_df.loc[:, 'ema_180'] = ta.trend.ema_indicator(close=reversed_df['close'], window=180)
 
     df.loc[:, 'ema_5'] = reversed_df['ema_5'].iloc[::-1].values  # Assigning the reversed EMA values to the original DataFrame
+    df.loc[:, 'ema_180'] = reversed_df['ema_180'].iloc[::-1].values  # Assigning the reversed EMA values to the original DataFrame
 
 
     print(df)
 
     return df
+
+# check if the stock has crossed the 180 EMA in the last crossed_n(5) minutes
+def crossed_180(df):
+
+    for index, row in df.head(crossed_n).iterrows():
+        open_p=row['open']
+        close_p=row['close']
+        ema=row['ema_180']
+        cur_time=str(row['timestamp'])
+
+        if open_p<ema and close_p>ema:
+            return True
+    return False
 
 def monitor_bought_stock(ticker, qty, bought_price, bought_below_five):
     
@@ -118,18 +134,30 @@ def check_play(ticker, play_type, priority):
     open_price = df.iloc[0]['open']
     close_price = df.iloc[0]['close']
     cur_volume = df.iloc[0]['volume']
-    cur_ema = df.iloc[0]['ema_5']
+    ema_5 = df.iloc[0]['ema_5']
+    recent_crossed_180=crossed_180(df)
 
     # -----------------------------------------CONDITIONS TO BUY--------------------------------------------------------------------------
     for cur_res in resistances:
-        if cur_volume>3*average_volume and open_price<cur_res and close_price>cur_res and cur_pct_change > 1.5 and (ticker not in texted_plays):
-            message = f"{play_type} - {priority} -  {ticker} is breaking out by {round(cur_pct_change,2)}% beyond resistance of {cur_res}!"
+
+        # only check resistances if the 180 EMA has recently been crossed
+        if not recent_crossed_180:
+            break
+
+        if cur_volume>3*average_volume and open_price<cur_res \
+        and close_price>cur_res and cur_pct_change > 1.5 \
+        and (ticker not in texted_plays):
+            
+            # send text alert
+            message = f"{play_type} - {priority} -  {ticker} is breaking out by {round(cur_pct_change,2)}% beyond resistance of {cur_res} \
+            and crossed 180 EMA on 1 minute chart!"
             print(f"texting: {message}")
             text(message)
+
+            # place Alpaca buy orders
             print("buying ticker: ",ticker)
             print("type of ticker: ", type(ticker))
 
-            # place Alpaca buy orders
             try:
                 if play_type  ==  'ALARM PLAY':
                     qty =  10  #10000//close_price
@@ -139,24 +167,27 @@ def check_play(ticker, play_type, priority):
                     qty =  5    #5000//close_price
                     place_buy(ticker, qty)
                     print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
-                bought_below_five = close_price<cur_ema
+                bought_below_five = close_price<ema_5
                 separate_process  =  multiprocessing.Process(target = monitor_bought_stock(ticker, qty, close_price, bought_below_five))
                 separate_process.start()
             except Exception as e:
-                print(f"UNABLE TO BUY {ticker} with an error: {e}")
+                print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
 
             # record ticker as being texted/bought
-            texted_plays[ticker]  =  texted_plays.get(ticker, 0) + 1
+            texted_plays.append(ticker)
             break
+
+
 
 def try_check(stock,  type_string, priority):
     try:
         check_play(stock,  type_string, priority)
     except Exception as e:
-        print(f"unable to check {stock} with error: {e}")
+        print(f"try_check - unable to check {stock} with error: {e}")
 
 def run_main():
-    global texted_plays 
+    global texted_plays
+    global crossed_n
     
     iteration = 1
     print("running main")
@@ -174,8 +205,8 @@ def run_main():
         print("today's green_plays: ", green_plays)
 
         # no briefing yet sleep 5 minutes
-        if alarm_plays is [] and green_plays == []:
-            raise Exception("no briefing yet error")
+        if alarm_plays == [] and green_plays == []:
+            raise Exception("run_main - no briefing yet error")
 
         plays_categories  =  {
             'NORMAL PLAY': green_plays,
@@ -185,9 +216,10 @@ def run_main():
         
         print("play categories: ", plays_categories)
     except Exception as e:
-        print(f"unable to get briefing or some error: {e}")
+        print(f"run_main - unable to get briefing or some error: {e}")
         print("sleeping 5 minutes...")
         time.sleep(300)  # Sleep for 5 minutes
+        print("running run_main again")
         run_main()
 
     # iterative check
@@ -200,13 +232,13 @@ def run_main():
                     try_check(stock, category, priority+1)
                 
         except Exception as e:
-            print("unable to minute iterate with error: ", e)
+            print("run_main - unable to minute iterate with error: ", e)
         print("Iteration complete - sleeping 15 seconds...")
         time.sleep(15)
         iteration+= 1
         #reset iteration dict after 10 minutes
         if iteration  == 20:
-            texted_plays = {}
+            texted_plays = []
         print("texted plays: ", texted_plays)
 
 def sleep_to_nine_fifteen():
@@ -241,13 +273,11 @@ if __name__  ==  '__main__':
 
     # Initialize texted_plays only once
     if 'texted_plays' not in locals():
-        texted_plays  =  {}  # Initializing texted_plays dictionary here
+        texted_plays  =  []  # Initializing texted_plays dictionary here
     try:
         run_main()
     except Exception as e:
-        print(f"unable to run_main error: {e}")
-
-    # get_data('pltr', '1min')
+        print(f"__main__ - unable to run_main error: {e}")
 
 
 
