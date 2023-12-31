@@ -82,7 +82,7 @@ def get_data(stock, time, date=None):
 
     print(df)
 
-    return df
+    return df[:910]
 def calculate_resistance(data, stock_symbol):
     resistance_levels = []
     high_prices = data['high'].values
@@ -103,8 +103,8 @@ if __name__=="__main__":
     stock='flj'
     df=get_data(stock, '1min')
     print("accessed data: ", df)
-    resistances=calculate_resistance(df, stock)
-    print("resistances: ", resistances)
-    crossed_180(df, resistances)
+    # resistances=calculate_resistance(df, stock)
+    # print("resistances: ", resistances)
+    # crossed_180(df, resistances)
 
 

@@ -62,7 +62,7 @@ def get_data(stock, time, date=None):
     resp= requests.get(request_url)
     timeseries_json=resp.json()[f'Time Series ({time})']
 
-    # Convert to formatted DataFrame
+    # Access data from timeseries_json
     data_list = [
         {
             'timestamp': timestamp,
@@ -88,22 +88,22 @@ def get_data(stock, time, date=None):
     df.loc[:, 'ema_5'] = reversed_df['ema_5'].iloc[::-1].values  # Assigning the reversed EMA values to the original DataFrame
     df.loc[:, 'ema_180'] = reversed_df['ema_180'].iloc[::-1].values  # Assigning the reversed EMA values to the original DataFrame
 
+    print("get_data - df with EMA's: ", df)
 
-    print(df)
-
-    return df
+    return df[:910] #only considser one day's data
 
 # check if the stock has crossed the 180 EMA in the last crossed_n(20) minutes
 def crossed_180(df):
 
     for index, row in df.head(crossed_n).iterrows():
+        # access data from row
         open_p=row['open']
         close_p=row['close']
         ema=row['ema_180']
-        cur_time=str(row['timestamp'])
+        formatted_time=str(row['timestamp'].strftime('%I:%M %p')) # time hh:mm AM/PM
 
         if open_p<ema and close_p>ema:
-            print("EMA crossed at", cur_time)
+            print("EMA crossed at: ", formatted_time)
             return True
     return False
 
@@ -118,7 +118,7 @@ def monitor_bought_stock(ticker, qty, bought_price, bought_below_five):
         print(f" position {ticker} is up {percent_gain}")
 
         # sell position
-        if((currently_below_five and not bought_below_five) or percent_gain<-2):
+        if((currently_below_five and not bought_below_five) or percent_gain<-5):
             place_sell(ticker, qty)
             print(f"selling position {ticker} of {qty} shares at a price of {current_price} made {round(percent_gain,2)}%")
             break
@@ -176,7 +176,7 @@ def check_play(ticker, play_type, priority):
         if ticker not in texted_plays:
             msg=f"{play_type} - {priority} -  {ticker} has crossed the 180 EMA"
             text(msg)
-        texted_plays.append(ticker)
+        # texted_plays.append(ticker)
         
 
 def try_check(stock,  type_string, priority):
@@ -244,11 +244,9 @@ def run_main():
         print("texted plays: ", texted_plays)
 
 if __name__  ==  '__main__':
-    # sleep_to_nine_fifteen()
 
-    # Initialize texted_plays only once
     if 'texted_plays' not in locals():
-        texted_plays  =  []  # Initializing texted_plays dictionary here
+        texted_plays  =  []
     try:
         run_main()
     except Exception as e:
