@@ -173,10 +173,10 @@ def check_play(ticker, play_type, priority):
                 # record ticker as being texted/bought
                 texted_plays.append(ticker)
                 break
-        if ticker not in texted_plays:
-            msg=f"{play_type} - {priority} -  {ticker} has crossed the 180 EMA"
-            text(msg)
-        # texted_plays.append(ticker)
+        # if ticker not in texted_plays:
+        #     msg=f"{play_type} - {priority} -  {ticker} has crossed the 180 EMA"
+        #     text(msg)
+        #     texted_plays.append(ticker)
         
 
 def try_check(stock,  type_string, priority):
