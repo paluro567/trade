@@ -138,8 +138,14 @@ def getnum(original):
 
 # run a test
 if __name__ == "__main__":
-    resistances, supports, retail, alarm_plays = get_briefing("2023-12-28")
-    print('alarm_plays: ', alarm_plays)
-    print('resistances: ', resistances)
-    print("supports: ", supports)
-    print("retail: ", retail)
+    resistances, supports, retail, alarm_plays = get_briefing("2024-01-04")
+    alarm_plays = [stock for stock in alarm_plays if ' ' not in stock]
+    green_plays = list(supports.keys())
+    other_on_radar = ['SLNH','PLTR','AI', 'SFWL']
+
+    print("today's alarm_plays: ", alarm_plays )
+    print("today's retail: ", retail)
+    print("today's green_plays: ", green_plays)
+    if alarm_plays == [] and green_plays == []:
+        print("exception made...")
+   
