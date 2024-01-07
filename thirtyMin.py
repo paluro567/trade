@@ -108,7 +108,7 @@ def monitor_bought_stock(ticker, qty, bought_price):
         current_price = df.iloc[0]['close']
         below=df.iloc[0]['ema_9']<df.iloc[0]['ema_20']
         percent_gain  =  ((current_price - bought_price) / bought_price) * 100
-        print(f" position {ticker} is up {percent_gain}")
+        print(f" position {ticker} of {qty} shares is up {percent_gain}%")
 
         # sell position
         if(percent_gain<-5 or below):
@@ -120,7 +120,7 @@ def monitor_bought_stock(ticker, qty, bought_price):
 def check_play(ticker, play_type, priority):
 
     df = get_data(ticker, '30min')
-    print("check_play - get_data df: ", df)
+    print(f"check_play ({ticker})- get_data df: {df}")
 
     # df Calculations
     average_volume = df['volume'].mean()
@@ -134,19 +134,22 @@ def check_play(ticker, play_type, priority):
     close_price = df.iloc[0]['close']
     cur_volume = df.iloc[0]['volume']
     ema_5 = df.iloc[0]['ema_5']
+    ema_9 = df.iloc[0]['ema_9']
+    ema_20 = df.iloc[0]['ema_20']
 
     # -----------------------------------------CONDITIONS TO BUY--------------------------------------------------------------------------
-    # only check resistances if the 180 EMA has recently been crossed within past 20 minutes
 
-    if crossed and cur_volume>3*average_volume \
+    # send text alert
+    if crossed \
+    and cur_volume > 3*average_volume \
     and cur_pct_change > 1.5 \
     and (ticker not in texted_plays):
         
-        # send text alert
         message = f"{play_type} - {priority} -  {ticker} is breaking out by {round(cur_pct_change,2)}% \
-        and crossed 9EMA crossed above 20!"
+        and 9EMA crossed above 20EMA!"
         print(f"texting: {message}")
         text(message)
+        texted_plays.append(ticker)
 
         # place Alpaca buy orders
         print(f"buying ticker: {ticker} at {cur_time}")
@@ -171,12 +174,7 @@ def try_check(stock,  type_string, priority):
     except Exception as e:
         print(f"try_check - unable to check {stock} with error: {e}")
 
-def run_main():
-    global texted_plays
-    iteration = 1
-
-    print("running run_main")
-
+def get_plays():
     # Morning briefing
     try:
         curr_date  =  datetime.datetime.now().strftime('%Y-%m-%d')
@@ -201,14 +199,23 @@ def run_main():
         print("combined play categories: ", plays_categories)
 
     except Exception as e:
-        print(f"run_main - unable to get briefing or some error: {e}")
+        print(f"get_plays - unable to get briefing or some error: {e}")
         print("sleeping 5 minutes...")
         time.sleep(300)  # Sleep for 5 minutes
         print("running run_main again")
-        run_main()
+        get_plays()
+    return plays_categories
+
+
+def run_main():
+    global texted_plays
+    iteration = 1
+
+    print("running run_main")
+    plays_categories = get_plays()
 
     # iterative check
-    dashes='-' * 20
+    dashes = '-' * 20
     while True:
         try:
             print("checking stocks!")
@@ -222,15 +229,14 @@ def run_main():
 
         print("Iteration complete - sleeping 15 seconds...")
         time.sleep(15)
-        iteration+= 1
+        iteration += 1
 
-        #reset iteration dict after 5 minutes
-        if iteration  == 20:
+        #reset texted_plays after 10 minutes
+        if iteration  == 40:
             texted_plays = []
         print(f"minute {iteration} - texted plays: ", texted_plays)
 
 if __name__  ==  '__main__':
-    # data=get_data('pltr', '30min')
     if 'texted_plays' not in locals():
         texted_plays  =  []
     try:

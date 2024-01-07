@@ -92,9 +92,10 @@ def get_data(stock, time, date=None):
     df.loc[:, 'ema_20'] = reversed_df['ema_20'].iloc[::-1].values
     df.loc[:, 'ema_180'] = reversed_df['ema_180'].iloc[::-1].values 
 
-    # print("get_data - df with EMA's: ", df)
+    print("get_data - df with EMA's: ", df)
 
     return df[:910] #only considser one day's data
+
 
 
 def nine_twenty_cross(df):
