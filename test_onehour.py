@@ -129,6 +129,7 @@ def check_play(ticker, play_type, priority):
     crossed=nine_twenty_cross(df)
 
     # most recent values to check from df
+    cur_time=df.iloc[0]['timestamp']
     cur_pct_change = df.iloc[0]['percent_change']
     open_price = df.iloc[0]['open']
     close_price = df.iloc[0]['close']
@@ -138,18 +139,18 @@ def check_play(ticker, play_type, priority):
     # -----------------------------------------CONDITIONS TO BUY--------------------------------------------------------------------------
     # only check resistances if the 180 EMA has recently been crossed within past 20 minutes
 
-    if cur_volume>3*average_volume and crossed \
+    if crossed and cur_volume>3*average_volume \
     and cur_pct_change > 1.5 \
     and (ticker not in texted_plays):
         
         # send text alert
         message = f"{play_type} - {priority} -  {ticker} is breaking out by {round(cur_pct_change,2)}% \
-        and crossed 180 EMA on 1 minute chart!"
+        and crossed 9EMA crossed above 20!"
         print(f"texting: {message}")
         text(message)
 
         # place Alpaca buy orders
-        print("buying ticker: ",ticker)
+        print(f"buying ticker: {ticker} at {cur_time}")
         try:
             if play_type  ==  'ALARM PLAY':
                 qty =  10  #10000//close_price
@@ -163,11 +164,6 @@ def check_play(ticker, play_type, priority):
             separate_process.start()
         except Exception as e:
             print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
-
-        # if ticker not in texted_plays:
-        #     msg=f"{play_type} - {priority} -  {ticker} has crossed the 180 EMA"
-        #     text(msg)
-        #     texted_plays.append(ticker)
         
 
 def try_check(stock,  type_string, priority):
@@ -235,28 +231,7 @@ def run_main():
         print(f"minute {iteration} - texted plays: ", texted_plays)
 
 if __name__  ==  '__main__':
-
-    if 'texted_plays' not in locals():
-        texted_plays  =  []
-    try:
-        run_main()
-    except Exception as e:
-        print(f"__main__ - unable to run_main error: {e}")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    data=get_data('pltr', '60min')
+    pd.set_option('display.max_rows', None)  # Set to None for displaying all rows
+    pd.set_option('display.max_columns', None)  # Set to None for displaying all columns
+    print("data: ", data)
