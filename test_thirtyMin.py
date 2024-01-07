@@ -107,9 +107,9 @@ def monitor_bought_stock(ticker, qty, bought_price):
     while True:
         df = get_data(ticker, '60min')
         current_price = df.iloc[0]['close']
-        below=df.iloc[0]['ema_9']<df.iloc[0]['ema_20']
         percent_gain  =  ((current_price - bought_price) / bought_price) * 100
         print(f" position {ticker} is up {percent_gain}")
+        below=df.iloc[0]['ema_9']<df.iloc[0]['ema_20']
 
         # sell position
         if(percent_gain<-5 or below):
@@ -231,7 +231,12 @@ def run_main():
         print(f"minute {iteration} - texted plays: ", texted_plays)
 
 if __name__  ==  '__main__':
-    data=get_data('pltr', '60min')
+    stock='MARA'
+    data=get_data(stock, '30min')
     pd.set_option('display.max_rows', None)  # Set to None for displaying all rows
     pd.set_option('display.max_columns', None)  # Set to None for displaying all columns
     print("data: ", data)
+
+    for i, row in data.iterrows():
+        if data.iloc[i-1]['ema_9']< data.iloc[i-1]['ema_20'] and data.iloc[i]['ema_9']> data.iloc[i]['ema_20']:
+            print(f"{stock}crossed: ", data.iloc[i]['timestamp'])

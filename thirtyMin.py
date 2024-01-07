@@ -101,10 +101,10 @@ def nine_twenty_cross(df):
     return df.iloc[1]['ema_9']<df.iloc[1]['ema_20'] and df.iloc[0]['ema_9']>df.iloc[0]['ema_20']
 
 
-def monitor_bought_stock(ticker, qty, bought_price):
+def monitor_bought_stock(ticker, qty, bought_price, interval):
     # check position every 5 seconds
     while True:
-        df = get_data(ticker, '30min')
+        df = get_data(ticker, interval)
         current_price = df.iloc[0]['close']
         below=df.iloc[0]['ema_9']<df.iloc[0]['ema_20']
         percent_gain  =  ((current_price - bought_price) / bought_price) * 100
@@ -117,9 +117,9 @@ def monitor_bought_stock(ticker, qty, bought_price):
             break
         time.sleep(5) #sleep 5 seconds
 
-def check_play(ticker, play_type, priority):
+def check_play(ticker, play_type, priority, interval):
 
-    df = get_data(ticker, '30min')
+    df = get_data(ticker, interval)
     print(f"check_play ({ticker})- get_data df: {df}")
 
     # df Calculations
@@ -162,15 +162,15 @@ def check_play(ticker, play_type, priority):
                 qty =  5    #5000//close_price
                 place_buy(ticker, qty)
                 print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
-            separate_process  =  multiprocessing.Process(target = monitor_bought_stock(ticker, qty, close_price))
+            separate_process  =  multiprocessing.Process(target = monitor_bought_stock(ticker, qty, close_price,interval))
             separate_process.start()
         except Exception as e:
             print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
 
 
-def try_check(stock,  type_string, priority):
+def try_check(stock,  type_string, priority, interval):
     try:
-        check_play(stock,  type_string, priority)
+        check_play(stock,  type_string, priority, interval)
     except Exception as e:
         print(f"try_check - unable to check {stock} with error: {e}")
 
@@ -207,7 +207,7 @@ def get_plays():
     return plays_categories
 
 
-def run_main():
+def run_main(interval):
     global texted_plays
     iteration = 1
 
@@ -222,7 +222,7 @@ def run_main():
             for category, stocks in plays_categories.items():
                 for priority, stock in enumerate(stocks):
                     print(f"{dashes}checking {stock} {dashes}")
-                    try_check(stock, category, priority+1)
+                    try_check(stock, category, priority+1, interval)
                 
         except Exception as e:
             print("run_main - unable to minute iterate with error: ", e)
@@ -237,10 +237,11 @@ def run_main():
         print(f"minute {iteration} - texted plays: ", texted_plays)
 
 if __name__  ==  '__main__':
+    interval='30min'
     if 'texted_plays' not in locals():
         texted_plays  =  []
     try:
-        run_main()
+        run_main(interval)
     except Exception as e:
         print(f"__main__ - unable to run_main error: {e}")
 
