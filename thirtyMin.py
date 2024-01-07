@@ -162,8 +162,9 @@ def check_play(ticker, play_type, priority, interval):
                 qty =  5    #5000//close_price
                 place_buy(ticker, qty)
                 print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
-            separate_process  =  multiprocessing.Process(target = monitor_bought_stock(ticker, qty, close_price,interval))
-            separate_process.start()
+            monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price,interval))
+
+            monitor_process.start()
         except Exception as e:
             print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
 
