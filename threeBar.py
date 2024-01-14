@@ -101,15 +101,14 @@ def nine_twenty_cross(df):
     return df.iloc[1]['ema_9']<df.iloc[1]['ema_20'] and df.iloc[0]['ema_9']>df.iloc[0]['ema_20']
 
 
-def monitor_bought_stock(ticker, qty, bought_price):
-    
+def monitor_bought_stock(ticker, qty, bought_price, interval):
     # check position every 5 seconds
     while True:
-        df = get_data(ticker, '60min')
+        df = get_data(ticker, interval)
         current_price = df.iloc[0]['close']
-        percent_gain  =  ((current_price - bought_price) / bought_price) * 100
-        print(f" position {ticker} is up {percent_gain}")
         below=df.iloc[0]['ema_9']<df.iloc[0]['ema_20']
+        percent_gain  =  ((current_price - bought_price) / bought_price) * 100
+        print(f" position {ticker} of {qty} shares is up {percent_gain}%")
 
         # sell position
         if(percent_gain<-5 or below):
@@ -118,39 +117,32 @@ def monitor_bought_stock(ticker, qty, bought_price):
             break
         time.sleep(5) #sleep 5 seconds
 
-def check_play(ticker, play_type, priority):
+def check_play(ticker, play_type, priority, interval):
 
-    df = get_data(ticker, '60min')
-    print("check_play - get_data df: ", df)
+    # DATA
+    df = get_data(ticker, interval)
+    close_price=df.iloc[0]['close']
+    cur_vol=df.iloc[0]['volume']
+    cur_pch=df.iloc[0]['percent_change']
+    avg_vol = df['volume'].mean()
+    prior_pch=df.iloc[1]['percent_change']
+    two_prior_pch=df.iloc[2]['percent_change']
 
-    # df Calculations
-    average_volume = df['volume'].mean()
-    resistances = calculate_resistance(df, ticker)
-    crossed=nine_twenty_cross(df)
-
-    # most recent values to check from df
-    cur_time=df.iloc[0]['timestamp']
-    cur_pct_change = df.iloc[0]['percent_change']
-    open_price = df.iloc[0]['open']
-    close_price = df.iloc[0]['close']
-    cur_volume = df.iloc[0]['volume']
-    ema_5 = df.iloc[0]['ema_5']
-
-    # -----------------------------------------CONDITIONS TO BUY--------------------------------------------------------------------------
-    # only check resistances if the 180 EMA has recently been crossed within past 20 minutes
-
-    if crossed and cur_volume>3*average_volume \
-    and cur_pct_change > 1.5 \
+    # -----------------------------------------CONDITIONS 3 BAR PLAY--------------------------------------------------------------------------
+    if cur_pch>2 \
+    and prior_pch<-2 \
+    and two_prior_pch>2\
+    and cur_vol > 3*avg_vol \
     and (ticker not in texted_plays):
-        
-        # send text alert
-        message = f"{play_type} - {priority} -  {ticker} is breaking out by {round(cur_pct_change,2)}% \
-        and crossed 9EMA crossed above 20!"
+
+        message = f"{play_type} - {priority} -  {ticker} is breaking with 3 bar play! \n Igniting: {round(two_prior_pch,2)}% \n \
+            test:{round(prior_pch, 2)}% \n Confirmation: {round(cur_pch,2)}%"
         print(f"texting: {message}")
         text(message)
+        texted_plays.append(ticker)
 
         # place Alpaca buy orders
-        print(f"buying ticker: {ticker} at {cur_time}")
+        print(f"buying ticker: {ticker} at {df.iloc[0]['timestamp']}")
         try:
             if play_type  ==  'ALARM PLAY':
                 qty =  10  #10000//close_price
@@ -160,31 +152,27 @@ def check_play(ticker, play_type, priority):
                 qty =  5    #5000//close_price
                 place_buy(ticker, qty)
                 print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
-            separate_process  =  multiprocessing.Process(target = monitor_bought_stock(ticker, qty, close_price))
-            separate_process.start()
+            monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price,interval))
+
+            monitor_process.start()
         except Exception as e:
             print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
-        
 
-def try_check(stock,  type_string, priority):
+
+def try_check(stock,  type_string, priority, interval):
     try:
-        check_play(stock,  type_string, priority)
+        check_play(stock,  type_string, priority, interval)
     except Exception as e:
         print(f"try_check - unable to check {stock} with error: {e}")
 
-def run_main():
-    global texted_plays
-    iteration = 1
-
-    print("running run_main")
-
+def get_plays():
     # Morning briefing
     try:
         curr_date  =  datetime.datetime.now().strftime('%Y-%m-%d')
         resistances, supports, retail, alarm_plays  =  get_briefing(curr_date)  # get briefing
         alarm_plays = [stock for stock in alarm_plays if ' ' not in stock]
         green_plays = list(supports.keys())
-        other_on_radar = ['SLNH','PLTR','AI', 'SFWL']
+        other_on_radar = ['SLNH','PLTR','AI', 'SFWL', 'MDAI']
 
         print("today's alarm_plays: ", alarm_plays )
         print("today's green_plays: ", green_plays)
@@ -202,42 +190,89 @@ def run_main():
         print("combined play categories: ", plays_categories)
 
     except Exception as e:
-        print(f"run_main - unable to get briefing or some error: {e}")
+        print(f"get_plays - unable to get briefing or some error: {e}")
         print("sleeping 5 minutes...")
         time.sleep(300)  # Sleep for 5 minutes
         print("running run_main again")
-        run_main()
+        get_plays()
+    return plays_categories
+
+
+def run_main(interval):
+    global texted_plays
+    iteration = 1
+
+    print("running run_main")
+    plays_categories = get_plays()
 
     # iterative check
-    dashes='-' * 20
+    dashes = '-' * 20
     while True:
         try:
             print("checking stocks!")
             for category, stocks in plays_categories.items():
                 for priority, stock in enumerate(stocks):
                     print(f"{dashes}checking {stock} {dashes}")
-                    try_check(stock, category, priority+1)
+                    try_check(stock, category, priority+1, interval)
                 
         except Exception as e:
             print("run_main - unable to minute iterate with error: ", e)
 
         print("Iteration complete - sleeping 15 seconds...")
         time.sleep(15)
-        iteration+= 1
+        iteration += 1
 
-        #reset iteration dict after 5 minutes
-        if iteration  == 20:
+        #reset texted_plays after 10 minutes
+        if iteration  == 40:
             texted_plays = []
         print(f"minute {iteration} - texted plays: ", texted_plays)
 
-if __name__  ==  '__main__':
-    stock='GRTX'
-    data=get_data(stock, '30min')
-    pd.set_option('display.max_rows', None)  # Set to None for displaying all rows
-    pd.set_option('display.max_columns', None)  # Set to None for displaying all columns
-    print(data)
 
-    for i, row in data.iterrows():
-        if data.iloc[i]['timestamp']=='2024-01-09 09:30:00':
-            row=data.iloc[i]
-            print(f"price at 9:30 open: {row['open']} close: {row['close']}")
+
+
+
+
+if __name__  ==  '__main__':
+    run_main('5min')
+
+    # TEST
+    '''
+    interval='1min' 
+    df=get_data('CRGE','5min')
+    start_timestamp = pd.to_datetime('2024-01-12 09:30:00')
+    jan_12_data = df[df['timestamp'] >= start_timestamp]
+
+    for i in range(2, len(df)):
+        current_percent_change = df.iloc[i]['percent_change']
+        prior_percent_change = df.iloc[i-1]['percent_change']
+        prior_prior_percent_change = df.iloc[i-2]['percent_change']
+
+        if (
+            current_percent_change > 3 and
+            prior_percent_change < -2 and
+            prior_prior_percent_change > 3
+        ):
+            print("----------------------------")
+            print("Timestamp:", df.iloc[i]['timestamp'])
+            print("current_percent_change: ",current_percent_change)
+            print("prior_percent_change: ",prior_percent_change)
+            print("prior_prior_percent_change: ",prior_prior_percent_change)
+    '''
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

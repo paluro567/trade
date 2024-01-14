@@ -14,7 +14,6 @@ qty = 10  # Number of shares/quantity you want to buy
 order_type = 'limit'  # Order type: 'limit', 'market', 'stop', etc.
 limit_price = 150.0  # Specify the limit price if order_type is 'limit' (optional)
 def place_buy(symbol, buy_qty):
-    # symbol=str(symbol)
     symbol=symbol.upper()
     buy_order = api.submit_order(
         symbol=symbol,

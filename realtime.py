@@ -4,7 +4,6 @@ from Discord import get_briefing
 from sms import text
 import datetime
 import pandas as pd
-import numpy as np
 import time
 import requests
 from realtimetrade import place_buy, place_sell
