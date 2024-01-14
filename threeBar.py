@@ -2,7 +2,6 @@ import yfinance as yf
 from datetime import datetime, timedelta
 from Discord import get_briefing
 from sms import text
-import datetime
 import pandas as pd
 import numpy as np
 import time
@@ -92,7 +91,7 @@ def get_data(stock, time, date=None):
     df.loc[:, 'ema_20'] = reversed_df['ema_20'].iloc[::-1].values
     df.loc[:, 'ema_180'] = reversed_df['ema_180'].iloc[::-1].values 
 
-    print("get_data - df with EMA's: ", df)
+    # print("get_data - df with EMA's: ", df)
 
     return df[:910] #only considser one day's data
 
@@ -231,33 +230,9 @@ def run_main(interval):
 
 
 
-
 if __name__  ==  '__main__':
     run_main('5min')
 
-    # TEST
-    '''
-    interval='1min' 
-    df=get_data('CRGE','5min')
-    start_timestamp = pd.to_datetime('2024-01-12 09:30:00')
-    jan_12_data = df[df['timestamp'] >= start_timestamp]
-
-    for i in range(2, len(df)):
-        current_percent_change = df.iloc[i]['percent_change']
-        prior_percent_change = df.iloc[i-1]['percent_change']
-        prior_prior_percent_change = df.iloc[i-2]['percent_change']
-
-        if (
-            current_percent_change > 3 and
-            prior_percent_change < -2 and
-            prior_prior_percent_change > 3
-        ):
-            print("----------------------------")
-            print("Timestamp:", df.iloc[i]['timestamp'])
-            print("current_percent_change: ",current_percent_change)
-            print("prior_percent_change: ",prior_percent_change)
-            print("prior_prior_percent_change: ",prior_prior_percent_change)
-    '''
 
 
 
