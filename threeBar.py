@@ -102,12 +102,12 @@ def nine_twenty_cross(df):
     return df.iloc[1]['ema_9']<df.iloc[1]['ema_20'] and df.iloc[0]['ema_9']>df.iloc[0]['ema_20']
 
 
-def monitor_bought_stock(ticker, qty, bought_price, interval):
+def monitor_bought_stock(ticker, qty, bought_price):
     # check position every 5 seconds
     while True:
-        df = get_data(ticker, interval)
+        df = get_data(ticker, '1min')
         current_price = df.iloc[0]['close']
-        below=df.iloc[0]['ema_9']<df.iloc[0]['ema_20']
+        below=df.iloc[0]['close']<df.iloc[0]['ema_9'] and df.iloc[1]['close']>df.iloc[1]['ema_9'] #crosses below ema_9
         percent_gain  =  ((current_price - bought_price) / bought_price) * 100
         print(f" position {ticker} of {qty} shares is up {percent_gain}%")
 
@@ -125,21 +125,56 @@ def check_play(ticker, play_type, priority, interval):
         df = get_data(ticker, interval)
         close_price=df.iloc[0]['close']
         cur_vol=df.iloc[0]['volume']
-        cur_pch=df.iloc[0]['percent_change']
         avg_vol = df['volume'].mean()
+        cur_pch=df.iloc[0]['percent_change']
         prior_pch=df.iloc[1]['percent_change']
         two_prior_pch=df.iloc[2]['percent_change']
+        three_prior_pch=df.iloc[3]['percent_change']
 
-        # -----------------------------------------CONDITIONS 3 BAR PLAY--------------------------------------------------------------------------
+        # ----------------------------------------- CONDITIONS 3 BAR PLAY --------------------------------------------------------------------------
         if cur_pch > 2 \
         and prior_pch < 0 \
         and two_prior_pch > 2 \
         and cur_vol > 3*avg_vol \
         and (ticker not in texted_plays):
 
-            message = (f"{play_type} - {priority} -  {ticker} is breaking with 3 bar play! \n"
+            message = (f"{play_type} - {priority} -  {ticker} is breaking out with 3 bar play! \n"
             f"Igniting: {round(two_prior_pch,2)}% \n"
             f"test:{round(prior_pch, 2)}% \n"
+            f"Confirmation: {round(cur_pch,2)}%")
+            print(f"Texting: {message}")
+            text(message)
+            texted_plays.append(ticker)
+
+            # place Alpaca buy orders
+            print(f"buying ticker: {ticker} at {df.iloc[0]['timestamp']}")
+            try:
+                if play_type  ==  'ALARM PLAY':
+                    qty =  10  #10000//close_price
+                    place_buy(str(ticker), qty)
+                    print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
+                else:
+                    qty =  5    #5000//close_price
+                    place_buy(ticker, qty)
+                    print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
+                monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price))
+
+                monitor_process.start()
+            except Exception as e:
+                print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
+
+        # -------------------- 4 bar play ----------------------------------------------
+        if cur_pch > 2 \
+        and prior_pch < 0 \
+        and two_prior_pch <0 \
+        and three_prior_pch>2 \
+        and cur_vol > 3*avg_vol \
+        and (ticker not in texted_plays):
+
+            message = (f"{play_type} - {priority} -  {ticker} is breaking out with 4 bar play! \n"
+            f"Igniting: {round(three_prior_pch,2)}% \n"
+            f"test:{round(prior_pch, 2)}% \n"
+            f"test:{round(two_prior_pch, 2)}% \n"
             f"Confirmation: {round(cur_pch,2)}%")
             print(f"texting: {message}")
             text(message)
@@ -156,7 +191,7 @@ def check_play(ticker, play_type, priority, interval):
                     qty =  5    #5000//close_price
                     place_buy(ticker, qty)
                     print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
-                monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price,interval))
+                monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price))
 
                 monitor_process.start()
             except Exception as e:
@@ -232,7 +267,6 @@ def run_main(interval):
         if iteration  == 40:
             texted_plays = []
         print(f"minute {iteration} - texted plays: ", texted_plays)
-
 
 if __name__  ==  '__main__':
     run_main('5min')
