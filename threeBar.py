@@ -1,4 +1,6 @@
 import yfinance as yf
+import datetime
+
 from datetime import datetime, timedelta
 from Discord import get_briefing
 from sms import text
@@ -118,57 +120,59 @@ def monitor_bought_stock(ticker, qty, bought_price, interval):
 
 def check_play(ticker, play_type, priority, interval):
 
-    # DATA
-    df = get_data(ticker, interval)
-    close_price=df.iloc[0]['close']
-    cur_vol=df.iloc[0]['volume']
-    cur_pch=df.iloc[0]['percent_change']
-    avg_vol = df['volume'].mean()
-    prior_pch=df.iloc[1]['percent_change']
-    two_prior_pch=df.iloc[2]['percent_change']
-
-    # -----------------------------------------CONDITIONS 3 BAR PLAY--------------------------------------------------------------------------
-    if cur_pch>2 \
-    and prior_pch<0 \
-    and two_prior_pch>2\
-    and cur_vol > 3*avg_vol \
-    and (ticker not in texted_plays):
-
-        message = f"{play_type} - {priority} -  {ticker} is breaking with 3 bar play! \n Igniting: {round(two_prior_pch,2)}% \n \
-            test:{round(prior_pch, 2)}% \n Confirmation: {round(cur_pch,2)}%"
-        print(f"texting: {message}")
-        text(message)
-        texted_plays.append(ticker)
-
-        # place Alpaca buy orders
-        print(f"buying ticker: {ticker} at {df.iloc[0]['timestamp']}")
-        try:
-            if play_type  ==  'ALARM PLAY':
-                qty =  10  #10000//close_price
-                place_buy(str(ticker), qty)
-                print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
-            else:
-                qty =  5    #5000//close_price
-                place_buy(ticker, qty)
-                print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
-            monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price,interval))
-
-            monitor_process.start()
-        except Exception as e:
-            print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
-
-
-def try_check(stock,  type_string, priority, interval):
     try:
-        check_play(stock,  type_string, priority, interval)
+        # DATA
+        df = get_data(ticker, interval)
+        close_price=df.iloc[0]['close']
+        cur_vol=df.iloc[0]['volume']
+        cur_pch=df.iloc[0]['percent_change']
+        avg_vol = df['volume'].mean()
+        prior_pch=df.iloc[1]['percent_change']
+        two_prior_pch=df.iloc[2]['percent_change']
+
+        # -----------------------------------------CONDITIONS 3 BAR PLAY--------------------------------------------------------------------------
+        if cur_pch > 2 \
+        and prior_pch < 0 \
+        and two_prior_pch > 2 \
+        and cur_vol > 3*avg_vol \
+        and (ticker not in texted_plays):
+
+            message = (f"{play_type} - {priority} -  {ticker} is breaking with 3 bar play! \n"
+            f"Igniting: {round(two_prior_pch,2)}% \n"
+            f"test:{round(prior_pch, 2)}% \n"
+            f"Confirmation: {round(cur_pch,2)}%")
+            print(f"texting: {message}")
+            text(message)
+            texted_plays.append(ticker)
+
+            # place Alpaca buy orders
+            print(f"buying ticker: {ticker} at {df.iloc[0]['timestamp']}")
+            try:
+                if play_type  ==  'ALARM PLAY':
+                    qty =  10  #10000//close_price
+                    place_buy(str(ticker), qty)
+                    print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
+                else:
+                    qty =  5    #5000//close_price
+                    place_buy(ticker, qty)
+                    print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
+                monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price,interval))
+
+                monitor_process.start()
+            except Exception as e:
+                print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
     except Exception as e:
-        print(f"try_check - unable to check {stock} with error: {e}")
+        print(f"check_play - unable to check {ticker} with error: {e}")
+
 
 def get_plays():
     # Morning briefing
     try:
+        import datetime
         curr_date  =  datetime.datetime.now().strftime('%Y-%m-%d')
         resistances, supports, retail, alarm_plays  =  get_briefing(curr_date)  # get briefing
+        
+        # clean tickers
         alarm_plays = [stock for stock in alarm_plays if ' ' not in stock]
         green_plays = list(supports.keys())
         other_on_radar = ['SLNH','PLTR','AI', 'SFWL', 'MDAI']
@@ -204,30 +208,30 @@ def run_main(interval):
     print("running run_main")
     plays_categories = get_plays()
 
+    
+    dashes = '-' * 20 # formatting
+
     # iterative check
-    dashes = '-' * 20
     while True:
-        try:
-            print("checking stocks!")
-            for category, stocks in plays_categories.items():
-                for priority, stock in enumerate(stocks):
+        print("checking stocks!")
+        for category, stocks in plays_categories.items():
+            for priority, stock in enumerate(stocks):
+                try:
                     print(f"{dashes}checking {stock} {dashes}")
-                    try_check(stock, category, priority+1, interval)
-                
-        except Exception as e:
-            print("run_main - unable to minute iterate with error: ", e)
+                    check_play(stock, category, priority+1, interval)
+                    
+                except Exception as e:
+                    print(f"run_main - unable to check {stock} with error: {e}")
 
         print("Iteration complete - sleeping 15 seconds...")
         time.sleep(15)
         iteration += 1
 
+
         #reset texted_plays after 10 minutes
         if iteration  == 40:
             texted_plays = []
         print(f"minute {iteration} - texted plays: ", texted_plays)
-
-
-
 
 
 if __name__  ==  '__main__':
