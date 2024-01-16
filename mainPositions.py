@@ -78,23 +78,22 @@ def watch_pos(ticker, interval):
     ema_180=df.iloc[0]['ema_180']
     relative_volume=round((cur_volume-average_volume)/average_volume*100,2)
 
-
     # 180 check
-    if open_price>ema_180 and close_price<ema_180 and ticker not in texted_plays:
-        
-        message = (f"MAIN POSITION -  {ticker} crossed below 180EMA by {round(cur_pct_change,2)}% \n"
-                   f"With relative volume as {relative_volume}%"
-        )
-        text(message)
-        texted_plays.append(ticker)
-
-    if open_price<ema_180 and close_price>ema_180 and ticker not in texted_plays:
-        
-        message = (f"MAIN POSITION -  {ticker} crossed above 180EMA by {round(cur_pct_change,2)}% \n"
-                   f"With relative volume as {relative_volume}%"
-        )
-        text(message)
-        texted_plays.append(ticker)
+    if ticker not in texted_plays:
+        if open_price>ema_180 and close_price<ema_180:
+            
+            message = (f"MAIN POSITION -  {ticker} crossed below 180EMA by {round(cur_pct_change,2)}% \n"
+                    f"With relative volume as {relative_volume}%"
+            )
+            text(message)
+            texted_plays.append(ticker)
+        if open_price<ema_180 and close_price>ema_180 and ticker not in texted_plays:
+            
+            message = (f"MAIN POSITION -  {ticker} crossed above 180EMA by {round(cur_pct_change,2)}% \n"
+                    f"With relative volume as {relative_volume}%"
+            )
+            text(message)
+            texted_plays.append(ticker)
 
 
 #format iteration string for printing
