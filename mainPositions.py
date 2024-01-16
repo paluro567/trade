@@ -80,7 +80,7 @@ def watch_pos(ticker, interval):
 
 
     # 180 check
-    if open_price>ema_180 and close_price<ema_180:
+    if open_price>ema_180 and close_price<ema_180 and ticker not in texted_plays:
         
         message = (f"MAIN POSITION -  {ticker} crossed below 180EMA by {round(cur_pct_change,2)}% \n"
                    f"With relative volume as {relative_volume}%"
@@ -88,7 +88,7 @@ def watch_pos(ticker, interval):
         text(message)
         texted_plays.append(ticker)
 
-    if open_price<ema_180 and close_price>ema_180:
+    if open_price<ema_180 and close_price>ema_180 and ticker not in texted_plays:
         
         message = (f"MAIN POSITION -  {ticker} crossed above 180EMA by {round(cur_pct_change,2)}% \n"
                    f"With relative volume as {relative_volume}%"
