@@ -240,6 +240,7 @@ def run_main():
         #reset iteration dict after 5 minutes
         if iteration  == 20:
             texted_plays = []
+            iteration =1
         print("texted plays: ", texted_plays)
 
 if __name__  ==  '__main__':

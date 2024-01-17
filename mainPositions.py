@@ -79,7 +79,10 @@ def watch_pos(ticker, interval):
     relative_volume=round((cur_volume-average_volume)/average_volume*100,2)
 
     # 180 check
+
     if ticker not in texted_plays:
+
+        # falling price
         if open_price>ema_180 and close_price<ema_180:
             
             message = (f"MAIN POSITION -  {ticker} crossed below 180EMA by {round(cur_pct_change,2)}% \n"
@@ -87,7 +90,8 @@ def watch_pos(ticker, interval):
             )
             text(message)
             texted_plays.append(ticker)
-        if open_price<ema_180 and close_price>ema_180 and ticker not in texted_plays:
+        # gaining price
+        if open_price<ema_180 and close_price>ema_180:
             
             message = (f"MAIN POSITION -  {ticker} crossed above 180EMA by {round(cur_pct_change,2)}% \n"
                     f"With relative volume as {relative_volume}%"
@@ -96,7 +100,7 @@ def watch_pos(ticker, interval):
             texted_plays.append(ticker)
 
 
-#format iteration string for printing
+# format iteration string for printing
 def ordinal(n):
     if 10 <= n % 100 <= 20:
         suffix = 'th'
@@ -107,7 +111,7 @@ def ordinal(n):
 
 if __name__  ==  '__main__':
     interval_mins=30 # candle aggregation mins
-    sleep_dur=30 # sleep between iterations (seconds)
+    sleep_dur=30 # sleep between iterations (SECONDS)
     reset_iterations = int((60 / sleep_dur) * interval_mins) # how many iterations before resetting texted array
     main_positions=['PLTR','UNH','PYPL', 'TSLA', 'AMZN', 'GOOGL', 'T']
     interval=str(interval_mins)+'min'
@@ -120,6 +124,7 @@ if __name__  ==  '__main__':
             watch_pos(stock, interval)
         iteration+=1
         if iteration==reset_iterations:
+            iteration=1
             texted_plays=[]
         iteration_ordinal = ordinal(iteration)
         print(f"{iteration_ordinal} iteration complete --- sleeping {sleep_dur} secs...")

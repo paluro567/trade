@@ -263,8 +263,9 @@ def run_main(interval):
         iteration += 1
 
 
-        #reset texted_plays after 10 minutes
-        if iteration  == 40:
+        #reset texted_plays after 6.25 minutes minutes
+        if iteration  == 25:
+            iteration=1
             texted_plays = []
         print(f"minute {iteration} - texted plays: ", texted_plays)
 
