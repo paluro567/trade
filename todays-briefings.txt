@@ -1,1 +1,64 @@
-[]
+[
+    {
+        "id": "1197167093783732268",
+        "type": 0,
+        "content": "@everyone good morning folks!",
+        "channel_id": "634554429689036830",
+        "author": {
+            "id": "534898794945576961",
+            "username": "zipcharlie",
+            "avatar": "ae3960508fbfad3c6b44b41f403ad911",
+            "discriminator": "0",
+            "public_flags": 0,
+            "premium_type": 2,
+            "flags": 0,
+            "banner": null,
+            "accent_color": null,
+            "global_name": "ZipCharlie",
+            "avatar_decoration_data": null,
+            "banner_color": null
+        },
+        "attachments": [],
+        "embeds": [],
+        "mentions": [],
+        "mention_roles": [],
+        "pinned": false,
+        "mention_everyone": true,
+        "tts": false,
+        "timestamp": "2024-01-17T13:14:37.447000+00:00",
+        "edited_timestamp": null,
+        "flags": 0,
+        "components": []
+    },
+    {
+        "id": "1197167065275048118",
+        "type": 0,
+        "content": "\u2600\ufe0fMorning Briefing\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\n\ud83d\udd2eS&P Futures are currently trading -0.43%, NASDAQ -0.50%, Dow -0.39%\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\n \u26a0\ufe0fMorning Briefings are daily published newsletters for explaining news catalysts, setups, and are all composed of ZipTrader\u2019s opinions for informational and research purposes. These are not any kind of investment advice, nor do we offer personalized investment advice as an educational publisher. \n\n\ud83d\udc4d\ud83c\udffbAlways do your own due diligence & always have your own plan! \n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\nGood Morning!\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\n\u2705Stocks head for red open\n\n\ud83d\udea8Market froth temperature: low \n\nHigh Implied Volatility: \n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\n\ud83d\udcc6This Week: MULN, MARA, BBIG, \n\nShort Squeeze Candidates \n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\n\u26a0\ufe0fCVNA, AI, FSR, UPST, PLUG, BLNK\n\nUnusually High Volume (is frequently a strong indicator of future trade setups) \n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\n\u2705MIMO\n\u2705BFRG\n\u2705MMAT\n\u2705GOEV\n\u2705SLDP\n\nMorning Catalysts \n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\n\u2b07\ufe0fthis is the section referenced in the public videos when we say \u201cbriefed on it\u201d \n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\n\u2705MIMO: trending on partnership with GCT semiconductor \n-Bull setup (long?) if it holds/retakes support @0.16 and especially wins and holds breakout of resistance @0.26.\n-Bear setup (avoid? short?) if it fails below effective support @0.16. A later rebound above would bring us back to bull setup.\n\n\u2705BFRG: seeing unusual volume in premarket \n-Bull setup (long?) if it holds/retakes support @3.24 and especially wins and holds breakout of resistance @3.58.\n-Bear setup (avoid? short?) if it fails below effective support @3.24. A later rebound above would bring us back to bull setup.\n\n\u2705ZVSA: trending on peer reviewed article link \n-Bull setup (long?) if it holds/retakes support @0.77 and especially wins and holds breakout of resistance @0.94.\n-Bear setup (avoid? short?) if it fails below effective support @0.77. A later rebound above would bring us back to bull setup.\n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\n\ud83d\udcc8IF UPWARD DIRECTION: SPXL, TQQQ, FNGU, LABU, YINN\n\n\ud83d\udea8IF DOWNWARD DIRECTION, FOCUS ON: SPXS, SQQQ, FNGD, LABD, YANG\n\nJNUG/JDST: Gold fluctuations\n\nUVXY/SVXY: Volatility ETF \n\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014\u2014-",
+        "channel_id": "634554429689036830",
+        "author": {
+            "id": "534898794945576961",
+            "username": "zipcharlie",
+            "avatar": "ae3960508fbfad3c6b44b41f403ad911",
+            "discriminator": "0",
+            "public_flags": 0,
+            "premium_type": 2,
+            "flags": 0,
+            "banner": null,
+            "accent_color": null,
+            "global_name": "ZipCharlie",
+            "avatar_decoration_data": null,
+            "banner_color": null
+        },
+        "attachments": [],
+        "embeds": [],
+        "mentions": [],
+        "mention_roles": [],
+        "pinned": false,
+        "mention_everyone": false,
+        "tts": false,
+        "timestamp": "2024-01-17T13:14:30.650000+00:00",
+        "edited_timestamp": null,
+        "flags": 0,
+        "components": []
+    }
+]
