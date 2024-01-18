@@ -3,6 +3,7 @@ import json
 
 
 def get_briefing(date):
+    print ("running get_briefing for date: ", date)
 
     channel_id = "634554429689036830"  # Zip trader discord channel ID
 
@@ -143,7 +144,7 @@ if __name__ == "__main__":
 
     curr_date  =  datetime.datetime.now().strftime('%Y-%m-%d')
     print("curr_date: ", curr_date)
-    resistances, supports, retail, alarm_plays = get_briefing("2024-01-17")
+    resistances, supports, retail, alarm_plays = get_briefing(curr_date)
     alarm_plays = [stock for stock in alarm_plays if ' ' not in stock]
     green_plays = list(supports.keys())
     other_on_radar = ['SLNH','PLTR','AI', 'SFWL']
