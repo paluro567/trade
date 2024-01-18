@@ -204,8 +204,9 @@ def get_plays():
     # Morning briefing
     try:
         import datetime
-        curr_date  =  datetime.datetime.now().strftime('%Y-%m-%d')
-        resistances, supports, retail, alarm_plays  =  get_briefing(curr_date)  # get briefing
+        current_utc_time = datetime.now(timezone.utc) - timedelta(days=1)
+        curr_date_utc = current_utc_time.strftime('%Y-%m-%d') 
+        resistances, supports, retail, alarm_plays  =  get_briefing(curr_date_utc)  # get briefing
         
         # clean tickers
         alarm_plays = [stock for stock in alarm_plays if ' ' not in stock]
