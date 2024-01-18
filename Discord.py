@@ -142,7 +142,8 @@ if __name__ == "__main__":
     from datetime import datetime
     import datetime
 
-    curr_date  =  datetime.datetime.now().strftime('%Y-%m-%d')
+    current_datetime = datetime.utcnow()
+    curr_date = current_datetime.strftime('%Y-%m-%d')
     print("curr_date: ", curr_date)
     resistances, supports, retail, alarm_plays = get_briefing(curr_date)
     alarm_plays = [stock for stock in alarm_plays if ' ' not in stock]
