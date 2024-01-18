@@ -138,7 +138,7 @@ def getnum(original):
 
 # run a test
 if __name__ == "__main__":
-    resistances, supports, retail, alarm_plays = get_briefing("2024-01-04")
+    resistances, supports, retail, alarm_plays = get_briefing("2024-01-17")
     alarm_plays = [stock for stock in alarm_plays if ' ' not in stock]
     green_plays = list(supports.keys())
     other_on_radar = ['SLNH','PLTR','AI', 'SFWL']
