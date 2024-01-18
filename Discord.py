@@ -139,13 +139,12 @@ def getnum(original):
 
 # run a test
 if __name__ == "__main__":
-    from datetime import datetime
-    import datetime
+    from datetime import datetime, timedelta, timezone
 
-    current_datetime = datetime.utcnow()
-    curr_date = current_datetime.strftime('%Y-%m-%d')
-    print("curr_date: ", curr_date)
-    resistances, supports, retail, alarm_plays = get_briefing(curr_date)
+    # Get current UTC time
+    current_utc_time = datetime.now(timezone.utc)
+    curr_date_utc = current_utc_time.strftime('%Y-%m-%d')
+    resistances, supports, retail, alarm_plays = get_briefing(curr_date_utc)
     alarm_plays = [stock for stock in alarm_plays if ' ' not in stock]
     green_plays = list(supports.keys())
     other_on_radar = ['SLNH','PLTR','AI', 'SFWL']
