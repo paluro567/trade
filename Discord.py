@@ -139,12 +139,20 @@ def getnum(original):
 
 # run a test
 if __name__ == "__main__":
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime
+    from datetime import timezone
+    import pytz
+    desired_timezone = 'America/New_York'
+
 
     # Get current UTC time
-    current_utc_time = datetime.now(timezone.utc) 
-    curr_date_utc = current_utc_time.strftime('%Y-%m-%d') 
-    resistances, supports, retail, alarm_plays = get_briefing(curr_date_utc)
+    current_utc_time = datetime.now(timezone.utc)
+    current_local_time = current_utc_time.astimezone(pytz.timezone(desired_timezone))
+    curr_date_local = current_local_time.strftime('%Y-%m-%d')
+
+
+ 
+    resistances, supports, retail, alarm_plays = get_briefing(curr_date_local)
     alarm_plays = [stock for stock in alarm_plays if ' ' not in stock]
     green_plays = list(supports.keys())
     other_on_radar = ['SLNH','PLTR','AI', 'SFWL']
