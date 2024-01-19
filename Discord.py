@@ -142,7 +142,7 @@ if __name__ == "__main__":
     from datetime import datetime, timedelta, timezone
 
     # Get current UTC time
-    current_utc_time = datetime.now(timezone.utc) - timedelta(days=1)
+    current_utc_time = datetime.now(timezone.utc) 
     curr_date_utc = current_utc_time.strftime('%Y-%m-%d') 
     resistances, supports, retail, alarm_plays = get_briefing(curr_date_utc)
     alarm_plays = [stock for stock in alarm_plays if ' ' not in stock]
