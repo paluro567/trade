@@ -143,8 +143,6 @@ if __name__ == "__main__":
     from datetime import timezone
     import pytz
     desired_timezone = 'America/New_York'
-
-
     # Get current UTC time
     current_utc_time = datetime.now(timezone.utc)
     current_local_time = current_utc_time.astimezone(pytz.timezone(desired_timezone))

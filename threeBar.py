@@ -203,10 +203,15 @@ def check_play(ticker, play_type, priority, interval):
 def get_plays():
     # Morning briefing
     try:
-        import datetime
-        current_utc_time = datetime.now(timezone.utc) - timedelta(days=1)
-        curr_date_utc = current_utc_time.strftime('%Y-%m-%d') 
-        resistances, supports, retail, alarm_plays  =  get_briefing(curr_date_utc)  # get briefing
+        from datetime import datetime
+        from datetime import timezone
+        import pytz
+        desired_timezone = 'America/New_York'
+        # Get current UTC time
+        current_utc_time = datetime.now(timezone.utc)
+        current_local_time = current_utc_time.astimezone(pytz.timezone(desired_timezone))
+        curr_date_local = current_local_time.strftime('%Y-%m-%d')
+        resistances, supports, retail, alarm_plays  =  get_briefing(curr_date_local)  # get briefing
         
         # clean tickers
         alarm_plays = [stock for stock in alarm_plays if ' ' not in stock]
