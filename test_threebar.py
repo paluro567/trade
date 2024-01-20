@@ -54,8 +54,7 @@ def calculate_resistance(data, stock_symbol):
     resistance_levels = remove_close_values(resistance_levels)
     print(f"{stock_symbol} resistances: ", resistance_levels)
     return resistance_levels
-
-def get_data(stock, time, date=None):
+def get_data(stock, time, start_time=None, end_time=None):
     
     #Alpha Vantage GET request
     request_url=f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={stock}&outputsize=full&interval={time}&entitlement=realtime&apikey={API_KEY}"
@@ -93,122 +92,19 @@ def get_data(stock, time, date=None):
     df.loc[:, 'ema_20'] = reversed_df['ema_20'].iloc[::-1].values
     df.loc[:, 'ema_180'] = reversed_df['ema_180'].iloc[::-1].values 
 
-    # print("get_data - df with EMA's: ", df)
+    print("DF IN GET_DATA: ", df)
 
-    return df[:910] #only considser one day's data
-
-
-def nine_twenty_cross(df):
-    return df.iloc[1]['ema_9']<df.iloc[1]['ema_20'] and df.iloc[0]['ema_9']>df.iloc[0]['ema_20']
-
-
-def monitor_bought_stock(ticker, qty, bought_price):
-    # check position every 5 seconds
-    while True:
-        df = get_data(ticker, '1min')
-        current_price = df.iloc[0]['close']
-        below=df.iloc[0]['close']<df.iloc[0]['ema_9'] and df.iloc[1]['close']>df.iloc[1]['ema_9'] #crosses below ema_9
-        percent_gain  =  ((current_price - bought_price) / bought_price) * 100
-        print(f" position {ticker} of {qty} shares is up {percent_gain}%")
-
-        # sell position
-        if(percent_gain<-5 or below):
-            place_sell(ticker, qty)
-            print(f"selling position {ticker} of {qty} shares at a price of {current_price} made {round(percent_gain,2)}%")
-            break
-        time.sleep(5) #sleep 5 seconds
-
-def check_play(ticker, play_type, priority, interval):
-
-    try:
-        # DATA
-        df = get_data(ticker, interval)
-        close_price=df.iloc[0]['close']
-        cur_vol=df.iloc[0]['volume']
-        avg_vol = df['volume'].mean()
-        cur_pch=df.iloc[0]['percent_change']
-        prior_pch=df.iloc[1]['percent_change']
-        two_prior_pch=df.iloc[2]['percent_change']
-        three_prior_pch=df.iloc[3]['percent_change']
-
-        # ----------------------------------------- CONDITIONS 3 BAR PLAY --------------------------------------------------------------------------
-        if cur_pch > 2 \
-        and prior_pch < 0 \
-        and two_prior_pch > 2 \
-        and cur_vol > 3*avg_vol \
-        and (ticker not in texted_plays):
-
-            message = (f"{play_type} - {priority} -  {ticker} is breaking out with 3 bar play! \n"
-            f"Igniting: {round(two_prior_pch,2)}% \n"
-            f"test:{round(prior_pch, 2)}% \n"
-            f"Confirmation: {round(cur_pch,2)}%")
-            print(f"Texting: {message}")
-            text(message)
-            texted_plays.append(ticker)
-
-            # place Alpaca buy orders
-            print(f"buying ticker: {ticker} at {df.iloc[0]['timestamp']}")
-            try:
-                if play_type  ==  'ALARM PLAY':
-                    qty =  10  #10000//close_price
-                    place_buy(str(ticker), qty)
-                    print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
-                else:
-                    qty =  5    #5000//close_price
-                    place_buy(ticker, qty)
-                    print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
-                monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price))
-
-                monitor_process.start()
-            except Exception as e:
-                print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
-
-        # -------------------- 4 bar play ----------------------------------------------
-        if cur_pch > 2 \
-        and prior_pch < 0 \
-        and two_prior_pch <0 \
-        and three_prior_pch>2 \
-        and cur_vol > 3*avg_vol \
-        and (ticker not in texted_plays):
-
-            message = (f"{play_type} - {priority} -  {ticker} is breaking out with 4 bar play! \n"
-            f"Igniting: {round(three_prior_pch,2)}% \n"
-            f"test:{round(prior_pch, 2)}% \n"
-            f"test:{round(two_prior_pch, 2)}% \n"
-            f"Confirmation: {round(cur_pch,2)}%")
-            print(f"texting: {message}")
-            text(message)
-            texted_plays.append(ticker)
-
-            # place Alpaca buy orders
-            print(f"buying ticker: {ticker} at {df.iloc[0]['timestamp']}")
-            try:
-                if play_type  ==  'ALARM PLAY':
-                    qty =  10  #10000//close_price
-                    place_buy(str(ticker), qty)
-                    print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
-                else:
-                    qty =  5    #5000//close_price
-                    place_buy(ticker, qty)
-                    print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
-                monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price))
-
-                monitor_process.start()
-            except Exception as e:
-                print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
-    except Exception as e:
-        print(f"check_play - unable to check {ticker} with error: {e}")
-
-
+    start_time = pd.to_datetime(start)
+    end_time = pd.to_datetime(end)
+    return df[(df['timestamp'] >= start_time) & (df['timestamp'] <= end_time)]
 def get_plays():
     # Morning briefing
     try:
         from datetime import datetime
         from datetime import timezone
         import pytz
-
-        # Get current UTC time
         desired_timezone = 'America/New_York'
+        # Get current UTC time
         current_utc_time = datetime.now(timezone.utc)
         current_local_time = current_utc_time.astimezone(pytz.timezone(desired_timezone))
         curr_date_local = current_local_time.strftime('%Y-%m-%d')
@@ -250,6 +146,7 @@ def run_main(interval):
     print("running run_main")
     plays_categories = get_plays()
 
+    
     dashes = '-' * 20 # formatting
 
     # iterative check
@@ -276,7 +173,33 @@ def run_main(interval):
         print(f"minute {iteration} - texted plays: ", texted_plays)
 
 if __name__  ==  '__main__':
-    run_main('5min')
+    print("running test_threebar")
+    day =input("Which day in January to check: ")
+    specific_day = '2024-01-'+day
+    start_hour=input("start hour: ")
+    end_hour=input("end hour: ")
+    start=specific_day+ f" {start_hour}:00:00"
+    end=specific_day+ f" {end_hour}:00:00"
+    print(f"time period: {start} to {end}")
+    stock=input(f"Which stock to check on 1/{day}: ")
+
+    df=get_data(stock,'5min', start, end)[::-1]
+    pd.set_option('display.max_rows', None)
+
+    print(f"df for {stock} on {specific_day}: \n",df)
+
+    for i in range(3, len(df)):
+        if df.iloc[i]['percent_change']>2 \
+            and df.iloc[i-1]['percent_change']<0 \
+            and df.iloc[i-2]['percent_change']>2:
+                print("3 bar at : ", df.iloc[i]['timestamp'])
+        if df.iloc[i]['percent_change']>2 and df.iloc[i-1]['percent_change']>2 \
+            and df.iloc[i-1]['percent_change']<0 \
+            and df.iloc[i-2]['percent_change']<0 \
+            and df.iloc[i-3]['percent_change']>2:
+                print("4 bar at : ", df.iloc[i]['percent_change'])
+
+
 
 
 
