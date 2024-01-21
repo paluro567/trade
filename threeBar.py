@@ -240,7 +240,7 @@ def get_plays():
         print("sleeping 5 minutes...")
         time.sleep(300)  # Sleep for 5 minutes
         print("running run_three_bar again")
-        get_plays()
+        return get_plays()
     return plays_categories
 
 
