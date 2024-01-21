@@ -118,6 +118,7 @@ def monitor_bought_stock(ticker, qty, bought_price):
             break
         time.sleep(5) #sleep 5 seconds
 
+
 def check_play(ticker, play_type, priority, interval):
 
     try:
@@ -131,7 +132,7 @@ def check_play(ticker, play_type, priority, interval):
         two_prior_pch=df.iloc[2]['percent_change']
         three_prior_pch=df.iloc[3]['percent_change']
 
-        # ----------------------------------------- CONDITIONS 3 BAR PLAY --------------------------------------------------------------------------
+        # 3 BAR PLAY 
         if cur_pch > 2 \
         and prior_pch < 0 \
         and two_prior_pch > 2 \
@@ -163,7 +164,7 @@ def check_play(ticker, play_type, priority, interval):
             except Exception as e:
                 print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
 
-        # -------------------- 4 bar play ----------------------------------------------
+        # 4 bar play
         if cur_pch > 2 \
         and prior_pch < 0 \
         and two_prior_pch <0 \
@@ -238,16 +239,16 @@ def get_plays():
         print(f"get_plays - unable to get briefing or some error: {e}")
         print("sleeping 5 minutes...")
         time.sleep(300)  # Sleep for 5 minutes
-        print("running run_main again")
+        print("running run_three_bar again")
         get_plays()
     return plays_categories
 
 
-def run_main(interval):
+def run_three_bar(interval):
     global texted_plays
     iteration = 1
 
-    print("running run_main")
+    print("running run_three_bar")
     plays_categories = get_plays()
 
     dashes = '-' * 20 # formatting
@@ -262,7 +263,7 @@ def run_main(interval):
                     check_play(stock, category, priority+1, interval)
                     
                 except Exception as e:
-                    print(f"run_main - unable to check {stock} with error: {e}")
+                    print(f"run_three_bar - unable to check {stock} with error: {e}")
 
         print("Iteration complete - sleeping 15 seconds...")
         time.sleep(15)
@@ -276,7 +277,7 @@ def run_main(interval):
         print(f"minute {iteration} - texted plays: ", texted_plays)
 
 if __name__  ==  '__main__':
-    run_main('5min')
+    run_three_bar('5min')
 
 
 
