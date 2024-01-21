@@ -226,7 +226,7 @@ def run_main():
         print("sleeping 5 minutes...")
         time.sleep(300)  # Sleep for 5 minutes
         print("running run_main again")
-        run_main()
+        return run_main()
 
     # iterative check
     while True:
