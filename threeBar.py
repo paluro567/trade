@@ -107,16 +107,16 @@ def monitor_bought_stock(ticker, qty, bought_price):
     while True:
         df = get_data(ticker, '1min')
         current_price = df.iloc[0]['close']
-        below=df.iloc[0]['close']<df.iloc[0]['ema_9'] and df.iloc[1]['close']>df.iloc[1]['ema_9'] #crosses below ema_9
+        below = df.iloc[0]['close']<df.iloc[0]['ema_9'] and df.iloc[1]['close']>df.iloc[1]['ema_9'] #crosses below ema_9
         percent_gain  =  ((current_price - bought_price) / bought_price) * 100
         print(f" position {ticker} of {qty} shares is up {percent_gain}%")
 
         # sell position
         if(percent_gain<-5 or below):
             place_sell(ticker, qty)
-            print(f"selling position {ticker} of {qty} shares at a price of {current_price} made {round(percent_gain,2)}%")
+            print(f"Sold position {ticker} of {qty} shares at a price of {current_price} made {round(bought_price*percent_gain,2)}%")
             break
-        time.sleep(5) #sleep 5 seconds
+        time.sleep(2) #sleep 2 seconds
 
 
 def check_play(ticker, play_type, priority, interval):
@@ -129,8 +129,8 @@ def check_play(ticker, play_type, priority, interval):
         avg_vol = df['volume'].mean()
         cur_pch=df.iloc[0]['percent_change']
         prior_pch=df.iloc[1]['percent_change']
-        two_prior_pch=df.iloc[2]['percent_change']
-        three_prior_pch=df.iloc[3]['percent_change']
+        two_prior_pch=df.iloc[2]['percent_change'] # 3 bar igniting
+        three_prior_pch=df.iloc[3]['percent_change'] # 4 bar igniting
 
         # 3 BAR PLAY 
         if cur_pch > 2 \

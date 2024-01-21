@@ -192,12 +192,12 @@ if __name__  ==  '__main__':
         if df.iloc[i]['percent_change']>2 \
             and df.iloc[i-1]['percent_change']<0 \
             and df.iloc[i-2]['percent_change']>2:
-                print("3 bar at : ", df.iloc[i]['timestamp'])
+                print(f"{stock} 3 bar at : ", df.iloc[i]['timestamp'])
         if df.iloc[i]['percent_change']>2 and df.iloc[i-1]['percent_change']>2 \
             and df.iloc[i-1]['percent_change']<0 \
             and df.iloc[i-2]['percent_change']<0 \
             and df.iloc[i-3]['percent_change']>2:
-                print("4 bar at : ", df.iloc[i]['percent_change'])
+                print(f"{stock} 4 bar at : ", df.iloc[i]['percent_change'])
 
 
 
