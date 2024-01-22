@@ -115,12 +115,13 @@ def get_plays():
         green_plays = list(supports.keys())
         other_on_radar = ['SLNH','PLTR','AI', 'SFWL', 'MDAI']
 
-        print("today's alarm_plays: ", alarm_plays )
-        print("today's green_plays: ", green_plays)
-
         # no briefing yet sleep 5 minutes
         if alarm_plays == [] and green_plays == []:
             raise Exception("empty alarm & green plays")
+        
+        print("today's alarm_plays: ", alarm_plays )
+        print("today's green_plays: ", green_plays)
+
 
         plays_categories  =  {
             'NORMAL PLAY': green_plays,
