@@ -1,0 +1,88 @@
+import yfinance as yf
+import datetime
+
+from datetime import datetime, timedelta
+from Discord import get_briefing
+from sms import text
+import pandas as pd
+import numpy as np
+import time
+import requests
+from realtimetrade import place_buy, place_sell
+import multiprocessing
+from alpha_vantage.timeseries import TimeSeries
+import ta
+
+
+# constants
+API_KEY  =  'XB2M6HD2DQMJA5Z1'
+
+
+def get_sentiment(stock,  date=None):
+    
+    #Alpha Vantage GET request
+    url=f"https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers={stock}&apikey={API_KEY}"
+    r = requests.get(url)
+    data = r.json()
+
+    print(data.keys())
+    print("items is ", data['items'])
+    print("sentiment_score_definition is ", data['sentiment_score_definition'])
+    print("relevance_score_definition is ", data['relevance_score_definition'])
+    # print("feed is ", data['feed'])
+    count=0
+    sentiment_scores = [feed_item['overall_sentiment_score'] for feed_item in data['feed']]
+    average_sentiment = sum(sentiment_scores) / len(sentiment_scores)
+
+    # Define threshold values for sentiment categories
+    bearish_threshold = -0.35
+    somewhat_bearish_threshold = -0.15
+    neutral_lower_threshold = -0.15
+    neutral_upper_threshold = 0.15
+    somewhat_bullish_threshold = 0.15
+    bullish_threshold = 0.35
+
+    # Determine the category based on the average sentiment score
+    if average_sentiment <= bearish_threshold:
+        sentiment_category = "Bearish"
+    elif bearish_threshold < average_sentiment <= somewhat_bearish_threshold:
+        sentiment_category = "Somewhat Bearish"
+    elif somewhat_bearish_threshold < average_sentiment < neutral_lower_threshold:
+        sentiment_category = "Neutral"
+    elif neutral_lower_threshold <= average_sentiment < neutral_upper_threshold:
+        sentiment_category = "Somewhat Bullish"
+    elif neutral_upper_threshold <= average_sentiment < bullish_threshold:
+        sentiment_category = "Bullish"
+    else:
+        sentiment_category = "Invalid Score"
+
+    # print(f"Average Overall Sentiment Score: {average_sentiment}")
+    print(f"{stock} Sentiment Category: {sentiment_category}")
+
+    print(f"Average Overall Sentiment Score: {average_sentiment}")
+
+
+
+   
+if __name__  ==  '__main__':
+    for stock in ['unh','pltr','AMZN']:
+        get_sentiment(stock,  date=None)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

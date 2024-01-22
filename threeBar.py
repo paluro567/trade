@@ -216,15 +216,16 @@ def get_plays():
         curr_date_local = current_local_time.strftime('%Y-%m-%d')
         resistances, supports, retail, alarm_plays  =  get_briefing(curr_date_local)  # get briefing
         
-        # no briefing yet sleep 5 minutes
-        if alarm_plays == [] and green_plays == []:
-            raise Exception("empty alarm & green plays")
         
         # clean tickers
         alarm_plays = [stock for stock in alarm_plays if ' ' not in stock]
         green_plays = list(supports.keys())
         other_on_radar = ['SLNH','PLTR','AI', 'SFWL', 'MDAI']
 
+        # no briefing yet sleep 5 minutes
+        if alarm_plays == [] and green_plays == []:
+            raise Exception("empty alarm & green plays")
+        
         print("today's alarm_plays: ", alarm_plays )
         print("today's green_plays: ", green_plays)
 
