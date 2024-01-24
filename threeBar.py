@@ -105,7 +105,7 @@ def nine_twenty_cross(df):
 def monitor_bought_stock(ticker, qty, bought_price):
     # check position every 5 seconds
     while True:
-        df = get_data(ticker, '1min')
+        df = get_data(ticker, '5min')
         current_price = df.iloc[0]['close']
         time_stmp = df.iloc[0]['timestamp']
         below = df.iloc[0]['close']<df.iloc[0]['ema_9'] and df.iloc[1]['close']>df.iloc[1]['ema_9'] #crosses below ema_9
