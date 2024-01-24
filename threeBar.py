@@ -115,7 +115,7 @@ def monitor_bought_stock(ticker, qty, bought_price):
         # sell position
         if(percent_gain<-5 or below):
             place_sell(ticker, qty)
-            print(f"Sold position {ticker} of {qty} shares at a price of {current_price} made {round(bought_price*percent_gain,2)}%")
+            print(f"Sold position {ticker} at {time_stmp} \nat a price of {current_price} made {round(bought_price*percent_gain,2)}%")
             break
         time.sleep(2) #sleep 2 seconds
 
