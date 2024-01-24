@@ -127,7 +127,7 @@ def check_play(ticker, play_type, priority, interval):
         df = get_data(ticker, interval)
         close_price=df.iloc[0]['close']
         cur_vol=df.iloc[0]['volume']
-        time_stmp=cur_vol=df.iloc[0]['timestamp']
+        time_stmp=df.iloc[0]['timestamp']
         avg_vol = df['volume'].mean()
         cur_pch=df.iloc[0]['percent_change']
         prior_pch=df.iloc[1]['percent_change']
