@@ -155,11 +155,11 @@ def check_play(ticker, play_type, priority, interval):
                 if play_type  ==  'ALARM PLAY':
                     qty =  10  #10000//close_price
                     place_buy(str(ticker), qty)
-                    print(f"{ticker} - Bought at: {time_stmp}")
+                    print(f"{ticker} - Bought at: {time_stmp} - price ${close_price}")
                 else:
                     qty =  5    #5000//close_price
                     place_buy(ticker, qty)
-                    print(f"{ticker} - Bought at: {time_stmp}")
+                    print(f"{ticker} - Bought at: {time_stmp} - price ${close_price}")
                 monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price))
 
                 monitor_process.start()
