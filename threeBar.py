@@ -107,9 +107,10 @@ def monitor_bought_stock(ticker, qty, bought_price):
     while True:
         df = get_data(ticker, '1min')
         current_price = df.iloc[0]['close']
+        time_stmp = df.iloc[0]['timestamp']
         below = df.iloc[0]['close']<df.iloc[0]['ema_9'] and df.iloc[1]['close']>df.iloc[1]['ema_9'] #crosses below ema_9
         percent_gain  =  ((current_price - bought_price) / bought_price) * 100
-        print(f" position {ticker} of {qty} shares is up {percent_gain}%")
+        print(f" sold {ticker} at {time_stmp} and gained {percent_gain}%")
 
         # sell position
         if(percent_gain<-5 or below):
@@ -126,6 +127,7 @@ def check_play(ticker, play_type, priority, interval):
         df = get_data(ticker, interval)
         close_price=df.iloc[0]['close']
         cur_vol=df.iloc[0]['volume']
+        time_stmp=cur_vol=df.iloc[0]['timestamp']
         avg_vol = df['volume'].mean()
         cur_pch=df.iloc[0]['percent_change']
         prior_pch=df.iloc[1]['percent_change']
@@ -153,11 +155,11 @@ def check_play(ticker, play_type, priority, interval):
                 if play_type  ==  'ALARM PLAY':
                     qty =  10  #10000//close_price
                     place_buy(str(ticker), qty)
-                    print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
+                    print(f"{ticker} - Bought at: {time_stmp}")
                 else:
                     qty =  5    #5000//close_price
                     place_buy(ticker, qty)
-                    print(f"{ticker} - Bought amount: {qty} at a price: {close_price}")
+                    print(f"{ticker} - Bought at: {time_stmp}")
                 monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price))
 
                 monitor_process.start()
