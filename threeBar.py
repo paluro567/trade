@@ -168,8 +168,8 @@ def check_play(ticker, play_type, priority, interval):
 
         # 4 bar play
         if cur_pch > 2 \
-        and prior_pch < 0 \
-        and two_prior_pch <0 \
+        and (prior_pch < 0 \
+        or two_prior_pch <0) \
         and three_prior_pch>2 \
         and cur_vol > 3*avg_vol \
         and (ticker not in texted_plays):

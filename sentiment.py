@@ -65,7 +65,8 @@ def get_sentiment(stock,  date=None):
 
    
 if __name__  ==  '__main__':
-    for stock in ['unh','pltr','AMZN']:
+    for stock in ['unh','pltr','AMZN', 'tsla']:
+        print(f"*********************sentiment for {stock}")
         get_sentiment(stock,  date=None)
 
 
