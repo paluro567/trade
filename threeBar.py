@@ -131,18 +131,18 @@ def check_play(ticker, play_type, priority, interval):
         avg_vol = df['volume'].mean()
         cur_pch=df.iloc[0]['percent_change']
         prior_pch=df.iloc[1]['percent_change']
-        two_prior_pch=df.iloc[2]['percent_change'] # 3 bar igniting
-        three_prior_pch=df.iloc[3]['percent_change'] # 4 bar igniting
+        igniting_three=prior_prior_pch=df.iloc[2]['percent_change'] # 3 bar igniting
+        igniting_four=df.iloc[3]['percent_change'] # 4 bar igniting
 
         # 3 BAR PLAY 
         if cur_pch > 2 \
         and prior_pch < 0 \
-        and two_prior_pch > 2 \
+        and igniting_three > 2 \
         and cur_vol > 3*avg_vol \
         and (ticker not in texted_plays):
 
             message = (f"{play_type} - {priority} -  {ticker} is breaking out with 3 bar play! \n"
-            f"Igniting: {round(two_prior_pch,2)}% \n"
+            f"Igniting: {round(igniting_three,2)}% \n"
             f"test:{round(prior_pch, 2)}% \n"
             f"Confirmation: {round(cur_pch,2)}%")
             print(f"Texting: {message}")
@@ -169,15 +169,15 @@ def check_play(ticker, play_type, priority, interval):
         # 4 bar play
         if cur_pch > 2 \
         and (prior_pch < 0 \
-        or two_prior_pch <0) \
-        and three_prior_pch>2 \
+        or prior_prior_pch <0) \
+        and igniting_four > 2 \
         and cur_vol > 3*avg_vol \
         and (ticker not in texted_plays):
 
             message = (f"{play_type} - {priority} -  {ticker} is breaking out with 4 bar play! \n"
-            f"Igniting: {round(three_prior_pch,2)}% \n"
+            f"Igniting: {round(igniting_four,2)}% \n"
+            f"test:{round(prior_prior_pch, 2)}% \n"
             f"test:{round(prior_pch, 2)}% \n"
-            f"test:{round(two_prior_pch, 2)}% \n"
             f"Confirmation: {round(cur_pch,2)}%")
             print(f"texting: {message}")
             text(message)

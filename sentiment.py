@@ -21,6 +21,7 @@ API_KEY  =  'XB2M6HD2DQMJA5Z1'
 def get_sentiment(stock,  date=None):
     
     #Alpha Vantage GET request
+    stock=stock.upper()
     url=f"https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers={stock}&apikey={API_KEY}"
     r = requests.get(url)
     data = r.json()
@@ -36,22 +37,20 @@ def get_sentiment(stock,  date=None):
 
     # Define threshold values for sentiment categories
     bearish_threshold = -0.35
-    somewhat_bearish_threshold = -0.15
-    neutral_lower_threshold = -0.15
+    somewhat_bearish_upper = -0.15
     neutral_upper_threshold = 0.15
-    somewhat_bullish_threshold = 0.15
     bullish_threshold = 0.35
 
     # Determine the category based on the average sentiment score
     if average_sentiment <= bearish_threshold:
         sentiment_category = "Bearish"
-    elif bearish_threshold < average_sentiment <= somewhat_bearish_threshold:
+    elif bearish_threshold < average_sentiment <= somewhat_bearish_upper:
         sentiment_category = "Somewhat Bearish"
-    elif somewhat_bearish_threshold < average_sentiment < neutral_lower_threshold:
+    elif somewhat_bearish_upper < average_sentiment < neutral_upper_threshold:
         sentiment_category = "Neutral"
-    elif neutral_lower_threshold <= average_sentiment < neutral_upper_threshold:
-        sentiment_category = "Somewhat Bullish"
     elif neutral_upper_threshold <= average_sentiment < bullish_threshold:
+        sentiment_category = "Somewhat Bullish"
+    elif bullish_threshold <= average_sentiment:
         sentiment_category = "Bullish"
     else:
         sentiment_category = "Invalid Score"
@@ -65,8 +64,8 @@ def get_sentiment(stock,  date=None):
 
    
 if __name__  ==  '__main__':
-    for stock in ['unh','pltr','AMZN', 'tsla']:
-        print(f"*********************sentiment for {stock}")
+    while True:
+        stock = input("enter stock: ")
         get_sentiment(stock,  date=None)
 
 
