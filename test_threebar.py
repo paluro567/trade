@@ -113,7 +113,7 @@ def get_plays():
         # clean tickers
         alarm_plays = [stock for stock in alarm_plays if ' ' not in stock]
         green_plays = list(supports.keys())
-        other_on_radar = ['SLNH','PLTR','AI', 'SFWL', 'MDAI']
+        other_on_radar = ['SLNH','PLTR','AI', 'SFWL', 'MDAI', 'SURG', 'SOFI']
 
         # no briefing yet sleep 5 minutes
         if alarm_plays == [] and green_plays == []:
