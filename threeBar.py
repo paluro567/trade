@@ -270,8 +270,6 @@ def run_three_bar(interval):
                 except Exception as e:
                     print(f"run_three_bar - unable to check {stock} with error: {e}")
 
-        print("Iteration complete - sleeping 15 seconds...")
-        time.sleep(15)
         iteration += 1
 
 
