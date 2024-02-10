@@ -142,9 +142,9 @@ def check_play(ticker, play_type, priority, interval):
         igniting_four=df.iloc[3]['percent_change'] # 4 bar igniting
 
         # 3 BAR PLAY 
-        if cur_pch > 2 \
+        if cur_pch > 1.5 \
         and prior_pch < 0 \
-        and igniting_three > 2 \
+        and igniting_three > 1.5 \
         and cur_vol > 3*avg_vol \
         and (ticker not in texted_plays):
             
