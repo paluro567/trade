@@ -123,6 +123,7 @@ def monitor_bought_stock(ticker, qty, bought_price, support):
             place_sell(ticker, qty)
             print(f"Sold position {ticker} at {time_stmp} \nat a price of {current_price} made {round(bought_price*percent_gain,2)}%")
             break
+        time.sleep(1)
 
 
 def check_play(ticker, play_type, priority, interval):
@@ -284,7 +285,7 @@ def run_three_bar(interval):
                 except Exception as e:
                     print(f"run_three_bar - unable to check {stock} with error: {e}")
         
-        # time.sleep(1)
+        time.sleep(1)
         iteration += 1
 
 
