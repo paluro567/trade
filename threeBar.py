@@ -200,11 +200,11 @@ def check_play(ticker, play_type, priority, interval):
             print(f"buying ticker: {ticker} at {df.iloc[0]['timestamp']}")
             try:
                 if play_type  ==  'ALARM PLAY':
-                    qty =  10  #10000//close_price
+                    qty =  10000//close_price
                     place_buy(str(ticker), qty)
                     print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price}")
                 else:
-                    qty =  5    #5000//close_price
+                    qty = 5000//close_price
                     place_buy(str(ticker), qty)
                     print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price}")
                 monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price, four_bar_support))
@@ -283,7 +283,8 @@ def run_three_bar(interval):
                     
                 except Exception as e:
                     print(f"run_three_bar - unable to check {stock} with error: {e}")
-
+        
+        # time.sleep(1)
         iteration += 1
 
 
