@@ -110,10 +110,10 @@ def monitor_bought_stock(ticker, qty, bought_price, support):
         time_stmp = df.iloc[0]['timestamp']
 
         ema_cross = df.iloc[0]['open']>df.iloc[0]['ema_9'] and df.iloc[0]['close']<df.iloc[0]['ema_9'] \
-            or df.iloc[1]['close']>df.iloc[0]['ema_9'] and df.iloc[0]['close']<df.iloc[0]['ema_9']#crosses below ema_9
+            or df.iloc[1]['close']>df.iloc[0]['ema_9'] and df.iloc[0]['close']<df.iloc[0]['ema_9']  # crosses below ema_9
         
         support_cross = df.iloc[0]['close']<support and df.iloc[0]['open']>support \
-            or df.iloc[0]['close']<support and df.iloc[1]['close']>support#crosses below support
+            or df.iloc[0]['close']<support and df.iloc[1]['close']>support  # crosses below support
 
         percent_gain  =  ((current_price - bought_price) / bought_price) * 100
         print(f" sold {ticker} at {time_stmp} and gained {percent_gain}%")
@@ -288,7 +288,7 @@ def run_three_bar(interval):
 
 
         #reset texted_plays after 6.25 minutes minutes
-        if iteration  == 25:
+        if iteration  == 60:
             iteration=1
             texted_plays = []
         print(f"minute {iteration} - texted plays: ", texted_plays)

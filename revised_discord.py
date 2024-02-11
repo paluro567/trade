@@ -73,7 +73,7 @@ def get_briefing(date):
             content = briefing['content']
             print(briefing)
 
-            check_mark = chr(9989)
+            check_mark = '✅'
             split_one = content.split(check_mark)
             print("content is:", content)
             split_colon = content.split(':')
@@ -139,6 +139,9 @@ def getnum(original):
 
 # run a test
 if __name__ == "__main__":
+    input_month=input("enter month(MM or M):")
+    input_day=input("enter month(DD or D):")
+    input_year=input("enter year(YYYY):")
     from datetime import datetime
     from datetime import timezone
     import pytz
@@ -147,7 +150,7 @@ if __name__ == "__main__":
     import pytz
 
     # Define the desired date
-    desired_date = datetime(2024, 2, 9)
+    desired_date = datetime(int(input_year), int(input_month), int(input_day)) #(2024, 2, 9)
 
 
     # Convert the desired date to the desired timezone
