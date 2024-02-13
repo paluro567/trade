@@ -162,12 +162,12 @@ def check_play(ticker, play_type, priority, interval):
             print(f"buying ticker: {ticker} at {df.iloc[0]['timestamp']}")
             try:
                 if play_type  ==  'ALARM PLAY':
-                    qty =  10000//close_price
+                    qty =  50//close_price
 
                     place_buy(str(ticker), qty)
                     print(f"{ticker} - 3 bar Bought at: {time_stmp} - price ${close_price}")
                 else:
-                    qty =  5000//close_price
+                    qty =  50//close_price
                     place_buy(str(ticker), qty)
                     print(f"{ticker} - 3 bar Bought at: {time_stmp} - price ${close_price}")
                 monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price, support))
@@ -201,11 +201,11 @@ def check_play(ticker, play_type, priority, interval):
             print(f"buying ticker: {ticker} at {df.iloc[0]['timestamp']}")
             try:
                 if play_type  ==  'ALARM PLAY':
-                    qty =  10000//close_price
+                    qty =  50//close_price
                     place_buy(str(ticker), qty)
                     print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price}")
                 else:
-                    qty = 5000//close_price
+                    qty = 50//close_price
                     place_buy(str(ticker), qty)
                     print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price}")
                 monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price, four_bar_support))
