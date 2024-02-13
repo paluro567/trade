@@ -119,7 +119,7 @@ def monitor_bought_stock(ticker, qty, bought_price, support):
         print(f" sold {ticker} at {time_stmp} and gained {percent_gain}%")
 
         # sell position
-        if(percent_gain<-5 or ema_cross or support_cross):
+        if(df.iloc[0]['percent_change']<-2 or ema_cross or support_cross):
             place_sell(ticker, qty)
             print(f"Sold position {ticker} at {time_stmp} \nat a price of {current_price} made {round(bought_price*percent_gain,2)}%")
             break
