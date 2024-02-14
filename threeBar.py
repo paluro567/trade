@@ -116,7 +116,6 @@ def monitor_bought_stock(ticker, qty, bought_price, support):
             or df.iloc[0]['close']<support and df.iloc[1]['close']>support  # crosses below support
 
         percent_gain  =  ((current_price - bought_price) / bought_price) * 100
-        print(f" sold {ticker} at {time_stmp} and gained {percent_gain}%")
 
         # sell position
         if(df.iloc[0]['percent_change']<-2 or ema_cross or support_cross):
