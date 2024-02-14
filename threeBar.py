@@ -118,9 +118,9 @@ def monitor_bought_stock(ticker, qty, bought_price, support):
         percent_gain  =  ((current_price - bought_price) / bought_price) * 100
 
         # sell position
-        if(df.iloc[0]['percent_change']<-2 or ema_cross or support_cross):
+        if(df.iloc[0]['percent_change']<-2 or ema_cross or support_cross or percent_gain>-5 or percent_gain>25):
             place_sell(ticker, qty)
-            print(f"Sold position {ticker} at {time_stmp} \nat a price of {current_price} made {round(bought_price*percent_gain,2)}%")
+            print(f"Sold position {ticker} at {time_stmp} \nat a price of {current_price} made {round(percent_gain,2)}%")
             break
         time.sleep(1)
 
@@ -178,7 +178,7 @@ def check_play(ticker, play_type, priority, interval):
         # 4 bar play
         if cur_pch > 2 \
         and (prior_pch < 0 \
-        or prior_prior_pch <0) \
+        or prior_prior_pch < 0) \
         and igniting_four > 2 \
         and cur_vol > 3*avg_vol \
         and (ticker not in texted_plays):
@@ -197,16 +197,16 @@ def check_play(ticker, play_type, priority, interval):
             texted_plays.append(ticker)
 
             # place Alpaca buy orders
-            print(f"buying ticker: {ticker} at {df.iloc[0]['timestamp']}")
+            print(f"buying ticker: {ticker} at {time_stmp}")
             try:
                 if play_type  ==  'ALARM PLAY':
                     qty =  50//close_price
                     place_buy(str(ticker), qty)
-                    print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price}")
+                    print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price} - {time_stmp}")
                 else:
                     qty = 50//close_price
                     place_buy(str(ticker), qty)
-                    print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price}")
+                    print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price} - {time_stmp}")
                 monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price, four_bar_support))
 
                 monitor_process.start()
@@ -295,7 +295,7 @@ def run_three_bar(interval):
         print(f"minute {iteration} - texted plays: ", texted_plays)
 
 if __name__  ==  '__main__':
-    run_three_bar('5min')
+    run_three_bar('1min')
 
 
 
