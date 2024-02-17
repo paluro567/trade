@@ -303,10 +303,15 @@ if __name__  ==  '__main__':
 
     while True:
         print("call: ",count)
-        get_data('pltr','5min')
-        elapsed_time = time.time() - start_time
-        print("Elapsed time: {:.2f} seconds".format(elapsed_time), f"iteration: {count}")
-        count+=1
+        try:
+            print(get_data('pltr','5min'))
+            elapsed_time = time.time() - start_time
+            print("Elapsed time: {:.2f} seconds".format(elapsed_time), f"iteration: {count}")
+            count+=1
+            time.sleep(0.144)
+
+        except Exception as e:
+            print("unable to get_data at count:", count)
 
 
 

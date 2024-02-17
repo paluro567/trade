@@ -15,9 +15,30 @@ import ta
 
 
 # constants
+global BOUGHT  # only place one day trade
+global TIME_LIMIT
+TIME_LIMIT=0.144
+BOUGHT=False
 API_KEY  =  'XB2M6HD2DQMJA5Z1'
 too_close_thresh = 1.5 #resistances are duplicates if within 1.5% of one another
 texted_plays  =  []
+
+def sleep_until(target_hour, target_minute, datetime_module, time_module):
+    # Get the current time
+    current_time = datetime_module.now()
+
+    # Set the target time
+    target_time = current_time.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
+
+    # If the target time has already passed for today, set it for tomorrow
+    if current_time > target_time:
+        target_time += timedelta(days=1)
+
+    # Calculate the time difference
+    time_difference = (target_time - current_time).total_seconds()
+
+    # Sleep until the target time
+    time_module.sleep(time_difference)
 
 
 def remove_close_values(arr):
@@ -122,7 +143,7 @@ def monitor_bought_stock(ticker, qty, bought_price, support):
             place_sell(ticker, qty)
             print(f"Sold position {ticker} at {time_stmp} \nat a price of {current_price} made {round(percent_gain,2)}%")
             break
-        time.sleep(1)
+        time.sleep(TIME_LIMIT)
 
 
 def check_play(ticker, play_type, priority, interval):
@@ -162,13 +183,13 @@ def check_play(ticker, play_type, priority, interval):
             try:
                 if play_type  ==  'ALARM PLAY':
                     qty =  50//close_price
-
                     place_buy(str(ticker), qty)
                     print(f"{ticker} - 3 bar Bought at: {time_stmp} - price ${close_price}")
                 else:
                     qty =  50//close_price
                     place_buy(str(ticker), qty)
                     print(f"{ticker} - 3 bar Bought at: {time_stmp} - price ${close_price}")
+                BOUGHT=True
                 monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price, support))
 
                 monitor_process.start()
@@ -207,6 +228,7 @@ def check_play(ticker, play_type, priority, interval):
                     qty = 50//close_price
                     place_buy(str(ticker), qty)
                     print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price} - {time_stmp}")
+                BOUGHT=True
                 monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price, four_bar_support))
 
                 monitor_process.start()
@@ -263,6 +285,7 @@ def get_plays():
 
 
 def run_three_bar(interval):
+    sleep_until(9, 30, datetime, time)
     global texted_plays
     texted_plays=[]
     iteration = 1
@@ -273,18 +296,19 @@ def run_three_bar(interval):
     dashes = '-' * 20 # formatting
 
     # iterative check
-    while True:
+    while True and not BOUGHT:
         print("checking stocks!")
         for category, stocks in plays_categories.items():
             for priority, stock in enumerate(stocks):
                 try:
                     print(f"{dashes}checking {stock} {dashes}")
                     check_play(stock, category, priority+1, interval)
+                    time.sleep(TIME_LIMIT)
                     
                 except Exception as e:
                     print(f"run_three_bar - unable to check {stock} with error: {e}")
         
-        time.sleep(1)
+        
         iteration += 1
 
 
