@@ -302,7 +302,8 @@ def run_three_bar(interval):
             for priority, stock in enumerate(stocks):
                 try:
                     print(f"{dashes}checking {stock} {dashes}")
-                    check_play(stock, category, priority+1, interval)
+                    if not BOUGHT:
+                        check_play(stock, category, priority+1, interval)
                     time.sleep(TIME_LIMIT) # avoid exceding api limit
                     
                 except Exception as e:
