@@ -16,7 +16,7 @@ import ta
 
 # constants
 global BOUGHT  # only place one day trade
-global TIME_LIMIT
+global TIME_LIMIT # time in between continuous AV calls (150 limit)
 TIME_LIMIT=0.144
 BOUGHT=False
 API_KEY  =  'XB2M6HD2DQMJA5Z1'
@@ -163,13 +163,13 @@ def check_play(ticker, play_type, priority, interval):
         igniting_four=df.iloc[3]['percent_change'] # 4 bar igniting
 
         # 3 BAR PLAY 
-        if cur_pch > 1.5 \
+        if cur_pch > 2 \
         and prior_pch < 0 \
-        and igniting_three > 1.5 \
+        and igniting_three > 2 \
         and cur_vol > 3*avg_vol \
         and (ticker not in texted_plays):
             
-
+            # text message
             message = (f"{play_type} - {priority} -  {ticker} is breaking out with 3 bar play! \n"
             f"Igniting: {round(igniting_three,2)}% \n"
             f"test:{round(prior_pch, 2)}% \n"
@@ -178,17 +178,17 @@ def check_play(ticker, play_type, priority, interval):
             text(message)
             texted_plays.append(ticker)
 
-            # place Alpaca buy orders
+            # place Alpaca buy order
             print(f"buying ticker: {ticker} at {df.iloc[0]['timestamp']}")
             try:
                 if play_type  ==  'ALARM PLAY':
+                    qty =  66//close_price
+                    place_buy(str(ticker), qty)
+                    print(f"{ticker} - 3 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
+                else:  # regular play
                     qty =  50//close_price
                     place_buy(str(ticker), qty)
-                    print(f"{ticker} - 3 bar Bought at: {time_stmp} - price ${close_price}")
-                else:
-                    qty =  50//close_price
-                    place_buy(str(ticker), qty)
-                    print(f"{ticker} - 3 bar Bought at: {time_stmp} - price ${close_price}")
+                    print(f"{ticker} - 3 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
                 BOUGHT=True
                 monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price, support))
 
@@ -197,7 +197,7 @@ def check_play(ticker, play_type, priority, interval):
                 print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
 
         # 4 bar play
-        if cur_pch > 2 \
+        if cur_pch > 3 \
         and (prior_pch < 0 \
         or prior_prior_pch < 0) \
         and igniting_four > 2 \
@@ -207,7 +207,7 @@ def check_play(ticker, play_type, priority, interval):
             # find support
             four_bar_support = prior_support if prior_pch > 0 else support
 
-
+            # text message
             message = (f"{play_type} - {priority} -  {ticker} is breaking out with 4 bar play! \n"
             f"Igniting: {round(igniting_four,2)}% \n"
             f"test:{round(prior_prior_pch, 2)}% \n"
@@ -217,17 +217,17 @@ def check_play(ticker, play_type, priority, interval):
             text(message)
             texted_plays.append(ticker)
 
-            # place Alpaca buy orders
+            # place Alpaca buy order
             print(f"buying ticker: {ticker} at {time_stmp}")
             try:
                 if play_type  ==  'ALARM PLAY':
                     qty =  50//close_price
                     place_buy(str(ticker), qty)
-                    print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price} - {time_stmp}")
+                    print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
                 else:
                     qty = 50//close_price
                     place_buy(str(ticker), qty)
-                    print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price} - {time_stmp}")
+                    print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
                 BOUGHT=True
                 monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price, four_bar_support))
 
@@ -303,7 +303,7 @@ def run_three_bar(interval):
                 try:
                     print(f"{dashes}checking {stock} {dashes}")
                     check_play(stock, category, priority+1, interval)
-                    time.sleep(TIME_LIMIT)
+                    time.sleep(TIME_LIMIT) # avoid exceding api limit
                     
                 except Exception as e:
                     print(f"run_three_bar - unable to check {stock} with error: {e}")
