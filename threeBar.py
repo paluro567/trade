@@ -296,7 +296,7 @@ def run_three_bar(interval):
     dashes = '-' * 20 # formatting
 
     # iterative check
-    while True and not BOUGHT:
+    while not BOUGHT:
         print("checking stocks!")
         for category, stocks in plays_categories.items():
             for priority, stock in enumerate(stocks):
