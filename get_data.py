@@ -325,7 +325,9 @@ def run_three_bar(interval):
         print(f"minute {iteration} - texted plays: ", texted_plays)
 
 if __name__  ==  '__main__':
-    run_three_bar('1min')
+    pd.set_option('display.max_rows', None)
+
+    print(get_data('AGRI', '1min'))
 
 
 

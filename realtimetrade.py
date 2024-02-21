@@ -1,7 +1,7 @@
 # Your Alpaca API credentials
-API_KEY = 'AK816DGXBVQUF89R5XSS'
-SECRET_KEY = 'g0x7cnTXGSKBf9fUPyAYUcrDX2dV1CqnN32Tvvs0'
-BASE_URL = 'https://api.alpaca.markets'  # Use 'https://api.alpaca.markets' for live trading
+API_KEY = 'PKKWS4PVGB68C02BPOH0'
+SECRET_KEY = 'Op3UPCi6YJnVzrO67lbCRvNjqgd6gPinrZkSS2DC'
+BASE_URL = 'https://paper-api.alpaca.markets'  # Use 'https://api.alpaca.markets' for live trading
 
 import alpaca_trade_api as tradeapi
 
