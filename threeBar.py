@@ -187,11 +187,11 @@ def check_play(ticker, play_type, priority, interval):
             print(f"buying ticker: {ticker} at {df.iloc[0]['timestamp']}")
             try:
                 if play_type  ==  'ALARM PLAY':
-                    qty =  66//close_price
+                    qty =  33//close_price
                     place_buy(str(ticker), qty)
                     print(f"{ticker} - 3 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
                 else:  # regular play
-                    qty =  50//close_price
+                    qty =  33//close_price
                     place_buy(str(ticker), qty)
                     print(f"{ticker} - 3 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
                 BOUGHT=True
@@ -207,6 +207,7 @@ def check_play(ticker, play_type, priority, interval):
         or prior_prior_pch < 0) \
         and igniting_four > 2 \
         and cur_vol > 3*avg_vol \
+        and not BOUGHT \
         and (ticker not in texted_plays):
             
             # find support
@@ -226,11 +227,11 @@ def check_play(ticker, play_type, priority, interval):
             print(f"buying ticker: {ticker} at {time_stmp}")
             try:
                 if play_type  ==  'ALARM PLAY':
-                    qty =  50//close_price
+                    qty =  33//close_price
                     place_buy(str(ticker), qty)
                     print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
                 else:
-                    qty = 50//close_price
+                    qty = 33//close_price
                     place_buy(str(ticker), qty)
                     print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
                 BOUGHT=True
