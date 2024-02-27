@@ -129,6 +129,7 @@ def crosses_below(df, threshold):
 
 
 def monitor_bought_stock(ticker, qty, bought_price, support):
+    global BOUGHT
     
     while True:
         df = get_data(ticker, '1min')
@@ -151,6 +152,7 @@ def monitor_bought_stock(ticker, qty, bought_price, support):
 
 
 def check_play(ticker, play_type, priority, interval):
+    global BOUGHT
 
     try:
         # DATA
@@ -291,6 +293,7 @@ def get_plays():
 
 
 def run_three_bar(interval):
+    global BOUGHT
     sleep_until(9, 30, datetime, time)
     global texted_plays
     texted_plays=[]
