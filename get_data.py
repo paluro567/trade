@@ -326,8 +326,17 @@ def run_three_bar(interval):
 
 if __name__  ==  '__main__':
     pd.set_option('display.max_rows', None)
+    test_data=get_data('nxu', '1min')
+    print(test_data)
 
-    print(get_data('AGRI', '1min'))
+    for i in range(2,len(test_data)):
+        cur_time=test_data.iloc[i]['timestamp']
+        cur=test_data.iloc[i]['percent_change']
+        prior=test_data.iloc[i-1]['percent_change']
+        prior_prior=test_data.iloc[i-2]['percent_change']
+        if cur>1 and prior<0 and prior_prior>1:
+            print("3 bar at: ", cur_time)
+
 
 
 
