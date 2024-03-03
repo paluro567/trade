@@ -344,30 +344,46 @@ def run_three_bar(interval):
         print(f"minute {iteration} - texted plays: ", texted_plays)
 
 if __name__  ==  '__main__':
-    input_ticker= input("enter a ticker to check: ")
-    df=get_data(input_ticker, '5min')
-    bought=False
-    bought_p=0
-    sell_p=0
-    percent_gains=[]
-    for i in range(2,len(df)):
-        if df.iloc[i-2]['percent_change']>2 \
-        and df.iloc[i-1]['percent_change']<0 \
-        and df.iloc[i]['percent_change']>2:
-            bought=True
-            bought_p= df.iloc[i]['close']
-        if bought \
-        and df.iloc[i]['open']>df.iloc[i]['ema_5'] \
-        and df.iloc[i]['close']<df.iloc[i]['ema_5']:
-            sell_p = df.iloc[i]['close']
-            percent_gains.append(round((bought_p-sell_p)/bought_p,2)*100)
-            bought=False
-    percent_gains = [-2 if i < -2 else i for i in percent_gains]
+    while True:
+        input_ticker= input("enter a ticker to check: ")
+        df=get_data(input_ticker, '5min')
+        bought=False
+        bought_p=0
+        sell_p=0
+        percent_gains=[]
+        bought_time=''
+        for i in range(2,len(df)):
+            #3 BAR
+            if df.iloc[i-2]['percent_change']>2 \
+            and df.iloc[i-1]['percent_change']<0 \
+            and df.iloc[i]['percent_change']>2:
+                bought=True
+                bought_p= df.iloc[i]['close']
+                bought_time=df.iloc[i]['timestamp']
+            #  4 BAR
+            if not bought \
+            and df.iloc[i-3]['percent_change']>3 \
+            and (df.iloc[i-2]['percent_change']<0 \
+            or df.iloc[i-1]['percent_change']<0) \
+            and df.iloc[i]['percent_change']>2:
+                bought=True
+                bought_p= df.iloc[i]['close']
+                bought_time=df.iloc[i]['timestamp']
+                
+            if bought \
+            and df.iloc[i]['open']>df.iloc[i]['ema_5'] \
+            and df.iloc[i]['close']<df.iloc[i]['ema_5']:
+                sell_p = df.iloc[i]['close']
+                percent_gains.append((bought_time, round((bought_p-sell_p)/bought_p,2)*100))
+                bought=False
+        percent_gains = [(timestamp, -2 if gain < -2 else gain) for timestamp, gain in percent_gains]
 
-    print("percent gains: ", percent_gains)
-    print(f"total percent{sum(percent_gains)}")
 
-        
+        print("percent gains: ", percent_gains)
+        total_percent_gain = sum(gain for timestamp, gain in percent_gains)
+        print(f"total percent gain: {total_percent_gain}%")
+
+            
 
 
 
