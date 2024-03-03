@@ -131,7 +131,6 @@ def get_data(stock, interval, date=None):
     df.loc[:, 'ema_20'] = reversed_df['ema_20'].iloc[::-1].values
     df.loc[:, 'ema_180'] = reversed_df['ema_180'].iloc[::-1].values 
 
-
     return df[:910] #only considser one day's data
 
 
@@ -193,8 +192,7 @@ def check_play(ticker, play_type, priority, interval):
         and igniting_three > 2 \
         and cur_vol > 3*avg_vol \
         and (ticker not in texted_plays) \
-        and not BOUGHT \
-        and not pdt_rule():
+        and not pdt_rule(): # removed bought condition and using PDT to limit
             
             # text message
             message = (f"{play_type} - {priority} -  {ticker} is breaking out with 3 bar play! \n"
@@ -231,9 +229,8 @@ def check_play(ticker, play_type, priority, interval):
         or prior_prior_pch < 0) \
         and igniting_four > 2 \
         and cur_vol > 3*avg_vol \
-        and not BOUGHT \
         and (ticker not in texted_plays)\
-        and not pdt_rule():
+        and not pdt_rule(): #removed and not bought
             
             # find support
             four_bar_support = prior_support if prior_pch > 0 else support
@@ -261,10 +258,10 @@ def check_play(ticker, play_type, priority, interval):
                     print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
                 BOUGHT=True
                 # monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price, four_bar_support))
-                buy_date=datetime.now()
+                buy_date=datetime.now() # track day trades in day_trades.txt
                 monitor_bought_stock(ticker, qty, close_price, four_bar_support, (buy_date.month,buy_date.day))
                 # monitor_process.start()
-                
+
             except Exception as e:
                 print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
     except Exception as e:
@@ -330,14 +327,14 @@ def run_three_bar(interval):
     dashes = '-' * 20 # formatting
 
     # iterative check
-    while not BOUGHT:
+    while True: # not BOUGHT:
         print("checking stocks!")
         for category, stocks in plays_categories.items():
             for priority, stock in enumerate(stocks):
                 try:
                     print(f"{dashes}Checking {stock} {dashes}")
-                    if not BOUGHT:
-                        check_play(stock, category, priority+1, interval)
+                    # if not BOUGHT:
+                    check_play(stock, category, priority+1, interval)
                     
                 except Exception as e:
                     print(f"run_three_bar - unable to check {stock} with error: {e}")
