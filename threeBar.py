@@ -171,6 +171,8 @@ def monitor_bought_stock(ticker, qty, bought_price, support, bought_date):
 
 def check_play(ticker, play_type, priority, interval):
     global BOUGHT 
+    print(" pdt_rule(): ",  pdt_rule())
+
 
     try:
         # DATA

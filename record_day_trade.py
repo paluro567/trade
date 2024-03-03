@@ -78,5 +78,5 @@ def pdt_rule(filename=gcp_trades_path):
 if __name__=='__main__':
     print("Day beginning 5 day PDT period: ", begin_pdt_period())
     print("PDT is met: ", pdt_rule())
-    record_trade('PLTR') # 
+    record_trade('PLTR') 
 
