@@ -21,32 +21,35 @@ def is_trading_day(date):
     # Consider it as a trading day otherwise
     return True
 
-
 def record_trade(ticker, filename="/home/peter_luro1/trade/trades.txt"):
-    #VM path /home/peter_luro1/trade/trades.txt
-    
-    
     # After recording the trade, check if 3 or more trades have been executed within a 5-day period
     if not check_trades_within_window(filename):
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open(filename, "a") as file:
-            file.write(f"Ticker: {ticker}, Time: {current_time}\n")
-        
+            file.write(f"Ticker: {ticker}, Time: {current_time}\n")  # Include newline character
     else:
         print("You have placed 3 or more trades within a 5-day trading day window.")
+
 def check_trades_within_window(filename="trades.txt"):
     try:
         # Read the content of the file
         with open(filename, "r") as file:
             lines = file.readlines()
 
-        # If the file is empty or has only one line, return False
+        # If the file has fewer than two lines, return False
         if len(lines) < 2:
             print("There are not enough trades recorded in the file.")
             return False
 
         # Extract timestamps from each line and convert them to datetime objects
-        trade_timestamps = [line.strip().split(", ")[1].split(": ")[1] for line in lines]
+        trade_timestamps = []
+        for line in lines:
+            parts = line.strip().split(", ")
+            if len(parts) >= 2:  # Ensure there are at least two parts in the line
+                timestamp = parts[1].split(": ")[1]
+                trade_timestamps.append(timestamp)
+            else:
+                print("Line doesn't contain the expected format:", line)
 
         if not trade_timestamps:
             print("No trade timestamps found in the file.")
@@ -78,6 +81,11 @@ def check_trades_within_window(filename="trades.txt"):
     except Exception as e:
         print("Error:", e)
         return False
+
+# Example usage:
+ticker = "AAPL"
+record_trade(ticker)
+
 
 # Example usage:
 ticker = "AAPL"
