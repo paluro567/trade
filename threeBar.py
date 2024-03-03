@@ -3,6 +3,7 @@ import datetime
 
 from datetime import datetime, timedelta
 from Discord import get_briefing
+from record_day_trade import pdt_rule, record_trade
 from sms import text
 import pandas as pd
 import numpy as np
@@ -143,7 +144,7 @@ def crosses_below(df, threshold):
            or (df.iloc[0]['close'] < threshold and df.iloc[1]['open'] > threshold)
 
 
-def monitor_bought_stock(ticker, qty, bought_price, support):
+def monitor_bought_stock(ticker, qty, bought_price, support, bought_date):
     global BOUGHT
     
     while True:
@@ -160,7 +161,11 @@ def monitor_bought_stock(ticker, qty, bought_price, support):
 
         # sell position
         if(df.iloc[0]['percent_change']<-2 or ema_cross or support_cross or percent_gain>-5 or percent_gain>25):
+            sell_date=datetime.now()
+            if bought_date==(sell_date.month,sell_date.day):
+                record_trade(ticker)
             place_sell(ticker, qty)
+            record_trade(ticker)
             print(f"Sold position {ticker} at {cur_time} \nat a price of {current_price} made {round(percent_gain,2)}%")
             break
 
@@ -188,7 +193,8 @@ def check_play(ticker, play_type, priority, interval):
         and igniting_three > 2 \
         and cur_vol > 3*avg_vol \
         and (ticker not in texted_plays) \
-        and not BOUGHT:
+        and not BOUGHT \
+        and not pdt_rule():
             
             # text message
             message = (f"{play_type} - {priority} -  {ticker} is breaking out with 3 bar play! \n"
@@ -212,7 +218,8 @@ def check_play(ticker, play_type, priority, interval):
                     print(f"{ticker} - 3 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
                 BOUGHT=True
                 # monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price, support))
-                monitor_bought_stock(ticker, qty, close_price, support)
+                buy_date=datetime.now()
+                monitor_bought_stock(ticker, qty, close_price, support, (buy_date.month,buy_date.day))
 
                 # monitor_process.start()
             except Exception as e:
@@ -225,7 +232,8 @@ def check_play(ticker, play_type, priority, interval):
         and igniting_four > 2 \
         and cur_vol > 3*avg_vol \
         and not BOUGHT \
-        and (ticker not in texted_plays):
+        and (ticker not in texted_plays)\
+        and not pdt_rule():
             
             # find support
             four_bar_support = prior_support if prior_pch > 0 else support
@@ -253,9 +261,10 @@ def check_play(ticker, play_type, priority, interval):
                     print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
                 BOUGHT=True
                 # monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price, four_bar_support))
-                monitor_bought_stock(ticker, qty, close_price, four_bar_support)
-
+                buy_date=datetime.now()
+                monitor_bought_stock(ticker, qty, close_price, four_bar_support, (buy_date.month,buy_date.day))
                 # monitor_process.start()
+                
             except Exception as e:
                 print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
     except Exception as e:
