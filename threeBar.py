@@ -159,12 +159,29 @@ def monitor_bought_stock(ticker, qty, bought_price, support, bought_date):
         percent_gain  =  round(((current_price - bought_price) / bought_price),2) * 100
 
         # sell position
-        if(df.iloc[0]['percent_change']<-2 or ema_cross or support_cross or percent_gain>-5 or percent_gain>25):
-            sell_date=datetime.now()
-            if bought_date==(sell_date.month,sell_date.day):
-                record_trade(ticker) # day trade
+        if df.iloc[0]['percent_change'] < -2:
+            print(f"SOLD: percent_change < -2 ~ percent_gain: {percent_gain}")
             place_sell(ticker, qty)
-            print(f"Sold position {ticker} at {cur_time} \nat a price of {current_price} made {round(percent_gain,2)}%")
+            break
+
+        elif ema_cross:
+            print(f"SOLD: EMA crossover ~ percent_gain: {percent_gain}")
+            place_sell(ticker, qty)
+            break
+
+        elif support_cross:
+            print(f"SOLD: Support crossover ~ percent_gain: {percent_gain}")
+            place_sell(ticker, qty)
+            break
+
+        elif percent_gain > 25:
+            print(f"SOLD: percent_gain > 25% ~ percent_gain: {percent_gain}")
+            place_sell(ticker, qty)
+            break
+
+        elif percent_gain < -5:
+            print(f"SOLD: percent_gain < -5% ~ percent_gain: {percent_gain}")
+            place_sell(ticker, qty)
             break
 
 
