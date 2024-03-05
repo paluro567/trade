@@ -160,27 +160,27 @@ def monitor_bought_stock(ticker, qty, bought_price, support, bought_date):
 
         # sell position
         if df.iloc[0]['percent_change'] < -2:
-            print(f"SOLD: percent_change < -2 ~ percent_gain: {percent_gain}")
+            print(f"SOLD: percent_change < -2 ~ percent_gain: {percent_gain} at {cur_time}")
             place_sell(ticker, qty)
             break
 
         elif ema_cross:
-            print(f"SOLD: EMA crossover ~ percent_gain: {percent_gain}")
+            print(f"SOLD: EMA crossover ~ percent_gain: {percent_gain} at {cur_time}")
             place_sell(ticker, qty)
             break
 
         elif support_cross:
-            print(f"SOLD: Support crossover ~ percent_gain: {percent_gain}")
+            print(f"SOLD: Support crossover ~ percent_gain: {percent_gain} at {cur_time}")
             place_sell(ticker, qty)
             break
 
         elif percent_gain > 25:
-            print(f"SOLD: percent_gain > 25% ~ percent_gain: {percent_gain}")
+            print(f"SOLD: percent_gain > 25% ~ percent_gain: {percent_gain} at {cur_time}")
             place_sell(ticker, qty)
             break
 
         elif percent_gain < -5:
-            print(f"SOLD: percent_gain < -5% ~ percent_gain: {percent_gain}")
+            print(f"SOLD: percent_gain < -5% ~ percent_gain: {percent_gain} at {cur_time}")
             place_sell(ticker, qty)
             break
 
