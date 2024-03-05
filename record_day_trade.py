@@ -69,6 +69,7 @@ def pdt_rule(filename=gcp_trades_path):
         count = sum(1 for trade_datetime in trade_datetimes if trade_datetime.date() >= begin_date)
 
         # PDT is in force => do not allow buys
+        print(f"Number day trades: {count}")
         return count >= 3
 
     except Exception as e:
