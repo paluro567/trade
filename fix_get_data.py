@@ -96,13 +96,17 @@ def get_data(stock, interval, date=None):
     last_time = time.time()
     
     #Alpha Vantage GET request
+    request_url=f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={stock}&outputsize=full&interval={interval}&entitlement=realtime&apikey={API_KEY}"
     try:
-        request_url=f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={stock}&outputsize=full&interval={interval}&entitlement=realtime&apikey={API_KEY}"
-        resp= requests.get(request_url)
-        print("Response status:", resp.status_code) 
-        timeseries_json=resp.json()[f'Time Series ({interval})']
-    except Exception as e:
-        print("AV request broken with: ", e)
+        resp = requests.get(request_url)
+        print(resp)
+        resp.raise_for_status()  # Raise an exception for HTTP errors
+        data = resp.json()  # Parse JSON response
+        print(data)
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching data: {e}")
+
+    timeseries_json=resp.json()[f'Time Series ({interval})']
 
     # Access data from timeseries_json
     data_list = [
@@ -373,7 +377,9 @@ def run_three_bar(interval):
 
 if __name__  ==  '__main__':
     try:
-        run_three_bar('5min')
+        df=get_data('PLTR', '5min')
+        print(df)
+
     except Exception as e:
         print(f"unable to run run_three_bar with: {e}")
 

@@ -1,8 +1,10 @@
 import yfinance as yf
+import datetime
+
 from datetime import datetime, timedelta
 from Discord import get_briefing
+from record_day_trade import pdt_rule, record_trade
 from sms import text
-import datetime
 import pandas as pd
 import numpy as np
 import time
@@ -14,9 +16,33 @@ import ta
 
 
 # constants
+# Initialize variables to track API call rate
+global BOUGHT  # only place one day trade
+global calls_made
+global last_time
+calls_made = 0
+last_time = time.time()
+BOUGHT=False
 API_KEY  =  'XB2M6HD2DQMJA5Z1'
 too_close_thresh = 1.5 #resistances are duplicates if within 1.5% of one another
 texted_plays  =  []
+
+def sleep_until(target_hour, target_minute, datetime_module, time_module):
+    # Get the current time
+    current_time = datetime_module.now()
+
+    # Set the target time
+    target_time = current_time.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
+
+    # If the target time has already passed for today, set it for tomorrow
+    if current_time > target_time:
+        target_time += timedelta(days=1)
+
+    # Calculate the time difference
+    time_difference = (target_time - current_time).total_seconds()
+
+    # Sleep until the target time
+    time_module.sleep(time_difference)
 
 
 def remove_close_values(arr):
@@ -54,12 +80,26 @@ def calculate_resistance(data, stock_symbol):
     print(f"{stock_symbol} resistances: ", resistance_levels)
     return resistance_levels
 
-def get_data(stock, time, date=None):
+def get_data(stock, interval, date=None):
+
+    # LIMIT CALLS
+    global calls_made, last_time
+    # fastest rate to make api calls
+    shortest_interval = 60 / 150
+
+    elapsed_time = time.time() - last_time
+
+    if elapsed_time<shortest_interval: # calls are being made too fast
+        print("sleeping: ", shortest_interval - elapsed_time)
+        time.sleep(shortest_interval - elapsed_time)
+
+    calls_made+=1
+    last_time = time.time()
     
     #Alpha Vantage GET request
-    request_url=f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={stock}&outputsize=full&interval={time}&entitlement=realtime&apikey={API_KEY}"
+    request_url=f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={stock}&outputsize=full&interval={interval}&entitlement=realtime&apikey={API_KEY}"
     resp= requests.get(request_url)
-    timeseries_json=resp.json()[f'Time Series ({time})']
+    timeseries_json=resp.json()[f'Time Series ({interval})']
 
     # Access data from timeseries_json
     data_list = [
@@ -92,10 +132,7 @@ def get_data(stock, time, date=None):
     df.loc[:, 'ema_20'] = reversed_df['ema_20'].iloc[::-1].values
     df.loc[:, 'ema_180'] = reversed_df['ema_180'].iloc[::-1].values 
 
-    print("get_data - df with EMA's: ", df)
-
     return df[:910] #only considser one day's data
-
 
 
 def nine_twenty_cross(df):
