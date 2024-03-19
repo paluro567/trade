@@ -137,27 +137,23 @@ def getnum(original):
         num += c
     return float(num)
 
+
 # run a test
 if __name__ == "__main__":
-    from datetime import datetime
-    from datetime import timezone
-    import pytz
-    desired_timezone = 'America/New_York'
-    # Get current UTC time
-    current_utc_time = datetime.now(timezone.utc)
-    current_local_time = current_utc_time.astimezone(pytz.timezone(desired_timezone))
-    curr_date_local = current_local_time.strftime('%Y-%m-%d')
+    # Set the desired date for testing
+    day=input("day: ")
+    test_date = f"2024-03-{day}"
 
-
- 
-    resistances, supports, retail, alarm_plays = get_briefing(curr_date_local)
+    # Call the get_briefing function with the test date
+    resistances, supports, retail, alarm_plays = get_briefing(test_date)
     alarm_plays = [stock for stock in alarm_plays if ' ' not in stock]
     green_plays = list(supports.keys())
-    other_on_radar = ['SLNH','PLTR','AI', 'SFWL']
+    other_on_radar = ['SLNH', 'PLTR', 'AI', 'SFWL']
 
-    print("today's alarm_plays: ", alarm_plays )
-    print("today's retail: ", retail)
-    print("today's green_plays: ", green_plays)
+    print("Today's alarm_plays:", alarm_plays)
+    print("Today's retail:", retail)
+    print("Today's green_plays:", green_plays)
     if alarm_plays == [] and green_plays == []:
-        print("exception made...")
+        print("No briefing available for the given date.")
+
    

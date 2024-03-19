@@ -100,6 +100,7 @@ def get_data(stock, interval, date=None):
     request_url=f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={stock}&outputsize=full&interval={interval}&entitlement=realtime&apikey={API_KEY}"
     resp= requests.get(request_url)
     timeseries_json=resp.json()[f'Time Series ({interval})']
+    print("TIME: ",timeseries_json)
 
     # Access data from timeseries_json
     data_list = [
@@ -271,7 +272,7 @@ if __name__  ==  '__main__':
     pd.set_option('display.max_rows', None)  # None means display all rows
     pd.set_option('display.max_columns', None)  # None means display all columns
 
-    data=get_data("MDAI", "30min")
+    data=get_data("MDAI", "5min")
     print("data: ", data)
 
 

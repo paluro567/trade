@@ -58,15 +58,35 @@ def get_sentiment(stock,  date=None):
     # print(f"Average Overall Sentiment Score: {average_sentiment}")
     print(f"{stock} Sentiment Category: {sentiment_category}")
 
-    print(f"Average Overall Sentiment Score: {average_sentiment}")
+    return average_sentiment
 
 
 
-   
+def sort_stocks_by_sentiment(stocks):
+    sentiment_scores = {}
+    
+    # Calculate sentiment scores for each stock
+    for stock in stocks:
+        sentiment_scores[stock] = get_sentiment(stock)
+    
+    # Sort stocks by sentiment value in descending order
+    sorted_stocks = sorted(sentiment_scores.items(), key=lambda x: x[1], reverse=True)
+    
+    return sorted_stocks
+
 if __name__  ==  '__main__':
-    while True:
-        stock = input("enter stock: ")
-        get_sentiment(stock,  date=None)
+    # while True:
+    #     stock = input("enter stock: ")
+    #     get_sentiment(stock,  date=None)
+    stocks=['pltr','nvda', 'pypl','baba', 'amzn', 'tsla']
+    
+    # Sort stocks by sentiment value in descending order
+    sorted_stocks = sort_stocks_by_sentiment(stocks)
+
+
+    # Print sorted stocks and their sentiment values
+    for stock, sentiment in sorted_stocks:
+        print(f'{stock}: {round(sentiment,2)}')
 
 
 
