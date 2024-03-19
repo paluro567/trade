@@ -303,19 +303,16 @@ def get_plays():
         current_utc_time = datetime.now(timezone.utc)
         current_local_time = current_utc_time.astimezone(pytz.timezone(desired_timezone))
         curr_date_local = current_local_time.strftime('%Y-%m-%d')
-        resistances, supports, retail, alarm_plays  =  get_briefing(curr_date_local)  # get briefing
+        alarm_plays, green_plays  =  get_briefing(curr_date_local)  # get briefing
         
         
-        # clean tickers
-        alarm_plays = [stock for stock in alarm_plays if ' ' not in stock]
-        green_plays = list(supports.keys())
         other_on_radar = ['SLNH','PLTR','AI', 'SFWL', 'MDAI', 'SURG', 'SOFI']
 
         # no briefing yet sleep 5 minutes
         if alarm_plays == [] and green_plays == []:
             raise Exception("empty alarm & green plays")
         
-        print("today's alarm_plays: ", alarm_plays )
+        print("today's alarm_plays: ", alarm_plays)
         print("today's green_plays: ", green_plays)
 
 
