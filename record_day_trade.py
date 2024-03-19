@@ -51,7 +51,7 @@ def pdt_rule(filename=gcp_trades_path):
 
         # If the file is empty or has only one line, return False
         if len(lines) < 3:
-            print("There are not enough trades recorded in the file for PDT")
+            print(f"No PDT")
             return False
 
         # Extract timestamps from each line and convert them to datetime objects

@@ -335,7 +335,7 @@ def get_plays():
 
 def run_three_bar(interval):
     global BOUGHT
-    # sleep_until(9, 29, datetime, time) # start executing 9:29
+    sleep_until(9, 29, datetime, time) # start executing 9:29
     global texted_plays
     texted_plays=[]
     iteration = 1
