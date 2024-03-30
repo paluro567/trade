@@ -16,13 +16,20 @@ import ta
 
 
 # Initialize variables to track API call rate
-global BOUGHT  # only place one day trade
-global calls_made
-global last_time
-calls_made = 0
-last_time = time.time()
+global BOUGHT  # bought a stock this day
 BOUGHT=False
+
+global calls_made
+calls_made = 0
+
+global shortest_interval
+shortest_interval = 60 / 150
+
+global last_time
+last_time = time.time()
+
 texted_plays  =  []
+
 # constants
 API_KEY  =  'XB2M6HD2DQMJA5Z1'
 too_close_thresh = 1.5 #resistances are duplicates if within 1.5% of one another
@@ -82,10 +89,9 @@ def calculate_resistance(data, stock_symbol):
 
 def get_data(stock, interval, date=None):
 
-    # LIMIT vars
-    global calls_made, last_time
-    # fastest rate to make api calls
-    shortest_interval = 60 / 150
+    # rate limit 
+    global calls_made, last_time, shortest_interval
+    
 
     elapsed_time = time.time() - last_time
 
