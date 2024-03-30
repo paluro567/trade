@@ -38,36 +38,7 @@ texted_plays  =  []
 API_KEY  =  'XB2M6HD2DQMJA5Z1'
 too_close_thresh = 1.5 #resistances are duplicates if within 1.5% of one another
 
-def sleep_until(target_hour, target_minute, datetime_module, time_module):
-    # Get the current time
-    current_time = datetime_module.now()
-
-    # Set the target time
-    target_time = current_time.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
-
-    # If the target time has already passed for today, set it for tomorrow
-    if current_time > target_time:
-        target_time += timedelta(days=1)
-
-    # Calculate the time difference
-    time_difference = (target_time - current_time).total_seconds()
-
-    # Sleep until the target time
-    time_module.sleep(time_difference)
-
-
-def calculate_resistance(data, stock_symbol):
-    resistance_levels  =  []
-    high_prices  =  data['high'].values
-    for i in range(1, len(high_prices) - 1):
-        if high_prices[i] > high_prices[i - 1] and high_prices[i] > high_prices[i + 1]:
-            resistance_levels.append(high_prices[i])
-            print("resistance at time:", data.iloc[i])
-    # clean resistances array
-    resistance_levels = remove_close_values(resistance_levels)
-    print(f"{stock_symbol} resistances: ", resistance_levels)
-    return resistance_levels
-
+# alpha data
 def alpha_get_data(stock, interval, date=None):
 
     # Alpha Vantage GET request
@@ -105,40 +76,45 @@ def alpha_get_data(stock, interval, date=None):
     latest_data = df[df['timestamp'].dt.date == latest_market_day].copy()  # Make a copy of the slice
 
     # Calculate EMA's
-    latest_data['ema_5'] = latest_data['close'].ewm(span=5, adjust=False).mean()
-    latest_data['ema_9'] = latest_data['close'].ewm(span=9, adjust=False).mean()
-    latest_data['ema_20'] = latest_data['close'].ewm(span=20, adjust=False).mean()
-    latest_data['ema_180'] = latest_data['close'].ewm(span=180, adjust=False).mean()
+    latest_data['EMA_5'] = latest_data['close'].ewm(span=5, adjust=False).mean()
+    latest_data['EMA_9'] = latest_data['close'].ewm(span=9, adjust=False).mean()
+    latest_data['EMA_20'] = latest_data['close'].ewm(span=20, adjust=False).mean()
+    latest_data['EMA_180'] = latest_data['close'].ewm(span=180, adjust=False).mean()
+    
 
-    return latest_data[::-1]
+    return latest_data[::-1] #alpha data return
 
-def yf_data(ticker):
+def yf_data(ticker, interval_time):
     try:
         # Fetch intraday data using the ticker symbol
         stock = yf.Ticker(ticker)
         
         # Get historical market data for the last trading day with 5-minute intervals
-        intraday_data = stock.history(period="1d", interval="5m", prepost=True)
+        intraday_data = stock.history(period="1d", interval=interval_time, prepost=True)
         
         # Print the intraday data
         print("Intraday Data for", ticker)
 
         # Calculate EMAs
-        intraday_data['sma_5'] = intraday_data['Close'].rolling(window=5).mean()
-        intraday_data['sma_9'] = intraday_data['Close'].rolling(window=9).mean()
-        intraday_data['sma_20'] = intraday_data['Close'].rolling(window=20).mean()
-        intraday_data['sma_180'] = intraday_data['Close'].rolling(window=180).mean()
+        intraday_data['SMA_5'] = intraday_data['Close'].rolling(window=5).mean()
+        intraday_data['SMA_9'] = intraday_data['Close'].rolling(window=9).mean()
+        intraday_data['SMA_20'] = intraday_data['Close'].rolling(window=20).mean()
+        intraday_data['SMA_180'] = intraday_data['Close'].rolling(window=180).mean()
+        intraday_data['percent_change'] = (intraday_data['Close']-intraday_data['Open'])/ intraday_data['Open']* 100
 
-        return intraday_data
+        return intraday_data # yahoo data return
     except Exception as e:
         print("Error fetching data:", e)
 
+
+
+
 # Example usage
 if __name__ == "__main__":
-    ticker_symbol = "AAPL"  # Example ticker symbol (Apple Inc.)
-    yahoo_data=yf_data(ticker_symbol)
-    print(f"yahoo_data: {yahoo_data}")
+    ticker_symbol = "PLTR"  
+    yahoo_data=yf_data(ticker_symbol, '5m')
+    print(f"yahoo_data: {yahoo_data} \n type yahoo data: {type(yahoo_data)}")
 
 
     alpha_data=alpha_get_data(ticker_symbol, "5min")
-    print("alpha_data: ", alpha_data)
+    print(f"alpha_data: {alpha_data} \n type yahoo data: {type(alpha_data)}")
