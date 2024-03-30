@@ -99,10 +99,10 @@ def get_data(stock, interval, date=None):
     try:
         request_url=f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={stock}&outputsize=full&interval={interval}&entitlement=realtime&apikey={API_KEY}"
         resp= requests.get(request_url)
-        print("Response status:", resp.status_code) 
+        print("Response status:", resp.status_code)
         timeseries_json=resp.json()[f'Time Series ({interval})']
     except Exception as e:
-        print("AV request broken with: ", e)
+        print("Alpha request broken with: ", e)
 
     # Access data from timeseries_json
     data_list = [

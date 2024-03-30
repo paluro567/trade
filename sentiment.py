@@ -78,7 +78,7 @@ if __name__  ==  '__main__':
     # while True:
     #     stock = input("enter stock: ")
     #     get_sentiment(stock,  date=None)
-    stocks=['pltr','nvda', 'pypl','baba', 'amzn', 'tsla']
+    stocks=['pltr','nvda', 'pypl','baba', 'amzn', 'tsla', 'bbai']
     
     # Sort stocks by sentiment value in descending order
     sorted_stocks = sort_stocks_by_sentiment(stocks)
