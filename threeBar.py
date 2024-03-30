@@ -15,7 +15,6 @@ from alpha_vantage.timeseries import TimeSeries
 import ta
 
 
-# constants
 # Initialize variables to track API call rate
 global BOUGHT  # only place one day trade
 global calls_made
@@ -23,9 +22,10 @@ global last_time
 calls_made = 0
 last_time = time.time()
 BOUGHT=False
+texted_plays  =  []
+# constants
 API_KEY  =  'XB2M6HD2DQMJA5Z1'
 too_close_thresh = 1.5 #resistances are duplicates if within 1.5% of one another
-texted_plays  =  []
 
 def sleep_until(target_hour, target_minute, datetime_module, time_module):
     # Get the current time
@@ -82,7 +82,7 @@ def calculate_resistance(data, stock_symbol):
 
 def get_data(stock, interval, date=None):
 
-    # LIMIT CALLS
+    # LIMIT vars
     global calls_made, last_time
     # fastest rate to make api calls
     shortest_interval = 60 / 150
@@ -90,10 +90,13 @@ def get_data(stock, interval, date=None):
     elapsed_time = time.time() - last_time
 
     if elapsed_time<shortest_interval: # calls are being made too fast
-        time.sleep(shortest_interval - elapsed_time)
+        sleep_time=shortest_interval - elapsed_time
+        print(f"rate limit sleep: {sleep_time}")
+        time.sleep(sleep_time)
 
     calls_made+=1
     last_time = time.time()
+    print("calls made: {calls_made} at {last_time}")
     
     #Alpha Vantage GET request
     try:
