@@ -1,21 +1,144 @@
 import yfinance as yf
 from datetime import datetime
 
-def fetch_intraday_data(ticker):
+
+import yfinance as yf
+import datetime
+
+from datetime import datetime, timedelta
+from Discord import get_briefing
+from record_day_trade import pdt_rule, record_trade
+from sms import text
+import pandas as pd
+import numpy as np
+import time
+import requests
+from realtimetrade import place_buy, place_sell
+import multiprocessing
+from alpha_vantage.timeseries import TimeSeries
+import ta
+
+
+# Initialize variables to track API call rate
+global BOUGHT  # bought a stock this day
+BOUGHT=False
+
+global calls_made
+calls_made = 0
+
+global shortest_interval
+shortest_interval = 60 / 150
+
+global last_time
+last_time = time.time()
+
+texted_plays  =  []
+
+# constants 
+API_KEY  =  'XB2M6HD2DQMJA5Z1'
+too_close_thresh = 1.5 #resistances are duplicates if within 1.5% of one another
+
+def sleep_until(target_hour, target_minute, datetime_module, time_module):
+    # Get the current time
+    current_time = datetime_module.now()
+
+    # Set the target time
+    target_time = current_time.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
+
+    # If the target time has already passed for today, set it for tomorrow
+    if current_time > target_time:
+        target_time += timedelta(days=1)
+
+    # Calculate the time difference
+    time_difference = (target_time - current_time).total_seconds()
+
+    # Sleep until the target time
+    time_module.sleep(time_difference)
+
+
+def calculate_resistance(data, stock_symbol):
+    resistance_levels  =  []
+    high_prices  =  data['high'].values
+    for i in range(1, len(high_prices) - 1):
+        if high_prices[i] > high_prices[i - 1] and high_prices[i] > high_prices[i + 1]:
+            resistance_levels.append(high_prices[i])
+            print("resistance at time:", data.iloc[i])
+    # clean resistances array
+    resistance_levels = remove_close_values(resistance_levels)
+    print(f"{stock_symbol} resistances: ", resistance_levels)
+    return resistance_levels
+
+def alpha_get_data(stock, interval, date=None):
+
+    # Alpha Vantage GET request
+    try:
+        request_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={stock}&outputsize=full&interval={interval}&entitlement=realtime&apikey={API_KEY}"
+        resp = requests.get(request_url)
+        print("Response status:", resp.status_code)
+        timeseries_json = resp.json()[f'Time Series ({interval})']
+    except Exception as e:
+        print("Alpha request broken with: ", e)
+        return None
+
+    # Access data from timeseries_json
+    data_list = [
+        {
+            'timestamp': timestamp,
+            'open': float(data['1. open']),
+            'high': float(data['2. high']),
+            'low': float(data['3. low']),
+            'close': float(data['4. close']),
+            'volume': int(data['5. volume'])
+        }
+        for timestamp, data in timeseries_json.items()
+    ]
+
+    # Create DataFrame
+    df = pd.DataFrame(data_list)
+    df['timestamp'] = pd.to_datetime(df['timestamp'])
+    df['percent_change'] = (df['close'] - df['open']) / df['open'] * 100
+
+    # Find the latest market day's timestamp
+    latest_market_day = df['timestamp'].max().date()
+
+    # Filter the DataFrame to include only the data for the latest market day
+    latest_data = df[df['timestamp'].dt.date == latest_market_day].copy()  # Make a copy of the slice
+
+    # Calculate EMA's
+    latest_data['ema_5'] = latest_data['close'].ewm(span=5, adjust=False).mean()
+    latest_data['ema_9'] = latest_data['close'].ewm(span=9, adjust=False).mean()
+    latest_data['ema_20'] = latest_data['close'].ewm(span=20, adjust=False).mean()
+    latest_data['ema_180'] = latest_data['close'].ewm(span=180, adjust=False).mean()
+
+    return latest_data[::-1]
+
+def yf_data(ticker):
     try:
         # Fetch intraday data using the ticker symbol
         stock = yf.Ticker(ticker)
         
         # Get historical market data for the last trading day with 5-minute intervals
-        intraday_data = stock.history(period="1d", interval="5m", prepost = True)
+        intraday_data = stock.history(period="1d", interval="5m", prepost=True)
         
         # Print the intraday data
         print("Intraday Data for", ticker)
-        print(intraday_data)
+
+        # Calculate EMAs
+        intraday_data['sma_5'] = intraday_data['Close'].rolling(window=5).mean()
+        intraday_data['sma_9'] = intraday_data['Close'].rolling(window=9).mean()
+        intraday_data['sma_20'] = intraday_data['Close'].rolling(window=20).mean()
+        intraday_data['sma_180'] = intraday_data['Close'].rolling(window=180).mean()
+
+        return intraday_data
     except Exception as e:
         print("Error fetching data:", e)
 
 # Example usage
 if __name__ == "__main__":
     ticker_symbol = "AAPL"  # Example ticker symbol (Apple Inc.)
-    fetch_intraday_data(ticker_symbol)
+    yahoo_data=yf_data(ticker_symbol)
+    print(f"yahoo_data: {yahoo_data}")
+
+
+    alpha_data=alpha_get_data(ticker_symbol, "5min")
+    print("alpha_data: ", alpha_data)
