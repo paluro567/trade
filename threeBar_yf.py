@@ -144,16 +144,17 @@ def check_play(ticker, play_type, priority, interval):
     try:
         # DATA
         df = yf_data(ticker, interval)
-        close_price=df.iloc[0]['Close']
-        cur_vol=df.iloc[0]['Volume']
-        time_stmp=df.iloc[0]['Datetime']
+        close_price = df.iloc[0]['Close']
+        cur_vol = df.iloc[0]['Volume']
+        time_stmp = df.index[0]  # Extracting datetime from index
         avg_vol = df['Volume'].mean()
-        cur_pch=df.iloc[0]['percent_change']
-        prior_pch=df.iloc[1]['percent_change']
-        support=df.iloc[1]['Close']
-        igniting_three=prior_prior_pch=df.iloc[2]['percent_change'] # 3 bar igniting
-        prior_support=df.iloc[2]['Close']
-        igniting_four=df.iloc[3]['percent_change'] # 4 bar igniting
+        cur_pch = df.iloc[0]['percent_change']
+        prior_pch = df.iloc[1]['percent_change']
+        prior_prior_pch= df.iloc[2]['percent_change']
+        support = df.iloc[1]['Close']
+        igniting_three = df.iloc[2]['percent_change']  # 3 bar igniting
+        prior_support = df.iloc[2]['Close']
+        igniting_four = df.iloc[3]['percent_change']  # 4 bar igniting
 
         # 3 BAR PLAY 
         if cur_pch > 2 \
@@ -191,7 +192,6 @@ def check_play(ticker, play_type, priority, interval):
                 # monitor_process.start()
             except Exception as e:
                 print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
-
         # 4 BAR PLAY 
         if cur_pch > 3 \
         and (prior_pch < 0 \
@@ -241,7 +241,7 @@ def get_plays():
 
     # Morning briefing
     try:
-        from datetime import datetime
+        
         from datetime import timezone
         import pytz
 

@@ -147,10 +147,6 @@ def get_data(stock, interval, date=None):
     return df[:910] #only considser one day's data
 
 
-def nine_twenty_cross(df):
-    return df.iloc[1]['ema_9']<df.iloc[1]['ema_20'] and df.iloc[0]['ema_9']>df.iloc[0]['ema_20']
-
-
 def crosses_below(df, threshold):
     return (df.iloc[0]['close'] < threshold and df.iloc[0]['open'] > threshold) \
            or (df.iloc[0]['close'] < threshold and df.iloc[1]['open'] > threshold)
@@ -171,7 +167,6 @@ def monitor_bought_stock(ticker, qty, bought_price, support, bought_date):
 
         percent_gain  =  round(((current_price - bought_price) / bought_price),2) * 100
 
-        # sell position
         if df.iloc[0]['percent_change'] < -2:
             print(f"SOLD: percent_change < -2 ~ percent_gain: {percent_gain} at {cur_time}")
             place_sell(ticker, qty)
