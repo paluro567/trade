@@ -144,6 +144,7 @@ def check_play(ticker, play_type, priority, interval):
     try:
         # DATA
         df = yf_data(ticker, interval)
+        df=df[::-1]
         close_price = df.iloc[0]['Close']
         cur_vol = df.iloc[0]['Volume']
         time_stmp = df.index[0]  # Extracting datetime from index
@@ -285,7 +286,7 @@ def get_plays():
 
 def run_three_bar(interval):
     global BOUGHT
-    sleep_until(9, 29, datetime, time) # start executing 9:29
+    # sleep_until(9, 29, datetime, time) # start executing 9:29
     global texted_plays
     texted_plays=[]
     iteration = 1

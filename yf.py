@@ -113,8 +113,9 @@ def yf_data(ticker, interval_time):
 if __name__ == "__main__":
     ticker_symbol = "PLTR"  
     yahoo_data=yf_data(ticker_symbol, '5m')
+    print("index[0]", yahoo_data[::-1].index[0])
     print(f"yahoo_data: {yahoo_data} \n type yahoo data: {type(yahoo_data)}")
 
 
-    alpha_data=alpha_get_data(ticker_symbol, "5min")
-    print(f"alpha_data: {alpha_data} \n type yahoo data: {type(alpha_data)}")
+    # alpha_data=alpha_get_data(ticker_symbol, "5min")
+    # print(f"alpha_data: {alpha_data} \n type yahoo data: {type(alpha_data)}")
