@@ -74,7 +74,7 @@ def pdt_rule(filename=gcp_trades_path):
 
     except Exception as e:
         print("Error:", e)
-        return True 
+        return True
 
 if __name__=='__main__':
     print("Day beginning 5 day PDT period: ", begin_pdt_period())

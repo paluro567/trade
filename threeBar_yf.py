@@ -147,10 +147,14 @@ def check_play(ticker, play_type, priority, interval):
         close_price = df.iloc[0]['Close']
         cur_vol = df.iloc[0]['Volume']
         time_stmp = df.index[0]  # Extracting datetime from index
+        print("time_stmp: ",time_stmp)
         avg_vol = df['Volume'].mean()
         cur_pch = df.iloc[0]['percent_change']
+        print("cur_pch: ",cur_pch)
         prior_pch = df.iloc[1]['percent_change']
+        print("prior_pch: ",prior_pch)
         prior_prior_pch= df.iloc[2]['percent_change']
+        print("prior_prior_pch: ",prior_prior_pch)
         support = df.iloc[1]['Close']
         igniting_three = df.iloc[2]['percent_change']  # 3 bar igniting
         prior_support = df.iloc[2]['Close']
