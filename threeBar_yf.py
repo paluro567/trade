@@ -92,8 +92,8 @@ def nine_twenty_cross(df):
 
 
 def crosses_below(df, threshold):
-    return (df.iloc[0]['close'] < threshold and df.iloc[0]['open'] > threshold) \
-           or (df.iloc[0]['close'] < threshold and df.iloc[1]['open'] > threshold)
+    return (df.iloc[0]['Close'] < threshold and df.iloc[0]['Open'] > threshold) \
+           or (df.iloc[0]['Close'] < threshold and df.iloc[1]['Open'] > threshold)
 
 
 def monitor_bought_stock(ticker, qty, bought_price, support, bought_date):
@@ -101,7 +101,7 @@ def monitor_bought_stock(ticker, qty, bought_price, support, bought_date):
     
     while True:
         df = yf_data(ticker, '1m')
-        current_price = df.iloc[0]['close']
+        current_price = df.iloc[0]['Close']
         cur_time = df.index[0]
 
         #  price weakening
