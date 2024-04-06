@@ -34,8 +34,8 @@ last_time = time.time()
 
 texted_plays  =  []
 
-# constants 
-API_KEY  =  'XB2M6HD2DQMJA5Z1'
+# constants
+API_KEY  =  'XB2M6HD2DQMJA5Z1' # DISCONTINUED
 too_close_thresh = 1.5 #resistances are duplicates if within 1.5% of one another
 
 # alpha data
@@ -85,12 +85,28 @@ def alpha_get_data(stock, interval, date=None):
     return latest_data[::-1] #alpha data return
 
 def yf_data(ticker, interval_time):
+     # rate limit 
+    global calls_made, last_time, shortest_interval
+    
+    elapsed_time = time.time() - last_time
+
+    if elapsed_time<shortest_interval: # calls are being made too fast
+        sleep_time=shortest_interval - elapsed_time
+        print(f"rate limit sleep: {sleep_time}")
+        time.sleep(sleep_time)
+
+    calls_made+=1
+    last_time = time.time()
+    if calls_made%50==0:
+        print("calls made: {calls_made} at {last_time}")
+    
     try:
         # Fetch intraday data using the ticker symbol
         stock = yf.Ticker(ticker)
         
         # Get historical market data for the last trading day with 5-minute intervals
         intraday_data = stock.history(period="1d", interval=interval_time, prepost=True)
+        intraday_data=intraday_data
         
         # Print the intraday data
         print("Intraday Data for", ticker)
@@ -106,15 +122,22 @@ def yf_data(ticker, interval_time):
     except Exception as e:
         print("Error fetching data:", e)
 
-
-
-
 # Example usage
 if __name__ == "__main__":
-    ticker_symbol = "PLTR"  
-    yahoo_data=yf_data(ticker_symbol, '5m')
-    print("index[0]", yahoo_data[::-1].index[0])
-    print(f"yahoo_data: {yahoo_data} \n type yahoo data: {type(yahoo_data)}")
+    ticker_symbol = "MDIA"
+    print(f"Checking {ticker_symbol} dataframe")
+    yahoo_data = yf_data(ticker_symbol, '1m')
+    print("yahoo_data: ", yahoo_data)
+    print("time at 0: ", yahoo_data.index[0])
+    for i in range(len(yahoo_data)-2):
+        if yahoo_data.loc[yahoo_data.index[i], 'percent_change'] > 5 and \
+           yahoo_data.loc[yahoo_data.index[i+1], 'percent_change'] < 0 and \
+           yahoo_data.loc[yahoo_data.index[i+2], 'percent_change'] > 3:
+            print(f"buy at {yahoo_data.index[i+2]}")
+
+
+
+
 
 
     # alpha_data=alpha_get_data(ticker_symbol, "5min")

@@ -69,6 +69,7 @@ def yf_data(ticker, interval_time):
         
         # Get historical market data for the last trading day with 5-minute intervals
         intraday_data = stock.history(period="1d", interval=interval_time, prepost=True)
+        intraday_data=intraday_data[::-1]
         
         # Print the intraday data
         print("Intraday Data for", ticker)
@@ -87,7 +88,7 @@ def yf_data(ticker, interval_time):
 
 
 def nine_twenty_cross(df):
-    return df.iloc[1]['ema_9']<df.iloc[1]['ema_20'] and df.iloc[0]['ema_9']>df.iloc[0]['ema_20']
+    return df.iloc[1]['SMA_9']<df.iloc[1]['SMA_20'] and df.iloc[0]['SMA_9']>df.iloc[0]['SMA_20']
 
 
 def crosses_below(df, threshold):
@@ -101,18 +102,17 @@ def monitor_bought_stock(ticker, qty, bought_price, support, bought_date):
     while True:
         df = yf_data(ticker, '1m')
         current_price = df.iloc[0]['close']
-        cur_time = df.iloc[0]['Datetime']
+        cur_time = df.index[0]
 
         #  price weakening
-        ema_cross = crosses_below(df, df.iloc[0]['ema_9'])
+        ema_cross = crosses_below(df, df.iloc[0]['SMA_9'])
         support_cross = crosses_below(df, support)
-
 
         percent_gain  =  round(((current_price - bought_price) / bought_price),2) * 100
 
         # sell position
-        if df.iloc[0]['percent_change'] < -2:
-            print(f"SOLD: percent_change < -2 ~ percent_gain: {percent_gain} at {cur_time}")
+        if percent_gain < -2:
+            print(f"SOLD: percent_gain: {percent_gain} at {cur_time}")
             place_sell(ticker, qty)
             break
 
@@ -144,7 +144,6 @@ def check_play(ticker, play_type, priority, interval):
     try:
         # DATA
         df = yf_data(ticker, interval)
-        df=df[::-1]
         close_price = df.iloc[0]['Close']
         cur_vol = df.iloc[0]['Volume']
         time_stmp = df.index[0]  # Extracting datetime from index
@@ -162,9 +161,9 @@ def check_play(ticker, play_type, priority, interval):
         igniting_four = df.iloc[3]['percent_change']  # 4 bar igniting
 
         # 3 BAR PLAY 
-        if cur_pch > 2 \
+        if cur_pch > 3 \
         and prior_pch < 0 \
-        and igniting_three > 2 \
+        and igniting_three > 5 \
         and cur_vol > 3*avg_vol \
         and (ticker not in texted_plays) \
         and not pdt_rule(): # removed bought condition and using PDT to limit
@@ -181,11 +180,11 @@ def check_play(ticker, play_type, priority, interval):
             # place Alpaca buy order
             print(f"buying ticker: {ticker} at {df.iloc[0]['Datetime']}")
             try:
-                if play_type  ==  'ALARM PLAY':
+                if play_type  ==  'ALARM PLAY' and not BOUGHT:
                     qty =  22//close_price
                     place_buy(str(ticker), qty)
                     print(f"{ticker} - 3 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
-                else:  # regular play
+                elif not BOUGHT:  # regular play
                     qty =  22//close_price
                     place_buy(str(ticker), qty)
                     print(f"{ticker} - 3 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
@@ -198,10 +197,10 @@ def check_play(ticker, play_type, priority, interval):
             except Exception as e:
                 print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
         # 4 BAR PLAY 
-        if cur_pch > 3 \
+        if cur_pch > 5 \
         and (prior_pch < 0 \
         or prior_prior_pch < 0) \
-        and igniting_four > 2 \
+        and igniting_four > 5 \
         and cur_vol > 3*avg_vol \
         and (ticker not in texted_plays)\
         and not pdt_rule(): #removed and not bought
@@ -222,15 +221,16 @@ def check_play(ticker, play_type, priority, interval):
             # place Alpaca buy order
             print(f"buying ticker: {ticker} at {time_stmp}")
             try:
-                if play_type  ==  'ALARM PLAY':
-                    qty =  33//close_price
+                if play_type  ==  'ALARM PLAY' and not BOUGHT:
+                    qty =  22//close_price
                     place_buy(str(ticker), qty)
                     print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
-                else:
-                    qty = 33//close_price
+                    BOUGHT=True
+                elif not BOUGHT:
+                    qty = 22//close_price
                     place_buy(str(ticker), qty)
                     print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
-                BOUGHT=True
+                    BOUGHT=True
                 # monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price, four_bar_support))
                 buy_date=datetime.now() # track day trades in day_trades.txt
                 monitor_bought_stock(ticker, qty, close_price, four_bar_support, (buy_date.month,buy_date.day))
@@ -286,7 +286,7 @@ def get_plays():
 
 def run_three_bar(interval):
     global BOUGHT
-    # sleep_until(9, 29, datetime, time) # start executing 9:29
+    sleep_until(9, 29, datetime, time) # start executing 9:29
     global texted_plays
     texted_plays=[]
     iteration = 1
@@ -303,7 +303,6 @@ def run_three_bar(interval):
             for priority, stock in enumerate(stocks):
                 try:
                     print(f"{dashes}Checking {stock} {dashes}")
-                    # if not BOUGHT:
                     check_play(stock, category, priority+1, interval)
                     
                 except Exception as e:
@@ -321,7 +320,7 @@ def run_three_bar(interval):
 
 if __name__  ==  '__main__':
     try:
-        run_three_bar('5m')
+        run_three_bar('1m')
     except Exception as e:
         print(f"unable to run run_three_bar with: {e}")
 
