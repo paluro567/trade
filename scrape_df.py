@@ -32,7 +32,7 @@ def calculate_percent_change(current_price, previous_price):
 def three_bar_breakout(cur_bars):
     return cur_bars[-1].percent_change>5 \
         and cur_bars[-2].percent_change<0 \
-            and cur_bars[-2].percent_change>5
+            and cur_bars[-3].percent_change>5
 
 # Function to update the minute_interval_df
 def monitor_stock(ticker):
