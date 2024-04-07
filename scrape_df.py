@@ -76,15 +76,21 @@ if __name__=="__main__":
 
 
     # Get plays for current date
-    desired_timezone = 'America/New_York'
-    current_utc_time = datetime.datetime.now(timezone.utc)
-    current_local_time = current_utc_time.astimezone(pytz.timezone(desired_timezone))
-    curr_date_local = current_local_time.strftime('%Y-%m-%d')
-    alarm_plays, green_plays  =  get_briefing(curr_date_local) 
+    try:
+        desired_timezone = 'America/New_York'
+        current_utc_time = datetime.datetime.now(timezone.utc)
+        current_local_time = current_utc_time.astimezone(pytz.timezone(desired_timezone))
+        curr_date_local = current_local_time.strftime('%Y-%m-%d')
+        alarm_plays, green_plays  =  get_briefing(curr_date_local) 
+    except Exception as e:
+        print(f"Error before scraping: {e}")
 
     # start monitoring a stock
     for play in alarm_plays:
-        process = multiprocessing.Process(target=monitor_stock, args=(play))
-        process.start()
+        try:
+            process = multiprocessing.Process(target=monitor_stock, args=(play))
+            process.start()
+        except Exception as e:
+        print(f"Error before multiprocessing: {e}")
 
 
