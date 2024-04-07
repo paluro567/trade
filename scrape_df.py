@@ -71,6 +71,8 @@ if __name__=="__main__":
     from datetime import timezone
     import pytz
     import multiprocessing
+    from threeBar_yf import sleep_until
+    sleep_until(9, 29) # sleep till market opens to begin execution
 
 
     # Get plays for current date

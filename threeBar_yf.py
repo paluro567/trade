@@ -30,9 +30,9 @@ last_time = time.time()
 
 texted_plays  =  []
 
-def sleep_until(target_hour, target_minute, datetime_module, time_module):
+def sleep_until(target_hour, target_minute):
     # Get the current time
-    current_time = datetime_module.now()
+    current_time = datetime.now()
 
     # Set the target time
     target_time = current_time.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
@@ -45,7 +45,7 @@ def sleep_until(target_hour, target_minute, datetime_module, time_module):
     time_difference = (target_time - current_time).total_seconds()
 
     # Sleep until the target time
-    time_module.sleep(time_difference)
+    time.sleep(time_difference)
 
 def yf_data(ticker, interval_time):
      # rate limit 
@@ -286,7 +286,7 @@ def get_plays():
 
 def run_three_bar(interval):
     global BOUGHT
-    sleep_until(9, 29, datetime, time) # start executing 9:29
+    sleep_until(9, 29) # start executing 9:29
     global texted_plays
     texted_plays=[]
     iteration = 1
