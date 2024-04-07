@@ -58,7 +58,7 @@ def monitor_stock(ticker):
             update_bar.percent_change= calculate_percent_change(current_price, update_bar.open_price)
             watch_bars[-1]=update_bar
 
-        if three_bar_breakout(ticker):
+        if three_bar_breakout(watch_bars):
             message =(f"scraped alert! {ticker}")
             for bar in watch_bars:
                 message+="\n" + bar.__str__ + "\n"
@@ -88,9 +88,9 @@ if __name__=="__main__":
     # start monitoring a stock
     for play in alarm_plays:
         try:
-            process = multiprocessing.Process(target=monitor_stock, args=(play))
+            process = multiprocessing.Process(target=monitor_stock, args=(play,))
             process.start()
         except Exception as e:
-        print(f"Error before multiprocessing: {e}")
+            print(f"Error before multiprocessing: {e}")
 
 
