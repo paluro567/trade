@@ -5,6 +5,7 @@ from sms import text
 import datetime
 from datetime import timezone
 import pytz
+import time
 from threeBar_yf import sleep_until
 import threading
 
@@ -48,7 +49,7 @@ def monitor_stock(ticker):
         # create a new bar object
         if len(watch_bars)<4 \
             or (current_time - watch_bars[-1].open_time).total_seconds() >= 60:
-            new_bar= Bar(current_price, current_price, 0, current_time)
+            new_bar= Bar(ticker, current_price, current_price, 0, current_time)
             if len(watch_bars)>=4:
                 watch_bars.pop(0)
             if len(watch_bars)>0:
@@ -68,6 +69,8 @@ def monitor_stock(ticker):
                 message+="\n" + str(bar) + "\n"
             text(message)
             texted=True
+        time.sleep(1)
+
 
 
 if __name__=="__main__":

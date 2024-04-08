@@ -161,9 +161,9 @@ def check_play(ticker, play_type, priority, interval):
         igniting_four = df.iloc[3]['percent_change']  # 4 bar igniting
 
         # 3 BAR PLAY 
-        if cur_pch > 3 \
+        if cur_pch > 2 \
         and prior_pch < 0 \
-        and igniting_three > 5 \
+        and igniting_three > 2 \
         and cur_vol > 3*avg_vol \
         and (ticker not in texted_plays) \
         and not pdt_rule(): # removed bought condition and using PDT to limit
