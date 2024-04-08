@@ -1,16 +1,12 @@
 import pandas as pd
-import time
-import requests
 from scrape_yahoo import scrape_stock_price
 from Discord import get_briefing
 from sms import text
-
-
-
-import pandas as pd
-import time
+import datetime
+from datetime import timezone
+import pytz
+from threeBar_yf import sleep_until
 import threading
-texted=False
 
 class Bar:
     def __init__(self, open_price, close_price, percent_change, open_time):
@@ -22,10 +18,7 @@ class Bar:
         return f"Open Price: {self.open_price}, Close Price: {self.close}, Percent Change: {self.percent_change}, Open Time: {self.open_time}"
 
 
-    
-
-
-# Example function to calculate percent change
+# Calculate percent change
 def calculate_percent_change(current_price, previous_price):
     if previous_price is None:
         return None
@@ -38,6 +31,8 @@ def three_bar_breakout(cur_bars):
 
 # Function to update the minute_interval_df
 def monitor_stock(ticker):
+    texted=False # only text once / stock
+
     watch_bars=[]
     while True:
         current_time = pd.Timestamp.now()
@@ -69,12 +64,7 @@ def monitor_stock(ticker):
 
 
 if __name__=="__main__":
-    import datetime
-
-    from datetime import timezone
-    import pytz
-    import multiprocessing
-    from threeBar_yf import sleep_until
+    
     sleep_until(9, 29) # sleep till market opens to begin execution
 
 
@@ -91,9 +81,15 @@ if __name__=="__main__":
     # start monitoring a stock
     for play in alarm_plays:
         try:
-            process = multiprocessing.Process(target=monitor_stock, args=(play,))
-            process.start()
+            thread = threading.Thread(target=monitor_stock, args=(play,))
+            thread.start()
         except Exception as e:
-            print(f"Error before multiprocessing: {e}")
+            print(f"Error with thread: {e}")
+
+
+
+
+
+
 
 
