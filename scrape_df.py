@@ -58,7 +58,7 @@ def monitor_stock(ticker):
         if three_bar_breakout(watch_bars) and not texted:
             message =(f"scraped alert! {ticker}")
             for bar in watch_bars:
-                message+="\n" + bar.__str__ + "\n"
+                message+="\n" + bar.__str__() + "\n"
             text(message)
             texted=True
 
