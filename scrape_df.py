@@ -16,6 +16,7 @@ class Bar:
         self.close_price = close_price
         self.percent_change = percent_change
         self.open_time = open_time
+
     def __str__(self):
         return f"ticker: {self.ticker}, Open Price: {self.open_price}, Close Price: {self.close_price}, Percent Change: {self.percent_change}, Open Time: {self.open_time}"
 
@@ -39,6 +40,14 @@ def monitor_stock(ticker):
     texted=False # only text once / stock
 
     watch_bars=[]
+    # initialize a first bar
+    try:
+        start_time = pd.Timestamp.now()
+        initial_price = scrape_stock_price(ticker)
+        watch_bars.append(Bar(ticker, initial_price, initial_price, 0, start_time))
+    except Exception as e:
+        print(f" unable to get first bar: {e}")
+    
     while True:
         current_time = pd.Timestamp.now()
         try:
@@ -47,13 +56,11 @@ def monitor_stock(ticker):
             print(f"unable to scrape : {e}")
 
         # create a new bar object
-        if len(watch_bars)<4 \
-            or (current_time - watch_bars[-1].open_time).total_seconds() >= 60:
+        if (current_time - watch_bars[-1].open_time).total_seconds() >= 60:
             new_bar= Bar(ticker, current_price, current_price, 0, current_time)
             if len(watch_bars)>=4:
                 watch_bars.pop(0)
-            if len(watch_bars)>0:
-                print(watch_bars[-1]) #print out the completed bar minute
+            print(watch_bars[-1]) #print out the completed bar minute
             watch_bars.append(new_bar)
             
         # update last bar
@@ -95,11 +102,3 @@ if __name__=="__main__":
             thread.start()
         except Exception as e:
             print(f"Error with thread: {e}")
-
-
-
-
-
-
-
-
