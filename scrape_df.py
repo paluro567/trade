@@ -65,7 +65,7 @@ def monitor_stock(ticker):
 
 if __name__=="__main__":
     
-    sleep_until(9, 29) # sleep till market opens to begin execution
+    # sleep_until(9, 29) # sleep till market opens to begin execution
 
 
     # Get plays for current date
