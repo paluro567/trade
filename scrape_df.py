@@ -9,13 +9,14 @@ from threeBar_yf import sleep_until
 import threading
 
 class Bar:
-    def __init__(self, open_price, close_price, percent_change, open_time):
+    def __init__(self, ticker, open_price, close_price, percent_change, open_time):
+        self.ticker = ticker
         self.open_price = open_price
-        self.close = close_price
+        self.close_price = close_price
         self.percent_change = percent_change
         self.open_time = open_time
     def __str__(self):
-        return f"Open Price: {self.open_price}, Close Price: {self.close}, Percent Change: {self.percent_change}, Open Time: {self.open_time}"
+        return f"ticker: {self.ticker}, Open Price: {self.open_price}, Close Price: {self.close_price}, Percent Change: {self.percent_change}, Open Time: {self.open_time}"
 
 
 # Calculate percent change
@@ -25,9 +26,12 @@ def calculate_percent_change(current_price, previous_price):
     return ((current_price - previous_price) / previous_price) * 100
 
 def three_bar_breakout(cur_bars):
-    return cur_bars[-1].percent_change>5 \
-        and cur_bars[-2].percent_change<0 \
-            and cur_bars[-3].percent_change>5
+    if len(cur_bars) < 3:
+        return False
+    return cur_bars[-1].percent_change > 2 \
+        and cur_bars[-2].percent_change < 0 \
+        and cur_bars[-3].percent_change > 2
+
 
 # Function to update the minute_interval_df
 def monitor_stock(ticker):
@@ -47,7 +51,10 @@ def monitor_stock(ticker):
             new_bar= Bar(current_price, current_price, 0, current_time)
             if len(watch_bars)>=4:
                 watch_bars.pop(0)
+            if len(watch_bars)>0:
+                print(watch_bars[-1]) #print out the completed bar minute
             watch_bars.append(new_bar)
+            
         # update last bar
         else:
             update_bar=watch_bars[-1]
@@ -58,7 +65,7 @@ def monitor_stock(ticker):
         if three_bar_breakout(watch_bars) and not texted:
             message =(f"scraped alert! {ticker}")
             for bar in watch_bars:
-                message+="\n" + bar.__str__() + "\n"
+                message+="\n" + str(bar) + "\n"
             text(message)
             texted=True
 
