@@ -10,6 +10,7 @@ from sms import text
 import pandas as pd
 import time
 import threading
+texted=False
 
 class Bar:
     def __init__(self, open_price, close_price, percent_change, open_time):
@@ -29,6 +30,7 @@ def calculate_percent_change(current_price, previous_price):
     if previous_price is None:
         return None
     return ((current_price - previous_price) / previous_price) * 100
+
 def three_bar_breakout(cur_bars):
     return cur_bars[-1].percent_change>5 \
         and cur_bars[-2].percent_change<0 \
@@ -58,11 +60,12 @@ def monitor_stock(ticker):
             update_bar.percent_change= calculate_percent_change(current_price, update_bar.open_price)
             watch_bars[-1]=update_bar
 
-        if three_bar_breakout(watch_bars):
+        if three_bar_breakout(watch_bars) and not texted:
             message =(f"scraped alert! {ticker}")
             for bar in watch_bars:
                 message+="\n" + bar.__str__ + "\n"
             text(message)
+            texted=True
 
 
 if __name__=="__main__":
