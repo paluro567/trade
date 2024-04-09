@@ -79,7 +79,10 @@ def yf_data(ticker, interval_time):
         intraday_data['SMA_9'] = intraday_data['Close'].rolling(window=9).mean()
         intraday_data['SMA_20'] = intraday_data['Close'].rolling(window=20).mean()
         intraday_data['SMA_180'] = intraday_data['Close'].rolling(window=180).mean()
+        print("Close data: ", intraday_data['Close'])
+        print("open data: ", intraday_data['Open'])
         intraday_data['percent_change'] = (intraday_data['Close']-intraday_data['Open'])/ intraday_data['Open']* 100
+        print("percent_change data: ", intraday_data['percent_change'])
 
         return intraday_data # yahoo data return
     except Exception as e:
@@ -319,8 +322,13 @@ def run_three_bar(interval):
         print(f"minute {iteration} - texted plays: ", texted_plays)
 
 if __name__  ==  '__main__':
-    try:
-        run_three_bar('1m')
-    except Exception as e:
-        print(f"unable to run run_three_bar with: {e}")
+    df = yf_data('pltr', '1m')
+    print("cur pch [0]: ", df.iloc[0]['percent_change'])
+
+#     try:
+#         run_three_bar('1m')
+#     except Exception as e:
+#         print(f"unable to run run_three_bar with: {e}")
+        
+
 
