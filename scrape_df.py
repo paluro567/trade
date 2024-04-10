@@ -47,12 +47,13 @@ def monitor_stock(ticker):
     except Exception as e:
         print(f" unable to get first bar: {e}")
     watch_bars=[Bar(ticker, initial_price, initial_price, 0, start_time)]
-    
+    iteration=1
     while True:
         current_time = pd.Timestamp.now()
         try:
             current_price = scrape_stock_price(ticker)
-            print(f"{ticker} current price: {current_price}")
+            if iteration%10==0:
+                print(f"{ticker} current price: {current_price}")
         except Exception as e:
             print(f"unable to scrape : {e}")
 
@@ -101,9 +102,11 @@ if __name__=="__main__":
         print(f"Error before scraping: {e}")
 
     # start monitoring a stock
-    for play in alarm_plays:
+    check_plays= alarm_plays+green_plays
+    monitor_stock(check_plays[0])
+    for i in range(1, len(check_plays)):
         try:
-            thread = threading.Thread(target=monitor_stock, args=(play,))
+            thread = threading.Thread(target=monitor_stock, args=(check_plays[i]))
             thread.start()
         except Exception as e:
             print(f"Error with thread: {e}")
