@@ -37,16 +37,16 @@ def three_bar_breakout(cur_bars):
 
 # Function to update the minute_interval_df
 def monitor_stock(ticker):
+    print("checking: ", ticker)
     texted=False # only text once / stock
 
-    watch_bars=[]
     # initialize a first bar
     try:
         start_time = pd.Timestamp.now()
         initial_price = scrape_stock_price(ticker)
-        watch_bars.append(Bar(ticker, initial_price, initial_price, 0, start_time))
     except Exception as e:
         print(f" unable to get first bar: {e}")
+    watch_bars=[Bar(ticker, initial_price, initial_price, 0, start_time)]
     
     while True:
         current_time = pd.Timestamp.now()
