@@ -52,16 +52,21 @@ def monitor_stock(ticker):
         current_time = pd.Timestamp.now()
         try:
             current_price = scrape_stock_price(ticker)
+            print(f"{ticker} current price: {current_price}")
         except Exception as e:
             print(f"unable to scrape : {e}")
 
         # create a new bar object
         if (current_time - watch_bars[-1].open_time).total_seconds() >= 60:
-            new_bar= Bar(ticker, current_price, current_price, 0, current_time)
-            if len(watch_bars)>=4:
+            previous_close_price = watch_bars[-1].close_price
+            new_bar = Bar(ticker, previous_close_price, current_price, 0, current_time)
+            if len(watch_bars) >= 4:
                 watch_bars.pop(0)
-            print(watch_bars[-1]) #print out the completed bar minute
+            # print the last completed bar 
+            print("closed bar: ", watch_bars[-1]) 
             watch_bars.append(new_bar)
+
+
             
         # update last bar
         else:

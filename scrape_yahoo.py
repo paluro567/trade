@@ -28,7 +28,7 @@ def scrape_stock_price(stock):
 if __name__ == '__main__':
  
     # Call the function to get the stock price and store it in the DataFrame
-    p = scrape_stock_price('pltr')
+    p = scrape_stock_price('JAGX')
 
     # Print the DataFrame
     print(p)
