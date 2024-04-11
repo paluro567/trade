@@ -106,7 +106,7 @@ if __name__=="__main__":
     monitor_stock(check_plays[0])
     for i in range(1, len(check_plays)):
         try:
-            thread = threading.Thread(target=monitor_stock, args=(check_plays[i]))
+            thread = threading.Thread(target=monitor_stock, args=(check_plays[i],))
             thread.start()
         except Exception as e:
             print(f"Error with thread: {e}")
