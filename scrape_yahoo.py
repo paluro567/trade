@@ -13,7 +13,8 @@ def scrape_stock_price(stock):
 
     price = soup.find(class_="quote-header-section Cf Bxz(cb) Pos(r) Mb(5px) Bgc($lv2BgColor) Maw($maxModuleWidth) Miw($minGridWidth) smartphone_Miw(ini) Miw(ini)!--tab768 Miw(ini)!--tab1024 Mstart(a) Mend(a) Px(20px) smartphone_Pb(0px) smartphone_Mb(0px) smartphone_Z(11)")
 
-    resp_price_string = price.text.split("trend2W10W9M")[1]
+    print("price.text: ", price.text)
+    resp_price_string = price.text.split("USDFollow")[1]
     string_price = ""
     for char in resp_price_string:
         if char.isdigit() or char == ".":
@@ -28,7 +29,7 @@ def scrape_stock_price(stock):
 if __name__ == '__main__':
  
     # Call the function to get the stock price and store it in the DataFrame
-    p = scrape_stock_price('JAGX')
+    p = scrape_stock_price('NXPL')
 
     # Print the DataFrame
     print(p)
