@@ -82,7 +82,7 @@ def monitor_stock(ticker):
                 message+="\n" + str(bar) + "\n"
             text(message)
             texted=True
-        time.sleep(1)
+        time.sleep(0.5)
 
 
 
