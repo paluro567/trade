@@ -135,14 +135,6 @@ if __name__  ==  '__main__':
     print(df)
     print("index 0: ", df.iloc[0])
     print("\nindex -1: ",df.iloc[-1])
-    # for index, row in df.iterrows():
-    #     if row['Close'] > row['SMA_180'] and row['Open'] < row['SMA_180']:
-    #         print("Price crossed above 180EMA at:", index)
-    #     # Check if the close price crosses below the 180-day EMA
-    #     elif row['Close'] < row['SMA_180'] and row['Open'] > row['SMA_180']:
-    #         print("Price crossed below 180EMA at:", index)
-    #     else:
-    #         print(f"{index} 180: {row['SMA_180']} open: {row['Open']} close: {row['Close']}")
     try:
         run_monitor_holdings('30m')
     except Exception as e:
