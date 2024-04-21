@@ -283,18 +283,18 @@ def get_plays():
         print(f"get_plays - unable to get briefing or some error: {e}")
         print("sleeping 5 minutes...")
         time.sleep(300)  # Sleep for 5 minutes
-        print("running run_three_bar again")
+        print("running run_monitor_holdings again")
         return get_plays()
     return plays_categories
 
-def run_three_bar(interval):
+def run_monitor_holdings(interval):
     global BOUGHT
     sleep_until(9, 29) # start executing 9:29
     global texted_plays
     texted_plays=[]
     iteration = 1
 
-    print("running run_three_bar")
+    print("running run_monitor_holdings")
     plays_categories = get_plays()
 
     dashes = '-' * 20 # formatting
@@ -309,7 +309,7 @@ def run_three_bar(interval):
                     check_play(stock, category, priority+1, interval)
                     
                 except Exception as e:
-                    print(f"run_three_bar - unable to check {stock} with error: {e}")
+                    print(f"run_monitor_holdings - unable to check {stock} with error: {e}")
         
         
         iteration += 1
@@ -322,13 +322,13 @@ def run_three_bar(interval):
         print(f"minute {iteration} - texted plays: ", texted_plays)
 
 if __name__  ==  '__main__':
-    df = yf_data('pltr', '1m')
+    df = yf_data('pltr', '30m')
     print("cur pch [0]: ", df.iloc[0]['percent_change'])
 
-#     try:
-#         run_three_bar('1m')
-#     except Exception as e:
-#         print(f"unable to run run_three_bar with: {e}")
+    try:
+        run_monitor_holdings('1m')
+    except Exception as e:
+        print(f"unable to run run_monitor_holdings with: {e}")
         
 
 

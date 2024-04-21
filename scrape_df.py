@@ -46,6 +46,7 @@ def monitor_stock(ticker):
         initial_price = scrape_stock_price(ticker)
     except Exception as e:
         print(f" unable to get first bar: {e}")
+        return 1
     watch_bars=[Bar(ticker, initial_price, initial_price, 0, start_time)]
     iteration=1
     while True:
