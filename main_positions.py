@@ -57,7 +57,7 @@ def yf_data(ticker, interval_time):
         stock = yf.Ticker(ticker)
         
         # Get historical market data for the last trading day with 5-minute intervals
-        intraday_data = yf.download(ticker, start=start_date, end=end_date, interval=interval_time, progress=False)
+        intraday_data = yf.download(ticker, start=start_date, end=end_date, interval=interval_time, progress=False, prepost=True)
         intraday_data=intraday_data[::-1]
 
         # Calculate EMAs
