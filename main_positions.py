@@ -18,17 +18,9 @@ import ta
 # Initialize variables to track API call rate
 global BOUGHT  # bought a stock this day
 BOUGHT=False
+texted={}
 
-global calls_made
-calls_made = 0
 
-global shortest_interval
-shortest_interval = 1.8 # 2,000 calls are allowed per hour using YF
-
-global last_time
-last_time = time.time()
-
-texted_plays  =  []
 
 def sleep_until(target_hour, target_minute):
     # Get the current time
@@ -73,6 +65,13 @@ def yf_data(ticker, interval_time):
     except Exception as e:
         print("Error fetching data:", e)
 
+#returns true if texted recently
+def texted_recently(ticker):
+    # Check if the ticker was texted within the last 30 minutes
+    if ticker in texted:
+        return (datetime.datetime.now() - texted[ticker]) < datetime.timedelta(minutes=30)
+    else:
+        return False
 
 
 def check_play(ticker, interval):
@@ -84,22 +83,25 @@ def check_play(ticker, interval):
         latest=df.iloc[0]
 
         # break above 180EMA
-        if latest['Open']<latest['EMA_180'] and latest['Close']>latest['EMA_180']:
+        if latest['Open']<latest['EMA_180'] and latest['Close']>latest['EMA_180'] and not texted_recently(ticker):
             message = (f" {ticker} crossed above 180EMA and latest % change is {latest['percent_change']}% \n")
             print(f"Texting: {message}")
             text(message)
+            texted[ticker] = datetime.datetime.now()  # Update texted time
 
         # break below 180EMA
-        if latest['Open']>latest['EMA_180'] and latest['Close']<latest['EMA_180']:
+        if latest['Open']>latest['EMA_180'] and latest['Close']<latest['EMA_180'] and not texted_recently(ticker):
             message = (f" {ticker} crossed below 180EMA and latest % change is {latest['percent_change']}% \n")
             print(f"Texting: {message}")
             text(message)
+            texted[ticker] = datetime.datetime.now()  # Update texted time
 
         #large percent change
-        if latest['percent_change']>3 or latest['percent_change']<-3:
+        if latest['percent_change']>3 or latest['percent_change']<-3 and not texted_recently(ticker):
             message = (f" {ticker} has large percent change: {latest['percent_change']}% \n")
             print(f"Texting: {message}")
             text(message)
+            texted[ticker] = datetime.datetime.now()  # Update texted time
 
     except Exception as e:
         print(f"unable to check_play {ticker} with error:{e}")
@@ -107,8 +109,7 @@ def check_play(ticker, interval):
 
 def run_monitor_holdings(interval):
     # sleep_until(9, 29) # start executing 9:29
-    global texted_plays
-    texted_plays=[]
+
     iteration = 1
 
     dashes = '-' * 20 # formatting
