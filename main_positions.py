@@ -69,11 +69,12 @@ def yf_data(ticker, interval_time):
 def texted_recently(ticker):
     # Check if the ticker was texted within the last 30 minutes
     if ticker in texted:
-        time_difference = datetime.datetime.now() - texted[ticker]
+        time_difference = datetime.now() - texted[ticker]  # Fix: Removed datetime prefix
         print(f"Time difference for {ticker}: {time_difference}")
-        return time_difference < datetime.timedelta(minutes=30)
+        return time_difference < timedelta(minutes=30)  # Fix: Removed datetime prefix
     else:
         return False
+
 
 
 def check_play(ticker, interval):
