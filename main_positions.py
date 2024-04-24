@@ -91,21 +91,21 @@ def check_play(ticker, interval):
                 message = (f" {ticker} crossed above 180EMA and latest % change is {latest['percent_change']}% \n")
                 print(f"Texting: {message}")
                 text(message)
-                texted[ticker] = datetime.datetime.now()  # Update texted time
+                texted[ticker] = datetime.now()  # Update texted time
 
             # break below 180EMA
             if latest['Open']>latest['EMA_180'] and latest['Close']<latest['EMA_180']:
                 message = (f" {ticker} crossed below 180EMA and latest % change is {latest['percent_change']}% \n")
                 print(f"Texting: {message}")
                 text(message)
-                texted[ticker] = datetime.datetime.now()  # Update texted time
+                texted[ticker] = datetime.now()  # Update texted time
 
             #large percent change
             if latest['percent_change']>3 or latest['percent_change']<-3:
                 message = (f" {ticker} has large percent change: {latest['percent_change']}% \n")
                 print(f"Texting: {message}")
                 text(message)
-                texted[ticker] = datetime.datetime.now()  # Update texted time
+                texted[ticker] = datetime.now()  # Update texted time
 
     except Exception as e:
         print(f"unable to check_play {ticker} with error:{e}")
