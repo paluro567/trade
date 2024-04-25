@@ -65,54 +65,6 @@ def yf_data(ticker, interval_time):
     except Exception as e:
         print("Error fetching data:", e)
 
-#returns true if texted recently
-def texted_recently(ticker):
-    # Check if the ticker was texted within the last 30 minutes
-    if ticker in texted:
-        time_difference = datetime.now() - texted[ticker]  # Fix: Removed datetime prefix
-        print(f"Time difference for {ticker}: {time_difference}")
-        return time_difference < timedelta(minutes=30)  # Fix: Removed datetime prefix
-    else:
-        return False
-
-
-
-def check_play(ticker, interval):
-
-    try:
-
-        # DATA
-        df = yf_data(ticker, interval)
-        latest=df.iloc[0]
-
-        # break above 180EMA
-        if not texted_recently(ticker):
-            if latest['Open']<latest['EMA_180'] and latest['Close']>latest['EMA_180']:
-                print("break above 180EMA: ",latest)
-                message = (f" {ticker} crossed above 180EMA and latest % change is {latest['percent_change']}% \n")
-                print(f"Texting: {message}")
-                text(message)
-                texted[ticker] = datetime.now()  # Update texted time
-
-            # break below 180EMA
-            if latest['Open']>latest['EMA_180'] and latest['Close']<latest['EMA_180']:
-                print("break below 180EMA: ",latest)
-                message = (f" {ticker} crossed below 180EMA and latest % change is {latest['percent_change']}% \n")
-                print(f"Texting: {message}")
-                text(message)
-                texted[ticker] = datetime.now()  # Update texted time
-
-            #large percent change
-            if latest['percent_change']>3 or latest['percent_change']<-3:
-                print("large percent change: ",latest)
-                message = (f" {ticker} has large percent change: {latest['percent_change']}% \n")
-                print(f"Texting: {message}")
-                text(message)
-                texted[ticker] = datetime.now()  # Update texted time
-
-    except Exception as e:
-        print(f"unable to check_play {ticker} with error:{e}")
-        
 
 def run_monitor_holdings(interval):
     # sleep_until(9, 29) # start executing 9:29
@@ -139,11 +91,7 @@ def run_monitor_holdings(interval):
         
 if __name__  ==  '__main__':
     interval="30m"
-    df=yf_data('pltr', interval)
+    df=yf_data('amzn', interval)
     print(df)
     print("index 0: ", df.iloc[0])
     print("\nindex -1: ",df.iloc[-1])
-    try:
-        run_monitor_holdings('30m')
-    except Exception as e:
-        print(f"unable to run_monitor_holdings: {e}")
