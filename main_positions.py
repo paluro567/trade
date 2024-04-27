@@ -88,7 +88,7 @@ def check_play(ticker, interval):
         # break above 180EMA
         if not texted_recently(ticker):
             if latest['Open']<latest['EMA_180'] and latest['Close']>latest['EMA_180']:
-                print("break above 180EMA: ",latest)
+                print("break above 180EMA: ",latest.to_string())
                 message = (f" {ticker} crossed above 180EMA and latest % change is {latest['percent_change']}% \n")
                 print(f"Texting: {message}")
                 text(message)
@@ -96,7 +96,7 @@ def check_play(ticker, interval):
 
             # break below 180EMA
             if latest['Open']>latest['EMA_180'] and latest['Close']<latest['EMA_180']:
-                print("break below 180EMA: ",latest)
+                print("break below 180EMA: ",latest.to_string())
                 message = (f" {ticker} crossed below 180EMA and latest % change is {latest['percent_change']}% \n")
                 print(f"Texting: {message}")
                 text(message)
@@ -104,7 +104,7 @@ def check_play(ticker, interval):
 
             #large percent change
             if latest['percent_change']>3 or latest['percent_change']<-3:
-                print("large percent change: ",latest)
+                print("large percent change: ",latest.to_string())
                 message = (f" {ticker} has large percent change: {latest['percent_change']}% \n")
                 print(f"Texting: {message}")
                 text(message)
@@ -141,7 +141,7 @@ if __name__  ==  '__main__':
     interval="30m"
     df=yf_data('pltr', interval)
     print(df)
-    print("index 0: ", df.iloc[0])
+    print("index 0: ", df.iloc[0].to_string())
     print("\nindex -1: ",df.iloc[-1])
     try:
         run_monitor_holdings('30m')
