@@ -87,7 +87,7 @@ def check_play(ticker, interval):
 
         # break above 180EMA
         if not texted_recently(ticker):
-            if latest['Open']<latest['EMA_180'] and latest['Close']>latest['EMA_180']:
+            if latest['Open']<latest['EMA_180'] and latest['Close']>latest['EMA_180'] and latest['percent_change']>1:
                 print("break above 180EMA: ",latest.to_string())
                 message = (f" {ticker} crossed above 180EMA and latest % change is {latest['percent_change']}% \n")
                 print(f"Texting: {message}")
@@ -95,7 +95,7 @@ def check_play(ticker, interval):
                 texted[ticker] = datetime.now()  # Update texted time
 
             # break below 180EMA
-            if latest['Open']>latest['EMA_180'] and latest['Close']<latest['EMA_180']:
+            if latest['Open']>latest['EMA_180'] and latest['Close']<latest['EMA_180'] and latest['percent_change']<-1:
                 print("break below 180EMA: ",latest.to_string())
                 message = (f" {ticker} crossed below 180EMA and latest % change is {latest['percent_change']}% \n")
                 print(f"Texting: {message}")
