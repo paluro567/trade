@@ -84,11 +84,12 @@ def check_play(ticker, interval):
         # DATA
         df = yf_data(ticker, interval)
         latest=df.iloc[0]
+        latest df.iloc[-1]['percent_change']
 
         # break above 180EMA
         if not texted_recently(ticker):
             if latest['Open']<latest['EMA_180'] and latest['Close']>latest['EMA_180'] and latest['percent_change']>1:
-                print("break above 180EMA: ",latest.to_string())
+                print(f"break above 180EMA. open: {latest['Open']}  close: {latest['Close']} pctchng: {latest['percent_change']}")
                 message = (f" {ticker} crossed above 180EMA and latest % change is {latest['percent_change']}% \n")
                 print(f"Texting: {message}")
                 text(message)
@@ -96,7 +97,7 @@ def check_play(ticker, interval):
 
             # break below 180EMA
             if latest['Open']>latest['EMA_180'] and latest['Close']<latest['EMA_180'] and latest['percent_change']<-1:
-                print("break below 180EMA: ",latest.to_string())
+                print(f"break below 180EMA. open: {latest['Open']}  close: {latest['Close']} pctchng: {latest['percent_change']}")
                 message = (f" {ticker} crossed below 180EMA and latest % change is {latest['percent_change']}% \n")
                 print(f"Texting: {message}")
                 text(message)
@@ -104,6 +105,7 @@ def check_play(ticker, interval):
 
             #large percent change
             if latest['percent_change']>3 or latest['percent_change']<-3:
+                print(f"large percent change: {latest['Open']}  close: {latest['Close']} pctchng: {latest['percent_change']}")
                 print("large percent change: ",latest.to_string())
                 message = (f" {ticker} has large percent change: {latest['percent_change']}% \n")
                 print(f"Texting: {message}")
@@ -141,8 +143,13 @@ if __name__  ==  '__main__':
     interval="30m"
     df=yf_data('pltr', interval)
     print(df)
-    print("index 0: ", df.iloc[0].to_string())
-    print("\nindex -1: ",df.iloc[-1])
+    # print("index 0: ", df.iloc[0].to_string())
+    print("percent_change: ", df['percent_change'].dtype)
+    print("df.columns: ",  df.columns)
+    print("df.tail(): ",df.tail())
+
+
+
     try:
         run_monitor_holdings('30m')
     except Exception as e:

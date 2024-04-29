@@ -91,7 +91,14 @@ def run_monitor_holdings(interval):
         
 if __name__  ==  '__main__':
     interval="30m"
-    df=yf_data('amzn', interval)
+    df=yf_data('tsla', interval)
+    pd.set_option('display.max_rows', None)
     print(df)
-    print("index 0: ", df.iloc[0])
-    print("\nindex -1: ",df.iloc[-1])
+    print("\npercent_change (last row): ", df.iloc[0]['percent_change'])
+
+
+    # print("index 0: ", df.iloc[0])
+    # print("\nindex -1: ",df.iloc[-1])
+    # print("percent_change: ", df['percent_change'].dtype)
+    # print("df.columns: ",  df.columns)
+    # print("df.tail(): ",df.tail())      
