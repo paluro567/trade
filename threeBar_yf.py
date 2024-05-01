@@ -141,8 +141,8 @@ def monitor_bought_stock(ticker, qty, bought_price, support, bought_date):
 
 
 def check_play(ticker, play_type, priority, interval):
-    global BOUGHT 
-    print(" pdt_rule(): ",  pdt_rule())
+    # global BOUGHT 
+    # print(" pdt_rule(): ",  pdt_rule())
 
     try:
         # DATA
@@ -163,23 +163,14 @@ def check_play(ticker, play_type, priority, interval):
         prior_support = df.iloc[2]['Close']
         igniting_four = df.iloc[3]['percent_change']  # 4 bar igniting
 
-        # 3 BAR PLAY 
-        if cur_pch > 2 \
-        and prior_pch < 0 \
-        and igniting_three > 2 \
-        and cur_vol > 3*avg_vol \
-        and (ticker not in texted_plays) \
-        and not pdt_rule(): # removed bought condition and using PDT to limit
-            
-            # text message
-            message = (f"{play_type} - {priority} -  {ticker} is breaking out with 3 bar play! \n"
-            f"Igniting: {round(igniting_three,2)}% \n"
-            f"test:{round(prior_pch, 2)}% \n"
-            f"Confirmation: {round(cur_pch,2)}%")
+        if cur_pch >5: 
+    
+            message = f"{play_type} - {priority} -  {ticker} is breaking out by {cur_pch}"
+          
             print(f"Texting: {message}")
             text(message)
             texted_plays.append(ticker)
-
+        '''
             # place Alpaca buy order
             print(f"buying ticker: {ticker} at {df.iloc[0]['Datetime']}")
             try:
@@ -238,9 +229,9 @@ def check_play(ticker, play_type, priority, interval):
                 buy_date=datetime.now() # track day trades in day_trades.txt
                 monitor_bought_stock(ticker, qty, close_price, four_bar_support, (buy_date.month,buy_date.day))
                 # monitor_process.start()
-
             except Exception as e:
                 print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
+        '''
     except Exception as e:
         print(f"check_play - unable to check {ticker} with error: {e}")
 
@@ -283,18 +274,18 @@ def get_plays():
         print(f"get_plays - unable to get briefing or some error: {e}")
         print("sleeping 5 minutes...")
         time.sleep(300)  # Sleep for 5 minutes
-        print("running run_monitor_holdings again")
+        print("running watch_zip_plays again")
         return get_plays()
     return plays_categories
 
-def run_monitor_holdings(interval):
+def watch_zip_plays(interval):
     global BOUGHT
     sleep_until(9, 29) # start executing 9:29
     global texted_plays
     texted_plays=[]
     iteration = 1
 
-    print("running run_monitor_holdings")
+    print("running watch_zip_plays")
     plays_categories = get_plays()
 
     dashes = '-' * 20 # formatting
@@ -309,7 +300,7 @@ def run_monitor_holdings(interval):
                     check_play(stock, category, priority+1, interval)
                     
                 except Exception as e:
-                    print(f"run_monitor_holdings - unable to check {stock} with error: {e}")
+                    print(f"watch_zip_plays - unable to check {stock} with error: {e}")
         
         
         iteration += 1
@@ -322,13 +313,13 @@ def run_monitor_holdings(interval):
         print(f"minute {iteration} - texted plays: ", texted_plays)
 
 if __name__  ==  '__main__':
-    df = yf_data('pltr', '30m')
-    print("cur pch [0]: ", df.iloc[0]['percent_change'])
+    # df = yf_data('pltr', '5m')
+    # print("cur pch [0]: ", df.iloc[0]['percent_change'])
 
     try:
-        run_monitor_holdings('1m')
+        watch_zip_plays('5m')
     except Exception as e:
-        print(f"unable to run run_monitor_holdings with: {e}")
+        print(f"unable to run watch_zip_plays with: {e}")
         
 
 
