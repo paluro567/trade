@@ -163,7 +163,7 @@ def check_play(ticker, play_type, priority, interval):
         prior_support = df.iloc[2]['Close']
         igniting_four = df.iloc[3]['percent_change']  # 4 bar igniting
 
-        if cur_pch >5: 
+        if cur_pch >5 and ticker not in texted_plays: 
     
             message = f"{play_type} - {priority} -  {ticker} is breaking out by {cur_pch}"
           
@@ -306,8 +306,8 @@ def watch_zip_plays(interval):
         iteration += 1
 
 
-        #reset texted_plays after 6.25 minutes minutes
-        if iteration  == 60:
+        #reset texted_plays after 6.25 minutes minutes (changed from 50)
+        if iteration  == 40:
             iteration=1
             texted_plays = []
         print(f"minute {iteration} - texted plays: ", texted_plays)
