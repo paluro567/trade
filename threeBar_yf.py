@@ -154,15 +154,32 @@ def check_play(ticker, play_type, priority, interval):
         avg_vol = df['Volume'].mean()
         cur_pch = df.iloc[0]['percent_change']
         print("cur_pch: ",cur_pch)
+
         prior_pch = df.iloc[1]['percent_change']
         print("prior_pch: ",prior_pch)
+
         prior_prior_pch= df.iloc[2]['percent_change']
         print("prior_prior_pch: ",prior_prior_pch)
+
+        prior_prior_prior_pch= df.iloc[3]['percent_change']
+        print("prior_prior_prior_pch: ",prior_prior_prior_pch)
+
         support = df.iloc[1]['Close']
         igniting_three = df.iloc[2]['percent_change']  # 3 bar igniting
         prior_support = df.iloc[2]['Close']
         igniting_four = df.iloc[3]['percent_change']  # 4 bar igniting
 
+        # 3 bar
+        if prior_prior_pch>5 and prior_pch<0 and cur_pch>3:
+            message = f"{play_type} - {priority} -  {ticker} 3 bar play \n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\nignighting: {round(prior_prior_pch,2)}%"
+          
+            print(f"Texting: {message}")
+            text(message)
+            texted_plays.append(ticker)
+        # 4 bar
+        if prior_prior_prior_pch>5 and (prior_prior_pch<0 or prior_pch<0) and cur_pch>3:
+            message = f"{play_type} - {priority} -  {ticker} 4 bar play\n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\n test: {round(prior_prior_pch,2)}%\nignighting: {round(prior_prior_prior_pch,2)}%"
+              
         if cur_pch >5 and ticker not in texted_plays: 
     
             message = f"{play_type} - {priority} -  {ticker} is breaking out by {cur_pch}"
@@ -170,6 +187,7 @@ def check_play(ticker, play_type, priority, interval):
             print(f"Texting: {message}")
             text(message)
             texted_plays.append(ticker)
+
         '''
             # place Alpaca buy order
             print(f"buying ticker: {ticker} at {df.iloc[0]['Datetime']}")
