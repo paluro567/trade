@@ -179,6 +179,8 @@ def check_play(ticker, play_type, priority, interval):
         # 4 bar
         if prior_prior_prior_pch>5 and (prior_prior_pch<0 or prior_pch<0) and cur_pch>3:
             message = f"{play_type} - {priority} -  {ticker} 4 bar play\n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\n test: {round(prior_prior_pch,2)}%\nignighting: {round(prior_prior_prior_pch,2)}%"
+            text(message)
+            texted_plays.append(ticker)
               
         if cur_pch >5 and ticker not in texted_plays: 
     
