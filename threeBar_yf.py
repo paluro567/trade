@@ -152,6 +152,7 @@ def check_play(ticker, play_type, priority, interval):
         time_stmp = df.index[0]  # Extracting datetime from index
         print("time_stmp: ",time_stmp)
         avg_vol = df['Volume'].mean()
+
         cur_pch = df.iloc[0]['percent_change']
         print("cur_pch: ",cur_pch)
 
@@ -312,6 +313,11 @@ def watch_zip_plays(interval):
 
     # iterative check
     while True: # not BOUGHT:
+        # only run while still before 8pm
+        current_time = datetime.datetime.now().time()
+        if current_time.hour >= 20:  
+            return 1
+
         print("checking stocks!")
         for category, stocks in plays_categories.items():
             for priority, stock in enumerate(stocks):
