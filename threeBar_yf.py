@@ -314,7 +314,7 @@ def watch_zip_plays(interval):
     # iterative check
     while True: # not BOUGHT:
         # only run while still before 8pm
-        current_time = datetime.datetime.now().time()
+        current_time = datetime.now().time()
         if current_time.hour >= 20:  
             return 1
 
