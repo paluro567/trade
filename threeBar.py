@@ -373,6 +373,7 @@ def run_three_bar(interval):
         print(f"minute {iteration} - texted plays: ", texted_plays)
 
 if __name__  ==  '__main__':
+    # print(get_plays())
     try:
         run_three_bar('5min')
     except Exception as e:

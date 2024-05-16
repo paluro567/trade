@@ -171,14 +171,15 @@ def check_play(ticker, play_type, priority, interval):
         igniting_four = df.iloc[3]['percent_change']  # 4 bar igniting
 
         # 3 bar
-        if prior_prior_pch>2 and prior_pch<0 and cur_pch>2:
+        if prior_prior_pch>3 and prior_pch<0 and cur_pch>3 and ticker not in texted_plays:
             message = f"{play_type} - {priority} -  {ticker} 3 bar play \n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\nignighting: {round(prior_prior_pch,2)}%"
           
             print(f"Texting: {message}")
             text(message)
             texted_plays.append(ticker)
+            
         # 4 bar
-        if prior_prior_prior_pch>2 and (prior_prior_pch<0 or prior_pch<0) and cur_pch>2:
+        if prior_prior_prior_pch>3 and (prior_prior_pch<0 or prior_pch<0) and cur_pch>3 and ticker not in texted_plays:
             message = f"{play_type} - {priority} -  {ticker} 4 bar play\n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\n test: {round(prior_prior_pch,2)}%\nignighting: {round(prior_prior_prior_pch,2)}%"
             text(message)
             texted_plays.append(ticker)
@@ -313,6 +314,7 @@ def watch_zip_plays(interval):
 
     # iterative check
     while True: # not BOUGHT:
+
         # only run while still before 8pm
         current_time = datetime.now().time()
         if current_time.hour >= 20:  
