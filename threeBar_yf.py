@@ -170,8 +170,10 @@ def check_play(ticker, play_type, priority, interval):
         prior_support = df.iloc[2]['Close']
         igniting_four = df.iloc[3]['percent_change']  # 4 bar igniting
 
+        # Threshholds
         three_thresh=5
         four_thresh=5
+        bar_thresh=10
 
         # 3 bar
         if prior_prior_pch>three_thresh and prior_pch<0 and cur_pch>three_thresh and ticker not in texted_plays:
@@ -187,7 +189,8 @@ def check_play(ticker, play_type, priority, interval):
             text(message)
             texted_plays.append(ticker)
               
-        if cur_pch >10 and ticker not in texted_plays: 
+        # single bar 
+        if cur_pch >bar_thresh and ticker not in texted_plays: 
     
             message = f"{play_type} - {priority} -  {ticker} is breaking out by {cur_pch}"
           
