@@ -170,16 +170,19 @@ def check_play(ticker, play_type, priority, interval):
         prior_support = df.iloc[2]['Close']
         igniting_four = df.iloc[3]['percent_change']  # 4 bar igniting
 
+        three_thresh=5
+        four_thresh=5
+
         # 3 bar
-        if prior_prior_pch>3 and prior_pch<0 and cur_pch>3 and ticker not in texted_plays:
+        if prior_prior_pch>three_thresh and prior_pch<0 and cur_pch>three_thresh and ticker not in texted_plays:
             message = f"{play_type} - {priority} -  {ticker} 3 bar play \n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\nignighting: {round(prior_prior_pch,2)}%"
           
             print(f"Texting: {message}")
             text(message)
             texted_plays.append(ticker)
-            
+
         # 4 bar
-        if prior_prior_prior_pch>3 and (prior_prior_pch<0 or prior_pch<0) and cur_pch>3 and ticker not in texted_plays:
+        if prior_prior_prior_pch>four_thresh and (prior_prior_pch<0 or prior_pch<0) and cur_pch>four_thresh and ticker not in texted_plays:
             message = f"{play_type} - {priority} -  {ticker} 4 bar play\n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\n test: {round(prior_prior_pch,2)}%\nignighting: {round(prior_prior_prior_pch,2)}%"
             text(message)
             texted_plays.append(ticker)
