@@ -187,7 +187,7 @@ def check_play(ticker, play_type, priority, interval):
             text(message)
             texted_plays.append(ticker)
               
-        if cur_pch >5 and ticker not in texted_plays: 
+        if cur_pch >10 and ticker not in texted_plays: 
     
             message = f"{play_type} - {priority} -  {ticker} is breaking out by {cur_pch}"
           
