@@ -13,6 +13,7 @@ from realtimetrade import place_buy, place_sell
 import multiprocessing
 from alpha_vantage.timeseries import TimeSeries
 import ta
+from alpaca import try_buy
 
 
 # Initialize variables to track API call rate
@@ -29,6 +30,8 @@ global last_time
 last_time = time.time()
 
 texted_plays  =  []
+bought=[]
+bought_amt=0
 
 def sleep_until(target_hour, target_minute):
     # Get the current time
@@ -97,7 +100,6 @@ def nine_twenty_cross(df):
 def crosses_below(df, threshold):
     return (df.iloc[0]['Close'] < threshold and df.iloc[0]['Open'] > threshold) \
            or (df.iloc[0]['Close'] < threshold and df.iloc[1]['Open'] > threshold)
-
 
 def monitor_bought_stock(ticker, qty, bought_price, support, bought_date):
     global BOUGHT
@@ -181,85 +183,35 @@ def check_play(ticker, play_type, priority, interval):
           
             print(f"Texting: {message}")
             text(message)
+            if ticker not in bought and bought_amt<100:
+                try_buy(ticker, 100//close_price) # buy at most $100
+                bought_amt+= close_price*(100//close_price)
+                bought.append(ticker)
             texted_plays.append(ticker)
 
         # 4 bar
         if prior_prior_prior_pch>four_thresh and (prior_prior_pch<0 or prior_pch<0) and cur_pch>four_thresh and ticker not in texted_plays:
             message = f"{play_type} - {priority} -  {ticker} 4 bar play\n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\n test: {round(prior_prior_pch,2)}%\nignighting: {round(prior_prior_prior_pch,2)}%"
             text(message)
+            if ticker not in bought and bought_amt<100:
+                try_buy(ticker, 100//close_price) # buy at most $100
+                bought_amt+= close_price*(100//close_price)
+                bought.append(ticker)
             texted_plays.append(ticker)
               
         # single bar 
         if cur_pch >bar_thresh and ticker not in texted_plays: 
     
             message = f"{play_type} - {priority} -  {ticker} is breaking out by {cur_pch}"
+            if ticker not in bought and bought_amt<100:
+                try_buy(ticker, 100//close_price) # buy at most $100
+                bought_amt+= close_price*(100//close_price)
+                bought.append(ticker)
           
             print(f"Texting: {message}")
             text(message)
             texted_plays.append(ticker)
 
-        '''
-            # place Alpaca buy order
-            print(f"buying ticker: {ticker} at {df.iloc[0]['Datetime']}")
-            try:
-                if play_type  ==  'ALARM PLAY' and not BOUGHT:
-                    qty =  22//close_price
-                    place_buy(str(ticker), qty)
-                    print(f"{ticker} - 3 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
-                elif not BOUGHT:  # regular play
-                    qty =  22//close_price
-                    place_buy(str(ticker), qty)
-                    print(f"{ticker} - 3 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
-                BOUGHT=True
-                # monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price, support))
-                buy_date=datetime.now()
-                monitor_bought_stock(ticker, qty, close_price, support, (buy_date.month,buy_date.day))
-
-                # monitor_process.start()
-            except Exception as e:
-                print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
-        # 4 BAR PLAY 
-        if cur_pch > 5 \
-        and (prior_pch < 0 \
-        or prior_prior_pch < 0) \
-        and igniting_four > 5 \
-        and cur_vol > 3*avg_vol \
-        and (ticker not in texted_plays)\
-        and not pdt_rule(): #removed and not bought
-            
-            # find support
-            four_bar_support = prior_support if prior_pch > 0 else support
-
-            # text message
-            message = (f"{play_type} - {priority} -  {ticker} is breaking out with 4 bar play! \n"
-            f"Igniting: {round(igniting_four,2)}% \n"
-            f"test:{round(prior_prior_pch, 2)}% \n"
-            f"test:{round(prior_pch, 2)}% \n"
-            f"Confirmation: {round(cur_pch,2)}%")
-            print(f"texting: {message}")
-            text(message)
-            texted_plays.append(ticker)
-
-            # place Alpaca buy order
-            print(f"buying ticker: {ticker} at {time_stmp}")
-            try:
-                if play_type  ==  'ALARM PLAY' and not BOUGHT:
-                    qty =  22//close_price
-                    place_buy(str(ticker), qty)
-                    print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
-                    BOUGHT=True
-                elif not BOUGHT:
-                    qty = 22//close_price
-                    place_buy(str(ticker), qty)
-                    print(f"{ticker} - 4 bar Bought amount: {qty} at a price: {close_price} ~ {time_stmp}")
-                    BOUGHT=True
-                # monitor_process = multiprocessing.Process(target=monitor_bought_stock, args=(ticker, qty, close_price, four_bar_support))
-                buy_date=datetime.now() # track day trades in day_trades.txt
-                monitor_bought_stock(ticker, qty, close_price, four_bar_support, (buy_date.month,buy_date.day))
-                # monitor_process.start()
-            except Exception as e:
-                print(f"check_play - UNABLE TO BUY {ticker} with an error: {e}")
-        '''
     except Exception as e:
         print(f"check_play - unable to check {ticker} with error: {e}")
 
