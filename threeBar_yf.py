@@ -31,6 +31,7 @@ last_time = time.time()
 
 texted_plays  =  []
 bought=[]
+global bought_amt
 bought_amt=0
 
 def sleep_until(target_hour, target_minute):
@@ -143,6 +144,8 @@ def monitor_bought_stock(ticker, qty, bought_price, support, bought_date):
 
 
 def check_play(ticker, play_type, priority, interval):
+    global bought_amt
+
     # global BOUGHT 
     # print(" pdt_rule(): ",  pdt_rule())
 
@@ -260,7 +263,7 @@ def get_plays():
 
 def watch_zip_plays(interval):
     global BOUGHT
-    sleep_until(9, 29) # start executing 9:29
+    # sleep_until(9, 29) # start executing 9:29
     global texted_plays
     texted_plays=[]
     iteration = 1
