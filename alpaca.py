@@ -38,6 +38,7 @@ def try_buy(ticker, qty, cur_open):
 
         print(f"{get_current_timestamp()} - Buy order filled.")
 
+        '''
         # Place trailing stop sell order
         sell_order = api.submit_order(
             symbol=ticker,
@@ -48,8 +49,8 @@ def try_buy(ticker, qty, cur_open):
             time_in_force='gtc'  # Good till canceled
         )
         print(f"{get_current_timestamp()} - {ticker} - Trailing stop sell order placed: {sell_order}")
-
         '''
+
         # place stop loss order
         sell_order = api.submit_order(
             symbol=ticker,
@@ -60,7 +61,6 @@ def try_buy(ticker, qty, cur_open):
             stop_price=cur_open
         )  
         print(f"{get_current_timestamp()} - {ticker} -  stop loss order placed: {sell_order}")
-        '''
 
     except Exception as e:
         print(f"{get_current_timestamp()} - Unable to place orders for {ticker}: {e}")
