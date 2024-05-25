@@ -159,22 +159,20 @@ def check_play(ticker, play_type, priority, interval):
         print("time_stmp: ",time_stmp)
         avg_vol = df['Volume'].mean()
 
+
+        cur_open = df.iloc[0]['Open']
         cur_pch = df.iloc[0]['percent_change']
         print("cur_pch: ",cur_pch)
 
         prior_pch = df.iloc[1]['percent_change']
         print("prior_pch: ",prior_pch)
 
-        prior_prior_pch= df.iloc[2]['percent_change']
-        print("prior_prior_pch: ",prior_prior_pch)
+        two_prior_pch= df.iloc[2]['percent_change']
+        print("two_prior_pch: ",two_prior_pch)
 
-        prior_prior_prior_pch= df.iloc[3]['percent_change']
-        print("prior_prior_prior_pch: ",prior_prior_prior_pch)
+        three_prior_pch= df.iloc[3]['percent_change']
+        print("three_prior_pch: ",three_prior_pch)
 
-        support = df.iloc[1]['Close']
-        igniting_three = df.iloc[2]['percent_change']  # 3 bar igniting
-        prior_support = df.iloc[2]['Close']
-        igniting_four = df.iloc[3]['percent_change']  # 4 bar igniting
 
         # Threshholds
         three_thresh=5
@@ -182,26 +180,26 @@ def check_play(ticker, play_type, priority, interval):
         bar_thresh=10
 
         # 3 bar
-        if prior_prior_pch>three_thresh and prior_pch<0 and cur_pch>three_thresh and ticker not in texted_plays:
-            message = f"{play_type} - {priority} -  {ticker} 3 bar play \n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\nignighting: {round(prior_prior_pch,2)}%"
+        if two_prior_pch>three_thresh and prior_pch<0 and cur_pch>three_thresh and ticker not in texted_plays:
+            message = f"{play_type} - {priority} -  {ticker} 3 bar play \n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\nignighting: {round(two_prior_pch,2)}%"
           
             print(f"Texting: {message}")
             text(message)
             # place orders
             if ticker not in BOUGHT and bought_amt<100:
                 print(f"placing {ticker} orders => {100//close_price} shares")
-                try_buy(ticker, 100//close_price) # buy at most $100
-                bought_amt+= close_price*(100//close_price)
+                try_buy(ticker, 100//close_price, cur_open) # buy at most $100
+                bought_amt+= close_price*(100//close_price, cur_open)
                 BOUGHT.append(ticker)
             texted_plays.append(ticker)
 
         # 4 bar
-        if prior_prior_prior_pch>four_thresh and (prior_prior_pch<0 or prior_pch<0) and cur_pch>four_thresh and ticker not in texted_plays:
-            message = f"{play_type} - {priority} -  {ticker} 4 bar play\n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\n test: {round(prior_prior_pch,2)}%\nignighting: {round(prior_prior_prior_pch,2)}%"
+        if three_prior_pch>four_thresh and (two_prior_pch<0 or prior_pch<0) and cur_pch>four_thresh and ticker not in texted_plays:
+            message = f"{play_type} - {priority} -  {ticker} 4 bar play\n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\n test: {round(two_prior_pch,2)}%\nignighting: {round(three_prior_pch,2)}%"
             text(message)
             if ticker not in BOUGHT and bought_amt<100:
                 print(f"placing {ticker} orders => {100//close_price} shares")
-                try_buy(ticker, 100//close_price) # buy at most $100
+                try_buy(ticker, 100//close_price, cur_open) # buy at most $100
                 bought_amt+= close_price*(100//close_price)
                 BOUGHT.append(ticker)
             texted_plays.append(ticker)

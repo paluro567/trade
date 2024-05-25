@@ -15,7 +15,7 @@ api = tradeapi.REST(API_KEY, API_SECRET, BASE_URL, api_version='v2')
 def get_current_timestamp():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-def try_buy(ticker, qty):
+def try_buy(ticker, qty, cur_open):
     try:
         # Place market buy order
         buy_order = api.submit_order(
@@ -48,6 +48,19 @@ def try_buy(ticker, qty):
             time_in_force='gtc'  # Good till canceled
         )
         print(f"{get_current_timestamp()} - {ticker} - Trailing stop sell order placed: {sell_order}")
+
+        '''
+        # place stop loss order
+        sell_order = api.submit_order(
+            symbol=ticker,
+            qty=qty,
+            side='sell',
+            type='stop',
+            time_in_force='gtc',  
+            stop_price=cur_open
+        )  
+        print(f"{get_current_timestamp()} - {ticker} -  stop loss order placed: {sell_order}")
+        '''
 
     except Exception as e:
         print(f"{get_current_timestamp()} - Unable to place orders for {ticker}: {e}")
