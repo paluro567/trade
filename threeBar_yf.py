@@ -30,7 +30,7 @@ global last_time
 last_time = time.time()
 
 texted_plays  =  []
-bought=[]
+BOUGHT=[]
 global bought_amt
 bought_amt=0
 
@@ -145,6 +145,7 @@ def monitor_bought_stock(ticker, qty, bought_price, support, bought_date):
 
 def check_play(ticker, play_type, priority, interval):
     global bought_amt
+    global BOUGHT
 
     # global BOUGHT 
     # print(" pdt_rule(): ",  pdt_rule())
@@ -186,30 +187,34 @@ def check_play(ticker, play_type, priority, interval):
           
             print(f"Texting: {message}")
             text(message)
-            if ticker not in bought and bought_amt<100:
+            # place orders
+            if ticker not in BOUGHT and bought_amt<100:
+                print(f"placing {ticker} orders => {100//close_price} shares")
                 try_buy(ticker, 100//close_price) # buy at most $100
                 bought_amt+= close_price*(100//close_price)
-                bought.append(ticker)
+                BOUGHT.append(ticker)
             texted_plays.append(ticker)
 
         # 4 bar
         if prior_prior_prior_pch>four_thresh and (prior_prior_pch<0 or prior_pch<0) and cur_pch>four_thresh and ticker not in texted_plays:
             message = f"{play_type} - {priority} -  {ticker} 4 bar play\n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\n test: {round(prior_prior_pch,2)}%\nignighting: {round(prior_prior_prior_pch,2)}%"
             text(message)
-            if ticker not in bought and bought_amt<100:
+            if ticker not in BOUGHT and bought_amt<100:
+                print(f"placing {ticker} orders => {100//close_price} shares")
                 try_buy(ticker, 100//close_price) # buy at most $100
                 bought_amt+= close_price*(100//close_price)
-                bought.append(ticker)
+                BOUGHT.append(ticker)
             texted_plays.append(ticker)
               
         # single bar 
         if cur_pch >bar_thresh and ticker not in texted_plays: 
     
             message = f"{play_type} - {priority} -  {ticker} is breaking out by {cur_pch}"
-            if ticker not in bought and bought_amt<100:
-                try_buy(ticker, 100//close_price) # buy at most $100
-                bought_amt+= close_price*(100//close_price)
-                bought.append(ticker)
+            # if ticker not in BOUGHT and bought_amt<100:
+            #     print(f"placing {ticker} orders => {100//close_price} shares")
+            #     try_buy(ticker, 100//close_price) # buy at most $100
+            #     bought_amt+= close_price*(100//close_price)
+            #     BOUGHT.append(ticker)
           
             print(f"Texting: {message}")
             text(message)

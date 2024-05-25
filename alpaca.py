@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 
 # Alpaca API credentials
-BASE_URL = "https://paper-api.alpaca.markets"
+BASE_URL = "https://api.alpaca.markets"
 API_KEY = "AK0N7FM1XU3EIZZAN6UR"
 API_SECRET = "rMPuDwYNDXLmQGXjhOe3BOluqdkwkMn2o1xPM01u"
 
@@ -51,3 +51,11 @@ def try_buy(ticker, qty):
 
     except Exception as e:
         print(f"{get_current_timestamp()} - Unable to place orders for {ticker}: {e}")
+
+if __name__=='__main__':
+    try:
+        print('testing try_buy in alpaca.py ')
+        try_buy('PLTR', 5)
+    except Exception as e:
+        print(f"Exception in main: {e}")
+
