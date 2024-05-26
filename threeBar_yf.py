@@ -256,8 +256,6 @@ def watch_zip_plays(interval):
         print(f"minute {iteration} - texted plays: ", texted_plays)
 
 if __name__  ==  '__main__':
-    # df = yf_data('pltr', '5m')
-    # print("cur pch [0]: ", df.iloc[0]['percent_change'])
 
     try:
         watch_zip_plays('5m')

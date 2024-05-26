@@ -35,7 +35,7 @@ def place_stop_loss_order(ticker, qty, cur_open):
         qty=qty,
         side='sell',
         type='stop',
-        time_in_force='gtc',  
+        time_in_force='gtc',
         stop_price=cur_open
     )  
     print(f"{get_current_timestamp()} - {ticker} -  stop loss order placed: {sell_order}")
@@ -52,12 +52,11 @@ def try_orders(ticker, qty, cur_open):
         while not order_filled:
             order = api.get_order(buy_order.id)
             if order.status == 'filled':
-                buy_fill_time = datetime.now().date()
+                buy_fill_time = datetime.now().date() # day date
                 order_filled = True
             else:
                 time.sleep(1)  # Wait for 1 second before checking again
         text(f"{get_current_timestamp()} - filled buy: {qty} shares of {ticker}")
-        print(f"{get_current_timestamp()} - Buy order filled.")
 
         '''
         # Place trailing stop sell order
@@ -80,7 +79,7 @@ def try_orders(ticker, qty, cur_open):
         while not order_filled:
             order = api.get_order(sell_order.id)
             if order.status == 'filled':
-                sell_fill_time = datetime.now().date()
+                sell_fill_time = datetime.now().date() # day date
                 order_filled = True
             else:
                 time.sleep(1)  # Wait for 1 second before checking again
