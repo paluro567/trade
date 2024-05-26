@@ -1,6 +1,8 @@
 import alpaca_trade_api as tradeapi
 import time
 from datetime import datetime
+from sms import text
+
 
 # Alpaca API credentials
 BASE_URL = "https://api.alpaca.markets"
@@ -35,7 +37,7 @@ def try_buy(ticker, qty, cur_open):
                 order_filled = True
             else:
                 time.sleep(1)  # Wait for 1 second before checking again
-
+        text(f"bought {qty} of {ticker}")
         print(f"{get_current_timestamp()} - Buy order filled.")
 
         '''
