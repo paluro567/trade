@@ -10,7 +10,7 @@ import numpy as np
 import time
 import requests
 from realtimetrade import place_buy, place_sell
-import multiprocessing
+from multiprocessing import Process
 from alpha_vantage.timeseries import TimeSeries
 import ta
 from alpaca import try_orders
@@ -133,7 +133,8 @@ def check_play(ticker, play_type, priority, interval):
             # place orders
             if ticker not in BOUGHT and bought_amt<100:
                 print(f"placing {ticker} orders => {100//close_price} shares")
-                try_orders(ticker, 100//close_price, cur_open) # buy at most $100
+                order_process = Process(target=try_orders, args=(ticker, 100 // close_price, cur_open))
+                order_process.start()
                 bought_amt+= close_price*(100//close_price, cur_open)
                 BOUGHT.append(ticker)
             texted_plays.append(ticker)
@@ -144,7 +145,8 @@ def check_play(ticker, play_type, priority, interval):
             text(message)
             if ticker not in BOUGHT and bought_amt<100:
                 print(f"placing {ticker} orders => {100//close_price} shares")
-                try_orders(ticker, 100//close_price, cur_open) # buy at most $100
+                order_process = Process(target=try_orders, args=(ticker, 100 // close_price, cur_open))
+                order_process.start()
                 bought_amt+= close_price*(100//close_price)
                 BOUGHT.append(ticker)
             texted_plays.append(ticker)
@@ -155,7 +157,8 @@ def check_play(ticker, play_type, priority, interval):
             message = f"{play_type} - {priority} -  {ticker} is breaking out by {cur_pch}"
             # if ticker not in BOUGHT and bought_amt<100:
             #     print(f"placing {ticker} orders => {100//close_price} shares")
-            #     try_orders(ticker, 100//close_price) # buy at most $100
+            #     order_process = Process(target=try_orders, args=(ticker, 100 // close_price, cur_open))
+            #     order_process.start()
             #     bought_amt+= close_price*(100//close_price)
             #     BOUGHT.append(ticker)
           
