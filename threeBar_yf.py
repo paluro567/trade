@@ -13,10 +13,10 @@ from realtimetrade import place_buy, place_sell
 import multiprocessing
 from alpha_vantage.timeseries import TimeSeries
 import ta
-from alpaca import try_buy
+from alpaca import try_orders
 
 
-# Initialize variables to track API call rate
+# GLOBALS
 global BOUGHT  # bought a stock this day
 BOUGHT=False
 
@@ -71,77 +71,22 @@ def yf_data(ticker, interval_time):
         # Fetch intraday data using the ticker symbol
         stock = yf.Ticker(ticker)
         
-        # Get historical market data for the last trading day with 5-minute intervals
+        # Get market data 
         intraday_data = stock.history(period="1d", interval=interval_time, prepost=True)
-        intraday_data=intraday_data[::-1]
+        intraday_data=intraday_data[::-1]  # reverse for calculating the EMA values
         
-        # Print the intraday data
-        print("Intraday Data for", ticker)
 
         # Calculate EMAs
         intraday_data['SMA_5'] = intraday_data['Close'].rolling(window=5).mean()
         intraday_data['SMA_9'] = intraday_data['Close'].rolling(window=9).mean()
         intraday_data['SMA_20'] = intraday_data['Close'].rolling(window=20).mean()
         intraday_data['SMA_180'] = intraday_data['Close'].rolling(window=180).mean()
-        print("Close data: ", intraday_data['Close'])
-        print("open data: ", intraday_data['Open'])
         intraday_data['percent_change'] = (intraday_data['Close']-intraday_data['Open'])/ intraday_data['Open']* 100
         print("percent_change data: ", intraday_data['percent_change'])
 
         return intraday_data # yahoo data return
     except Exception as e:
         print("Error fetching data:", e)
-
-
-
-def nine_twenty_cross(df):
-    return df.iloc[1]['SMA_9']<df.iloc[1]['SMA_20'] and df.iloc[0]['SMA_9']>df.iloc[0]['SMA_20']
-
-
-def crosses_below(df, threshold):
-    return (df.iloc[0]['Close'] < threshold and df.iloc[0]['Open'] > threshold) \
-           or (df.iloc[0]['Close'] < threshold and df.iloc[1]['Open'] > threshold)
-
-def monitor_bought_stock(ticker, qty, bought_price, support, bought_date):
-    global BOUGHT
-    
-    while True:
-        df = yf_data(ticker, '1m')
-        current_price = df.iloc[0]['Close']
-        cur_time = df.index[0]
-
-        #  price weakening
-        ema_cross = crosses_below(df, df.iloc[0]['SMA_9'])
-        support_cross = crosses_below(df, support)
-
-        percent_gain  =  round(((current_price - bought_price) / bought_price),2) * 100
-
-        # sell position
-        if percent_gain < -2:
-            print(f"SOLD: percent_gain: {percent_gain} at {cur_time}")
-            place_sell(ticker, qty)
-            break
-
-        elif ema_cross:
-            print(f"SOLD: EMA crossover ~ percent_gain: {percent_gain} at {cur_time}")
-            place_sell(ticker, qty)
-            break
-
-        elif support_cross:
-            print(f"SOLD: Support crossover ~ percent_gain: {percent_gain} at {cur_time}")
-            place_sell(ticker, qty)
-            break
-
-        elif percent_gain > 25:
-            print(f"SOLD: percent_gain > 25% ~ percent_gain: {percent_gain} at {cur_time}")
-            place_sell(ticker, qty)
-            break
-
-        elif percent_gain < -5:
-            print(f"SOLD: percent_gain < -5% ~ percent_gain: {percent_gain} at {cur_time}")
-            place_sell(ticker, qty)
-            break
-
 
 def check_play(ticker, play_type, priority, interval):
     global bought_amt
@@ -150,8 +95,8 @@ def check_play(ticker, play_type, priority, interval):
     # global BOUGHT 
     # print(" pdt_rule(): ",  pdt_rule())
 
+    # DATA
     try:
-        # DATA
         df = yf_data(ticker, interval)
         close_price = df.iloc[0]['Close']
         cur_vol = df.iloc[0]['Volume']
@@ -188,7 +133,7 @@ def check_play(ticker, play_type, priority, interval):
             # place orders
             if ticker not in BOUGHT and bought_amt<100:
                 print(f"placing {ticker} orders => {100//close_price} shares")
-                try_buy(ticker, 100//close_price, cur_open) # buy at most $100
+                try_orders(ticker, 100//close_price, cur_open) # buy at most $100
                 bought_amt+= close_price*(100//close_price, cur_open)
                 BOUGHT.append(ticker)
             texted_plays.append(ticker)
@@ -199,7 +144,7 @@ def check_play(ticker, play_type, priority, interval):
             text(message)
             if ticker not in BOUGHT and bought_amt<100:
                 print(f"placing {ticker} orders => {100//close_price} shares")
-                try_buy(ticker, 100//close_price, cur_open) # buy at most $100
+                try_orders(ticker, 100//close_price, cur_open) # buy at most $100
                 bought_amt+= close_price*(100//close_price)
                 BOUGHT.append(ticker)
             texted_plays.append(ticker)
@@ -210,7 +155,7 @@ def check_play(ticker, play_type, priority, interval):
             message = f"{play_type} - {priority} -  {ticker} is breaking out by {cur_pch}"
             # if ticker not in BOUGHT and bought_amt<100:
             #     print(f"placing {ticker} orders => {100//close_price} shares")
-            #     try_buy(ticker, 100//close_price) # buy at most $100
+            #     try_orders(ticker, 100//close_price) # buy at most $100
             #     bought_amt+= close_price*(100//close_price)
             #     BOUGHT.append(ticker)
           
@@ -265,16 +210,19 @@ def get_plays():
     return plays_categories
 
 def watch_zip_plays(interval):
+
     global BOUGHT
-    # sleep_until(9, 29) # start executing 9:29
     global texted_plays
     texted_plays=[]
     iteration = 1
+    dashes = '-' * 20 # formatting
+
+    sleep_until(9, 29) # start executing 9:29
 
     print("running watch_zip_plays")
+
     plays_categories = get_plays()
 
-    dashes = '-' * 20 # formatting
 
     # iterative check
     while True: # not BOUGHT:

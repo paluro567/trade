@@ -17,7 +17,7 @@ api = tradeapi.REST(API_KEY, API_SECRET, BASE_URL, api_version='v2')
 def get_current_timestamp():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-def try_buy(ticker, qty, cur_open):
+def try_orders(ticker, qty, cur_open):
     try:
         # Place market buy order
         buy_order = api.submit_order(
@@ -69,8 +69,8 @@ def try_buy(ticker, qty, cur_open):
 
 if __name__=='__main__':
     try:
-        print('testing try_buy in alpaca.py ')
-        try_buy('PLTR', 5)
+        print('testing try_orders in alpaca.py ')
+        try_orders('PLTR', 5)
     except Exception as e:
         print(f"Exception in main: {e}")
 
