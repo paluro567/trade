@@ -45,7 +45,7 @@ def place_stop_loss_order(ticker, qty, cur_open):
         print(f"unable to place place_stop_loss_order=> {e}")
         return 1
 
-def place_trailing_stop_order(ticker, qty, cur_open,pct):
+def place_trailing_stop_order(ticker, qty,trailing_pct):
     # Place trailing stop sell order
     try:
         trailing_stop_order = API.submit_order(
@@ -53,7 +53,7 @@ def place_trailing_stop_order(ticker, qty, cur_open,pct):
             qty=qty,
             side='sell',
             type='trailing_stop',
-            trail_percent=pct,  # 10% trailing stop
+            trail_percent=trailing_pct,  # 10% trailing stop
             time_in_force='gtc'  # Good till canceled
         )
         print(f"{get_current_timestamp()} - {ticker} - Trailing stop sell order placed: {trailing_stop_order}")
@@ -83,7 +83,7 @@ def try_orders(ticker, qty, cur_open):
         text(f"{get_current_timestamp()} - filled buy: {qty} shares of {ticker}")
 
         # place sell orders
-        trailing_order=place_trailing_stop_order(ticker, qty, cur_open, trailing_pct)
+        trailing_order=place_trailing_stop_order(ticker, qty,  trailing_pct)
         stop_order=place_stop_loss_order(ticker, qty, cur_open)
 
         # Wait for the sell_order to be filled

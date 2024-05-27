@@ -91,8 +91,8 @@ def yf_data(ticker, interval_time):
         print("Error fetching data:", e)
 
 def check_play(ticker, play_type, priority, interval):
-    global BOUGHT_AMT
-    global BOUGHT_PLAYS
+    global BOUGHT_AMT #0
+    global BOUGHT_PLAYS #[]
 
     print(" pdt_rule(): ",  pdt_rule())
 
@@ -155,12 +155,6 @@ def check_play(ticker, play_type, priority, interval):
         if cur_pch >bar_thresh and ticker not in TEXTED_PLAYS: 
     
             message = f"{play_type} - {priority} -  {ticker} is breaking out by {round(cur_pch,2)}"
-            # if ticker not in BOUGHT and BOUGHT_AMT<100:
-            #     print(f"placing {ticker} orders => {100//close_price} shares")
-            #     order_process = Process(target=try_orders, args=(ticker, 100 // close_price, cur_open))
-            #     order_process.start()
-            #     BOUGHT_AMT+= close_price*(100//close_price)
-            #     BOUGHT.append(ticker)
           
             print(f"Texting: {message}")
             text(message)
@@ -230,7 +224,7 @@ def watch_zip_plays(interval):
 
 
     # iterative check
-    while True: # not BOUGHT:
+    while True:
 
         # only watch_zip_plays while still before 8pm
         current_time = datetime.now().time()
