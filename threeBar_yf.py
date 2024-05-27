@@ -91,8 +91,8 @@ def yf_data(ticker, interval_time):
         print("Error fetching data:", e)
 
 def check_play(ticker, play_type, priority, interval):
-    global BOUGHT_AMT #0
-    global BOUGHT_PLAYS #[]
+    global BOUGHT_AMT  # 0
+    global BOUGHT_PLAYS  #[]
 
     print(" pdt_rule(): ",  pdt_rule())
 
@@ -219,7 +219,7 @@ def watch_zip_plays(interval):
     print("running watch_zip_plays")
 
     plays_categories = get_plays()
-    stock_watch_june=["MU", "ONON","COIN","FXI","FUTU","BABA"]
+    stock_watch_june=["MU", "ONON", "COIN", "FXI", "FUTU", "BABA", "FFIE"]
 
 
 
