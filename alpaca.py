@@ -45,7 +45,7 @@ def place_stop_loss_order(ticker, qty, cur_open):
         print(f"unable to place place_stop_loss_order=> {e}")
         return 1
 
-def place_trailing_stop_order(ticker, qty,trailing_pct):
+def place_trailing_stop_order(ticker, qty, trailing_pct):
     # Place trailing stop sell order
     try:
         trailing_stop_order = API.submit_order(
@@ -83,16 +83,17 @@ def try_orders(ticker, qty, cur_open):
         text(f"{get_current_timestamp()} - filled buy: {qty} shares of {ticker}")
 
         # place sell orders
-        trailing_order=place_trailing_stop_order(ticker, qty,  trailing_pct)
+        # trailing_order=place_trailing_stop_order(ticker, qty,  trailing_pct)
         stop_order=place_stop_loss_order(ticker, qty, cur_open)
 
         # Wait for the sell_order to be filled
         order_filled = False
         while not order_filled:
             # order objects
-            trailing_order_obj = API.get_order(trailing_order.id)
+            # trailing_order_obj = API.get_order(trailing_order.id)
             stop_order_obj = API.get_order(stop_order.id)
-            if trailing_order_obj.status == 'filled' or stop_order_obj.status == 'filled':
+            # if trailing_order_obj.status == 'filled' or stop_order_obj.status == 'filled':
+            if stop_order_obj.status == 'filled':
                 sell_fill_time = datetime.now().date() # day date
                 order_filled = True
             else:
