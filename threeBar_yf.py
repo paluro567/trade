@@ -94,7 +94,7 @@ def check_play(ticker, play_type, priority, interval):
     global BOUGHT_AMT  # 0
     global BOUGHT_PLAYS  #[]
 
-    print(" pdt_rule(): ",  pdt_rule())
+    print(f" {ticker} check play pdt_rule(): ",  pdt_rule())
 
     # DATA
     try:
@@ -232,6 +232,7 @@ def watch_zip_plays(interval):
             break
 
         print("checking stocks!")
+        # zip plays
         for category, stocks in plays_categories.items():
             for priority, stock in enumerate(stocks):
                 try:
@@ -241,6 +242,7 @@ def watch_zip_plays(interval):
                     
                 except Exception as e:
                     print(f"watch_zip_plays - unable to check {stock} with error: {e}")
+        # stock watch plays
         for stock in stock_watch_june:
             check_play(stock, "stock_watch_june", 5, interval)
         
