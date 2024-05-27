@@ -17,8 +17,8 @@ from alpaca import try_orders
 
 
 # GLOBALS
-global BOUGHT  # bought a stock this day
-BOUGHT=False
+global BOUGHT_PLAYS  # bought a stock this day
+BOUGHT_PLAYS=[]
 
 global calls_made
 calls_made = 0
@@ -29,10 +29,11 @@ shortest_interval = 1.8 # 2,000 calls are allowed per hour using YF
 global last_time
 last_time = time.time()
 
-texted_plays  =  []
-BOUGHT=[]
-global bought_amt
-bought_amt=0
+global TEXTED_PLAYS
+TEXTED_PLAYS  =  []
+
+global BOUGHT_AMT
+BOUGHT_AMT=0
 
 def sleep_until(target_hour, target_minute):
     # Get the current time
@@ -62,8 +63,9 @@ def yf_data(ticker, interval_time):
         print(f"rate limit sleep: {sleep_time}")
         time.sleep(sleep_time)
 
-    calls_made+=1
     last_time = time.time()
+    calls_made+=1
+    # track every 50'th call
     if calls_made%50==0:
         print("calls made: {calls_made} at {last_time}")
     
@@ -89,11 +91,10 @@ def yf_data(ticker, interval_time):
         print("Error fetching data:", e)
 
 def check_play(ticker, play_type, priority, interval):
-    global bought_amt
-    global BOUGHT
+    global BOUGHT_AMT
+    global BOUGHT_PLAYS
 
-    # global BOUGHT 
-    # print(" pdt_rule(): ",  pdt_rule())
+    print(" pdt_rule(): ",  pdt_rule())
 
     # DATA
     try:
@@ -103,7 +104,6 @@ def check_play(ticker, play_type, priority, interval):
         time_stmp = df.index[0]  # Extracting datetime from index
         print("time_stmp: ",time_stmp)
         avg_vol = df['Volume'].mean()
-
 
         cur_open = df.iloc[0]['Open']
         cur_pch = df.iloc[0]['percent_change']
@@ -125,46 +125,46 @@ def check_play(ticker, play_type, priority, interval):
         bar_thresh=10
 
         # 3 bar
-        if two_prior_pch>three_thresh and prior_pch<0 and cur_pch>three_thresh and ticker not in texted_plays:
+        if two_prior_pch>three_thresh and prior_pch<0 and cur_pch>three_thresh and ticker not in TEXTED_PLAYS:
             message = f"{play_type} - {priority} -  {ticker} 3 bar play \n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\nignighting: {round(two_prior_pch,2)}%"
           
             print(f"Texting: {message}")
             text(message)
             # place orders
-            if ticker not in BOUGHT and bought_amt<100:
-                print(f"placing {ticker} orders => {100//close_price} shares")
-                order_process = Process(target=try_orders, args=(ticker, 100 // close_price, cur_open))
+            if ticker not in BOUGHT_PLAYS and BOUGHT_AMT<100 and not pdt_rule():
+                print(f"placing {ticker} orders => {(100-BOUGHT_AMT)//close_price} shares")
+                order_process = Process(target=try_orders, args=(ticker, (100-BOUGHT_AMT) // close_price, cur_open)) #  submit orders
                 order_process.start()
-                bought_amt+= close_price*(100//close_price, cur_open)
-                BOUGHT.append(ticker)
-            texted_plays.append(ticker)
+                BOUGHT_AMT+= close_price*((100-BOUGHT_AMT)//close_price)
+                BOUGHT_PLAYS.append(ticker)
+            TEXTED_PLAYS.append(ticker)
 
         # 4 bar
-        if three_prior_pch>four_thresh and (two_prior_pch<0 or prior_pch<0) and cur_pch>four_thresh and ticker not in texted_plays:
+        if three_prior_pch>four_thresh and (two_prior_pch<0 or prior_pch<0) and cur_pch>four_thresh and ticker not in TEXTED_PLAYS:
             message = f"{play_type} - {priority} -  {ticker} 4 bar play\n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\n test: {round(two_prior_pch,2)}%\nignighting: {round(three_prior_pch,2)}%"
             text(message)
-            if ticker not in BOUGHT and bought_amt<100:
-                print(f"placing {ticker} orders => {100//close_price} shares")
-                order_process = Process(target=try_orders, args=(ticker, 100 // close_price, cur_open))
+            if ticker not in BOUGHT_PLAYS and BOUGHT_AMT<100 and not pdt_rule():
+                print(f"placing {ticker} orders => {(100-BOUGHT_AMT)//close_price} shares")
+                order_process = Process(target=try_orders, args=(ticker, (100-BOUGHT_AMT) // close_price, cur_open)) #  submit orders
                 order_process.start()
-                bought_amt+= close_price*(100//close_price)
-                BOUGHT.append(ticker)
-            texted_plays.append(ticker)
+                BOUGHT_AMT+= close_price*((100-BOUGHT_AMT)//close_price)
+                BOUGHT_PLAYS.append(ticker)
+            TEXTED_PLAYS.append(ticker)
               
         # single bar 
-        if cur_pch >bar_thresh and ticker not in texted_plays: 
+        if cur_pch >bar_thresh and ticker not in TEXTED_PLAYS: 
     
-            message = f"{play_type} - {priority} -  {ticker} is breaking out by {cur_pch}"
-            # if ticker not in BOUGHT and bought_amt<100:
+            message = f"{play_type} - {priority} -  {ticker} is breaking out by {round(cur_pch,2)}"
+            # if ticker not in BOUGHT and BOUGHT_AMT<100:
             #     print(f"placing {ticker} orders => {100//close_price} shares")
             #     order_process = Process(target=try_orders, args=(ticker, 100 // close_price, cur_open))
             #     order_process.start()
-            #     bought_amt+= close_price*(100//close_price)
+            #     BOUGHT_AMT+= close_price*(100//close_price)
             #     BOUGHT.append(ticker)
           
             print(f"Texting: {message}")
             text(message)
-            texted_plays.append(ticker)
+            TEXTED_PLAYS.append(ticker)
 
     except Exception as e:
         print(f"check_play - unable to check {ticker} with error: {e}")
@@ -214,9 +214,9 @@ def get_plays():
 
 def watch_zip_plays(interval):
 
-    global BOUGHT
-    global texted_plays
-    texted_plays=[]
+    global BOUGHT_PLAYS
+    global TEXTED_PLAYS
+    TEXTED_PLAYS=[]
     iteration = 1
     dashes = '-' * 20 # formatting
 
@@ -225,15 +225,17 @@ def watch_zip_plays(interval):
     print("running watch_zip_plays")
 
     plays_categories = get_plays()
+    stock_watch_june=["MU", "ONON","COIN","FXI","FUTU","BABA"]
+
 
 
     # iterative check
     while True: # not BOUGHT:
 
-        # only run while still before 8pm
+        # only watch_zip_plays while still before 8pm
         current_time = datetime.now().time()
         if current_time.hour >= 20:  
-            return 1
+            break
 
         print("checking stocks!")
         for category, stocks in plays_categories.items():
@@ -241,19 +243,22 @@ def watch_zip_plays(interval):
                 try:
                     print(f"{dashes}Checking {stock} {dashes}")
                     check_play(stock, category, priority+1, interval)
+
                     
                 except Exception as e:
                     print(f"watch_zip_plays - unable to check {stock} with error: {e}")
+        for stock in stock_watch_june:
+            check_play(stock, "stock_watch_june", 5, interval)
         
         
         iteration += 1
 
 
-        #reset texted_plays after 6.25 minutes minutes (changed from 50)
+        #reset TEXTED_PLAYS after 6.25 minutes minutes (changed from 50)
         if iteration  == 40:
             iteration=1
-            texted_plays = []
-        print(f"minute {iteration} - texted plays: ", texted_plays)
+            TEXTED_PLAYS = []
+        print(f"minute {iteration} - texted plays: ", TEXTED_PLAYS)
 
 if __name__  ==  '__main__':
 
