@@ -14,6 +14,8 @@ from multiprocessing import Process
 from alpha_vantage.timeseries import TimeSeries
 import ta
 from alpaca import try_orders
+import pytz
+
 
 
 # GLOBALS
@@ -34,6 +36,11 @@ TEXTED_PLAYS  =  []
 
 global BOUGHT_AMT
 BOUGHT_AMT=0
+
+def is_before_noon_est():
+    est = pytz.timezone('America/New_York')
+    current_time_est = datetime.now(est)
+    return current_time_est.hour < 12
 
 def sleep_until(target_hour, target_minute):
     # Get the current time
@@ -88,7 +95,7 @@ def yf_data(ticker, interval_time):
 
         return intraday_data # yahoo data return
     except Exception as e:
-        print("Error fetching data:", e)
+        print("ERROR -  fetching data:", e)
 
 def check_play(ticker, play_type, priority, interval):
     global BOUGHT_AMT  # 0
@@ -131,7 +138,7 @@ def check_play(ticker, play_type, priority, interval):
             print(f"Texting: {message}")
             text(message)
             # place orders
-            if ticker not in BOUGHT_PLAYS and BOUGHT_AMT<100 and not pdt_rule():
+            if ticker not in BOUGHT_PLAYS and BOUGHT_AMT<100 and not pdt_rule() and is_before_noon_est():
                 print(f"placing {ticker} orders => {(100-BOUGHT_AMT)//close_price} shares")
                 order_process = Process(target=try_orders, args=(ticker, (100-BOUGHT_AMT) // close_price, cur_open)) #  submit orders
                 order_process.start()
@@ -143,7 +150,7 @@ def check_play(ticker, play_type, priority, interval):
         if three_prior_pch>four_thresh and (two_prior_pch<0 or prior_pch<0) and cur_pch>four_thresh and ticker not in TEXTED_PLAYS:
             message = f"{play_type} - {priority} -  {ticker} 4 bar play\n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\n test: {round(two_prior_pch,2)}%\nignighting: {round(three_prior_pch,2)}%"
             text(message)
-            if ticker not in BOUGHT_PLAYS and BOUGHT_AMT<100 and not pdt_rule():
+            if ticker not in BOUGHT_PLAYS and BOUGHT_AMT<100 and not pdt_rule() and is_before_noon_est():
                 print(f"placing {ticker} orders => {(100-BOUGHT_AMT)//close_price} shares")
                 order_process = Process(target=try_orders, args=(ticker, (100-BOUGHT_AMT) // close_price, cur_open)) #  submit orders
                 order_process.start()
@@ -161,7 +168,7 @@ def check_play(ticker, play_type, priority, interval):
             TEXTED_PLAYS.append(ticker)
 
     except Exception as e:
-        print(f"check_play - unable to check {ticker} with error: {e}")
+        print(f"ERROR - check_play - unable to check {ticker} with error: {e}")
 
 
 def get_plays():
@@ -184,7 +191,7 @@ def get_plays():
 
         # no briefing yet sleep 5 minutes
         if alarm_plays == [] and green_plays == []:
-            raise Exception("empty alarm & green plays")
+            raise Exception("ERROR - empty alarm & green plays")
         
         print("today's alarm_plays: ", alarm_plays)
         print("today's green_plays: ", green_plays)
@@ -199,7 +206,7 @@ def get_plays():
         print("combined play categories: ", plays_categories)
 
     except Exception as e:
-        print(f"get_plays - unable to get briefing or some error: {e}")
+        print(f"ERROR - get_plays - unable to get briefing or some error: {e}")
         print("sleeping 5 minutes...")
         time.sleep(300)  # Sleep for 5 minutes
         print("running watch_zip_plays again")
@@ -241,7 +248,7 @@ def watch_zip_plays(interval):
 
                     
                 except Exception as e:
-                    print(f"watch_zip_plays - unable to check {stock} with error: {e}")
+                    print(f"ERROR - watch_zip_plays - unable to check {stock} with error: {e}")
         # stock watch plays
         for stock in stock_watch_june:
             check_play(stock, "stock_watch_june", 5, interval)
@@ -257,11 +264,11 @@ def watch_zip_plays(interval):
         print(f"minute {iteration} - texted plays: ", TEXTED_PLAYS)
 
 if __name__  ==  '__main__':
-
+    # print("is_before_noon_est:", is_before_noon_est())
     try:
         watch_zip_plays('5m')
     except Exception as e:
-        print(f"unable to run watch_zip_plays with: {e}")
+        print(f"ERROR - unable to run watch_zip_plays with: {e}")
         
 
 
