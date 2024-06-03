@@ -236,7 +236,7 @@ def watch_zip_plays(interval):
         # only watch_zip_plays while still before 8pm
         current_time = datetime.now().time()
         if current_time.hour >= 20:  
-            break
+            return 0
 
         print("checking stocks!")
         # zip plays
