@@ -224,13 +224,14 @@ def watch_zip_plays(interval):
     sleep_until(9, 29) # start executing 9:29
 
     print("running watch_zip_plays")
-
+    print("test 1")
     plays_categories = get_plays()
     stock_watch_june=["MU", "ONON", "COIN", "FXI", "FUTU", "BABA", "FFIE"]
 
 
 
     # iterative check
+    print("test 2")
     while True:
 
         # only watch_zip_plays while still before 8pm
@@ -251,7 +252,9 @@ def watch_zip_plays(interval):
                     print(f"ERROR - watch_zip_plays - unable to check {stock} with error: {e}")
         # stock watch plays
         for stock in stock_watch_june:
+            print("test 3")
             check_play(stock, "stock_watch_june", 5, interval)
+            print("test 4")
         
         
         iteration += 1
