@@ -215,6 +215,7 @@ def get_plays():
 
 def watch_zip_plays(interval):
 
+    print("test 1")
     global BOUGHT_PLAYS
     global TEXTED_PLAYS
     TEXTED_PLAYS=[]
@@ -224,7 +225,6 @@ def watch_zip_plays(interval):
     sleep_until(9, 29) # start executing 9:29
 
     print("running watch_zip_plays")
-    print("test 1")
     plays_categories = get_plays()
     stock_watch_june=["MU", "ONON", "COIN", "FXI", "FUTU", "BABA", "FFIE"]
 
