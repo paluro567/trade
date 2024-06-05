@@ -223,6 +223,7 @@ def watch_zip_plays(interval):
     dashes = '-' * 20 # formatting
 
     sleep_until(9, 29) # start executing 9:29
+    print("test 1.2")
 
     print("running watch_zip_plays")
     plays_categories = get_plays()
