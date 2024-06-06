@@ -215,7 +215,7 @@ def get_plays():
 
 def watch_zip_plays(interval):
 
-    print("test 1")
+    print("watch_zip_plays")
     global BOUGHT_PLAYS
     global TEXTED_PLAYS
     TEXTED_PLAYS=[]
@@ -223,7 +223,7 @@ def watch_zip_plays(interval):
     dashes = '-' * 20 # formatting
 
     sleep_until(9, 29) # start executing 9:29
-    print("test 1.2")
+    print("test 1")
 
     print("running watch_zip_plays")
     plays_categories = get_plays()
@@ -268,6 +268,7 @@ def watch_zip_plays(interval):
         print(f"minute {iteration} - texted plays: ", TEXTED_PLAYS)
 
 if __name__  ==  '__main__':
+    print("main running")
     # print("is_before_noon_est:", is_before_noon_est())
     try:
         watch_zip_plays('5m')
