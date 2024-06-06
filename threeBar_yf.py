@@ -109,21 +109,21 @@ def check_play(ticker, play_type, priority, interval):
         close_price = df.iloc[0]['Close']
         cur_vol = df.iloc[0]['Volume']
         time_stmp = df.index[0]  # Extracting datetime from index
-        print("time_stmp: ",time_stmp)
+        print("time_stmp: ",time_stmp, flush=True)
         avg_vol = df['Volume'].mean()
 
         cur_open = df.iloc[0]['Open']
         cur_pch = df.iloc[0]['percent_change']
-        print("cur_pch: ",cur_pch)
+        print("cur_pch: ",cur_pch, flush=True)
 
         prior_pch = df.iloc[1]['percent_change']
-        print("prior_pch: ",prior_pch)
+        print("prior_pch: ",prior_pch, flush=True)
 
         two_prior_pch= df.iloc[2]['percent_change']
-        print("two_prior_pch: ",two_prior_pch)
+        print("two_prior_pch: ",two_prior_pch, flush=True)
 
         three_prior_pch= df.iloc[3]['percent_change']
-        print("three_prior_pch: ",three_prior_pch)
+        print("three_prior_pch: ",three_prior_pch, flush=True)
 
 
         # Threshholds
@@ -135,11 +135,11 @@ def check_play(ticker, play_type, priority, interval):
         if two_prior_pch>three_thresh and prior_pch<0 and cur_pch>three_thresh and ticker not in TEXTED_PLAYS:
             message = f"{play_type} - {priority} -  {ticker} 3 bar play \n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\nignighting: {round(two_prior_pch,2)}%"
           
-            print(f"Texting: {message}")
+            print(f"Texting: {message}", flush=True)
             text(message)
             # place orders
             if ticker not in BOUGHT_PLAYS and BOUGHT_AMT<100 and not pdt_rule() and is_before_noon_est():
-                print(f"placing {ticker} orders => {(100-BOUGHT_AMT)//close_price} shares")
+                print(f"placing {ticker} orders => {(100-BOUGHT_AMT)//close_price} shares", flush=True)
                 order_process = Process(target=try_orders, args=(ticker, (100-BOUGHT_AMT) // close_price, cur_open)) #  submit orders
                 order_process.start()
                 BOUGHT_AMT+= close_price*((100-BOUGHT_AMT)//close_price)
@@ -151,7 +151,7 @@ def check_play(ticker, play_type, priority, interval):
             message = f"{play_type} - {priority} -  {ticker} 4 bar play\n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\n test: {round(two_prior_pch,2)}%\nignighting: {round(three_prior_pch,2)}%"
             text(message)
             if ticker not in BOUGHT_PLAYS and BOUGHT_AMT<100 and not pdt_rule() and is_before_noon_est():
-                print(f"placing {ticker} orders => {(100-BOUGHT_AMT)//close_price} shares")
+                print(f"placing {ticker} orders => {(100-BOUGHT_AMT)//close_price} shares", flush=True)
                 order_process = Process(target=try_orders, args=(ticker, (100-BOUGHT_AMT) // close_price, cur_open)) #  submit orders
                 order_process.start()
                 BOUGHT_AMT+= close_price*((100-BOUGHT_AMT)//close_price)
@@ -163,12 +163,12 @@ def check_play(ticker, play_type, priority, interval):
     
             message = f"{play_type} - {priority} -  {ticker} is breaking out by {round(cur_pch,2)}"
           
-            print(f"Texting: {message}")
+            print(f"Texting: {message}", flush=True)
             text(message)
             TEXTED_PLAYS.append(ticker)
 
     except Exception as e:
-        print(f"ERROR - check_play - unable to check {ticker} with error: {e}")
+        print(f"ERROR - check_play - unable to check {ticker} with error: {e}", flush=True)
 
 
 def get_plays():
@@ -193,8 +193,8 @@ def get_plays():
         if alarm_plays == [] and green_plays == []:
             raise Exception("ERROR - empty alarm & green plays")
         
-        print("today's alarm_plays: ", alarm_plays)
-        print("today's green_plays: ", green_plays)
+        print("today's alarm_plays: ", alarm_plays, flush=True)
+        print("today's green_plays: ", green_plays, flush=True)
 
 
         plays_categories  =  {
@@ -203,19 +203,19 @@ def get_plays():
             'OTHER ON RADAR': other_on_radar
         }
         
-        print("combined play categories: ", plays_categories)
+        print("combined play categories: ", plays_categories, flush=True)
 
     except Exception as e:
-        print(f"ERROR - get_plays - unable to get briefing or some error: {e}")
-        print("sleeping 5 minutes...")
+        print(f"ERROR - get_plays - unable to get briefing or some error: {e}", flush=True)
+        print("sleeping 5 minutes...", flush=True)
         time.sleep(300)  # Sleep for 5 minutes
-        print("running watch_zip_plays again")
+        print("running watch_zip_plays again", flush=True)
         return get_plays()
     return plays_categories
 
 def watch_zip_plays(interval):
 
-    print("watch_zip_plays")
+    print("watch_zip_plays", flush=True)
     global BOUGHT_PLAYS
     global TEXTED_PLAYS
     TEXTED_PLAYS=[]
@@ -223,16 +223,16 @@ def watch_zip_plays(interval):
     dashes = '-' * 20 # formatting
 
     # sleep_until(9, 29) # start executing 9:29
-    print("test 1")
+    print("test 1", flush=True)
 
-    print("running watch_zip_plays")
+    print("running watch_zip_plays", flush=True)
     plays_categories = get_plays()
     stock_watch_june=["MU", "ONON", "COIN", "FXI", "FUTU", "BABA", "FFIE"]
 
 
 
     # iterative check
-    print("test 2")
+    print("test 2", flush=True)
     while True:
 
         # only watch_zip_plays while still before 8pm
@@ -240,22 +240,22 @@ def watch_zip_plays(interval):
         if current_time.hour >= 20:  
             return 0
 
-        print("checking stocks!")
+        print("checking stocks!", flush=True)
         # zip plays
         for category, stocks in plays_categories.items():
             for priority, stock in enumerate(stocks):
                 try:
-                    print(f"{dashes}Checking {stock} {dashes}")
+                    print(f"{dashes}Checking {stock} {dashes}", flush=True)
                     check_play(stock, category, priority+1, interval)
 
                     
                 except Exception as e:
-                    print(f"ERROR - watch_zip_plays - unable to check {stock} with error: {e}")
+                    print(f"ERROR - watch_zip_plays - unable to check {stock} with error: {e}", flush=True)
         # stock watch plays
         for stock in stock_watch_june:
-            print("test 3")
+            print("test 3", flush=True)
             check_play(stock, "stock_watch_june", 5, interval)
-            print("test 4")
+            print("test 4", flush=True)
         
         
         iteration += 1
