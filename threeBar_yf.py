@@ -222,7 +222,7 @@ def watch_zip_plays(interval):
     iteration = 1
     dashes = '-' * 20 # formatting
 
-    sleep_until(9, 29) # start executing 9:29
+    # sleep_until(9, 29) # start executing 9:29
     print("test 1")
 
     print("running watch_zip_plays")
