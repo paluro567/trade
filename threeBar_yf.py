@@ -132,6 +132,7 @@ def check_play(ticker, play_type, priority, interval):
         bar_thresh=10
 
         # 3 bar
+        three_bars={"ignighting": two_prior_pch, "test":prior_pch, "confirmation": cur_pch}
         if two_prior_pch>three_thresh and prior_pch<0 and cur_pch>three_thresh and ticker not in TEXTED_PLAYS:
             message = f"{play_type} - {priority} -  {ticker} 3 bar play \n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\nignighting: {round(two_prior_pch,2)}%"
           
@@ -140,19 +141,20 @@ def check_play(ticker, play_type, priority, interval):
             # place orders
             if ticker not in BOUGHT_PLAYS and BOUGHT_AMT<100 and not pdt_rule() and is_before_noon_est():
                 print(f"placing {ticker} orders => {(100-BOUGHT_AMT)//close_price} shares", flush=True)
-                order_process = Process(target=try_orders, args=(ticker, (100-BOUGHT_AMT) // close_price, cur_open)) #  submit orders
+                order_process = Process(target=try_orders, args=(ticker, (100-BOUGHT_AMT) // close_price, cur_open, three_bars)) #  submit orders
                 order_process.start()
                 BOUGHT_AMT+= close_price*((100-BOUGHT_AMT)//close_price)
                 BOUGHT_PLAYS.append(ticker)
             TEXTED_PLAYS.append(ticker)
 
         # 4 bar
+        four_bars={"ignighting": three_prior_pch, "test1":two_prior_pch, "test2":prior_pch, "confirmation": cur_pch}
         if three_prior_pch>four_thresh and (two_prior_pch<0 or prior_pch<0) and cur_pch>four_thresh and ticker not in TEXTED_PLAYS:
             message = f"{play_type} - {priority} -  {ticker} 4 bar play\n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\n test: {round(two_prior_pch,2)}%\nignighting: {round(three_prior_pch,2)}%"
             text(message)
             if ticker not in BOUGHT_PLAYS and BOUGHT_AMT<100 and not pdt_rule() and is_before_noon_est():
                 print(f"placing {ticker} orders => {(100-BOUGHT_AMT)//close_price} shares", flush=True)
-                order_process = Process(target=try_orders, args=(ticker, (100-BOUGHT_AMT) // close_price, cur_open)) #  submit orders
+                order_process = Process(target=try_orders, args=(ticker, (100-BOUGHT_AMT) // close_price, cur_open, four_bars)) #  submit orders
                 order_process.start()
                 BOUGHT_AMT+= close_price*((100-BOUGHT_AMT)//close_price)
                 BOUGHT_PLAYS.append(ticker)

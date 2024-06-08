@@ -64,7 +64,7 @@ def place_trailing_stop_order(ticker, qty, trailing_pct):
 
 
 # place buy and sell orders consecutively
-def try_orders(ticker, qty, cur_open):
+def try_orders(ticker, qty, cur_open, bars):
     trailing_pct=10.0
     try:
 
@@ -99,7 +99,7 @@ def try_orders(ticker, qty, cur_open):
             else:
                 time.sleep(1)  # Wait for 1 second before checking again
 
-        text(f"{get_current_timestamp()} - filled Sell: {qty} shares of {ticker}")
+        text(f"{get_current_timestamp()} - filled Sell: {qty} shares of {ticker} \n\n {bars}")
 
         if buy_fill_time==sell_fill_time:
             record_trade(ticker)
