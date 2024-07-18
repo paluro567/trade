@@ -139,11 +139,11 @@ def check_play(ticker, play_type, priority, interval):
             print(f"Texting: {message}", flush=True)
             text(message)
             # place orders
-            if ticker not in BOUGHT_PLAYS and BOUGHT_AMT<100 and not pdt_rule() and is_before_noon_est():
-                print(f"placing {ticker} orders => {(100-BOUGHT_AMT)//close_price} shares", flush=True)
-                order_process = Process(target=try_orders, args=(ticker, (100-BOUGHT_AMT) // close_price, cur_open, three_bars)) #  submit orders
+            if ticker not in BOUGHT_PLAYS and BOUGHT_AMT<200 and not pdt_rule() and is_before_noon_est():
+                print(f"placing {ticker} orders => {(200-BOUGHT_AMT)//close_price} shares", flush=True)
+                order_process = Process(target=try_orders, args=(ticker, (200-BOUGHT_AMT) // close_price, cur_open, three_bars)) #  submit orders
                 order_process.start()
-                BOUGHT_AMT+= close_price*((100-BOUGHT_AMT)//close_price)
+                BOUGHT_AMT+= close_price*((200-BOUGHT_AMT)//close_price)
                 BOUGHT_PLAYS.append(ticker)
             TEXTED_PLAYS.append(ticker)
 
