@@ -78,7 +78,7 @@ def try_orders(ticker, qty, cur_open, bars):
                 buy_order_filled = True
             else:
                 time.sleep(1)  # Wait for 1 second before checking again
-        text(f"{get_current_timestamp()} - Filled buy: {qty} shares of {ticker}")
+        text(f"{get_current_timestamp()} - Filled buy: {qty} shares of {ticker}\n\n{bars}")
 
         # Place sell orders
         trailing_order = place_trailing_stop_order(ticker, qty, trailing_pct)
@@ -95,7 +95,7 @@ def try_orders(ticker, qty, cur_open, bars):
             else:
                 time.sleep(1)  # Wait for 1 second before checking again
 
-        text(f"{get_current_timestamp()} - Filled sell: {qty} shares of {ticker}\n\n{bars}")
+        text(f"{get_current_timestamp()} - Filled sell: {qty} shares of {ticker}")
 
         if buy_fill_time == sell_fill_time:
             record_trade(ticker)
