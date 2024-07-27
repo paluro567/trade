@@ -113,31 +113,27 @@ def check_play(ticker, play_type, priority, interval):
         avg_vol = df['Volume'].mean()
 
         cur_open = df.iloc[0]['Open']
-        cur_pch = df.iloc[0]['percent_change']
-        print("cur_pch: ",cur_pch, flush=True)
+        cur_pch = round(df.iloc[0]['percent_change'],2)
+        prior_pch = round(df.iloc[1]['percent_change'],2)
+        two_prior_pch= round(df.iloc[2]['percent_change'],2)
+        three_prior_pch= round(df.iloc[3]['percent_change'],2)
 
-        prior_pch = df.iloc[1]['percent_change']
-        print("prior_pch: ",prior_pch, flush=True)
-
-        two_prior_pch= df.iloc[2]['percent_change']
-        print("two_prior_pch: ",two_prior_pch, flush=True)
-
-        three_prior_pch= df.iloc[3]['percent_change']
-        print("three_prior_pch: ",three_prior_pch, flush=True)
-
+        print(f"cur_pch: {cur_pch}, prior_pch: {prior_pch}, two_prior_pch: {two_prior_pch}, three_prior_pch: {three_prior_pch}", flush=True)
 
         # Threshholds
         three_thresh=5
         four_thresh=5
         bar_thresh=10
 
-        # 3 bar
+        # ********** 3 BAR **********
         three_bars={"ignighting": two_prior_pch, "test":prior_pch, "confirmation": cur_pch}
         if two_prior_pch>three_thresh and prior_pch<0 and cur_pch>three_thresh and ticker not in TEXTED_PLAYS:
-            message = f"{play_type} - {priority} -  {ticker} 3 bar play \n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\nignighting: {round(two_prior_pch,2)}%"
-          
+
+            message = f"{play_type} - {priority} -  {ticker} 3 bar play \n Confirmation {cur_pch}%\n test: {prior_pch}%\nignighting: {two_prior_pch}%"
             print(f"Texting: {message}", flush=True)
             text(message)
+            TEXTED_PLAYS.append(ticker)
+
             # place orders
             if len(BOUGHT_PLAYS) == 0  and not pdt_rule() and is_before_noon_est():
                 print(f"placing {ticker} orders => {(200)//close_price} shares", flush=True)
@@ -145,25 +141,24 @@ def check_play(ticker, play_type, priority, interval):
                 order_process.start()
                 BOUGHT_AMT+= close_price*(200//close_price)
                 BOUGHT_PLAYS.append(ticker)
-            TEXTED_PLAYS.append(ticker)
 
-        # 4 bar
+        # ********** 4 BAR **********
         four_bars={"ignighting": three_prior_pch, "test1":two_prior_pch, "test2":prior_pch, "confirmation": cur_pch}
         if three_prior_pch>four_thresh and (two_prior_pch<0 or prior_pch<0) and cur_pch>four_thresh and ticker not in TEXTED_PLAYS:
-            message = f"{play_type} - {priority} -  {ticker} 4 bar play\n Confirmation {round(cur_pch,2)}%\n test: {round(prior_pch,2)}%\n test: {round(two_prior_pch,2)}%\nignighting: {round(three_prior_pch,2)}%"
+            message = f"{play_type} - {priority} -  {ticker} 4 bar play\n Confirmation {cur_pch}%\n test: {prior_pch}%\n test: {two_prior_pch}%\nignighting: {three_prior_pch}%"
             text(message)
+            TEXTED_PLAYS.append(ticker)
             if len(BOUGHT_PLAYS) == 0  and not pdt_rule() and is_before_noon_est():
-                print(f"placing {ticker} orders => {(200-BOUGHT_AMT)//close_price} shares", flush=True)
+                print(f"placing {ticker} orders => {200//close_price} shares", flush=True)
                 order_process = Process(target=try_orders, args=(ticker, 200 // close_price, cur_open, four_bars)) #  submit orders
                 order_process.start()
                 BOUGHT_AMT+= close_price*(200//close_price)
                 BOUGHT_PLAYS.append(ticker)
-            TEXTED_PLAYS.append(ticker)
               
         # single bar 
         if cur_pch >bar_thresh and ticker not in TEXTED_PLAYS: 
     
-            message = f"{play_type} - {priority} -  {ticker} is breaking out by {round(cur_pch,2)}"
+            message = f"{play_type} - {priority} -  {ticker} is breaking out by {cur_pch}"
           
             print(f"Texting: {message}", flush=True)
             text(message)
@@ -229,20 +224,24 @@ def watch_zip_plays(interval):
 
     print("running watch_zip_plays", flush=True)
     plays_categories = get_plays()
-    stock_watch_june=["MU", "ONON", "COIN", "FXI", "FUTU", "BABA", "FFIE"]
+
+    july_august_zip=['SERV', 'MARA']  # TODO add JULY/AUGUST
+    # stock_watch_june=["MU", "ONON", "COIN", "FXI", "FUTU", "BABA", "FFIE"] 
 
 
 
     # iterative check
     print("test 2", flush=True)
+    iter_count=0
     while True:
+        iter_count+=1
 
         # only watch_zip_plays while still before 8pm
         current_time = datetime.now().time()
         if current_time.hour >= 20:  
-            return 0
+            return 0 # exit for today
 
-        print("checking stocks!", flush=True)
+        print(f"checking stocks iteration! - {iter_count}", flush=True)
         # zip plays
         for category, stocks in plays_categories.items():
             for priority, stock in enumerate(stocks):
@@ -254,9 +253,9 @@ def watch_zip_plays(interval):
                 except Exception as e:
                     print(f"ERROR - watch_zip_plays - unable to check {stock} with error: {e}", flush=True)
         # stock watch plays
-        for stock in stock_watch_june:
+        for stock in july_august_zip:
             print("test 3", flush=True)
-            check_play(stock, "stock_watch_june", 5, interval)
+            check_play(stock, "july_august_zip", 5, interval)
             print("test 4", flush=True)
         
         
