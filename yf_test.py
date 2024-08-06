@@ -90,7 +90,7 @@ def run_monitor_holdings(interval):
         
         
 if __name__  ==  '__main__':
-    interval="5m"
+    interval="1m"
     df=yf_data('BNED', interval)
     pd.set_option('display.max_rows', None)
     print(df)

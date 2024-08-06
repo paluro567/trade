@@ -98,6 +98,7 @@ def yf_data(ticker, interval_time):
         print("ERROR -  fetching data:", e)
 
 def check_play(ticker, play_type, priority, interval):
+    BUY_AMT=500
     global BOUGHT_AMT  # 0
     global BOUGHT_PLAYS  #[]
 
@@ -136,10 +137,10 @@ def check_play(ticker, play_type, priority, interval):
 
             # place orders
             if len(BOUGHT_PLAYS) == 0  and not pdt_rule() and is_before_noon_est():
-                print(f"placing {ticker} orders => {(200)//close_price} shares", flush=True)
-                order_process = Process(target=try_orders, args=(ticker, 200 // close_price, cur_open, three_bars)) #  submit orders
+                print(f"placing {ticker} orders => {(BUY_AMT)//close_price} shares", flush=True)
+                order_process = Process(target=try_orders, args=(ticker, BUY_AMT // close_price, cur_open, three_bars)) #  submit orders
                 order_process.start()
-                BOUGHT_AMT+= close_price*(200//close_price)
+                BOUGHT_AMT+= close_price*(BUY_AMT//close_price)
                 BOUGHT_PLAYS.append(ticker)
 
         # ********** 4 BAR **********
@@ -149,10 +150,10 @@ def check_play(ticker, play_type, priority, interval):
             text(message)
             TEXTED_PLAYS.append(ticker)
             if len(BOUGHT_PLAYS) == 0  and not pdt_rule() and is_before_noon_est():
-                print(f"placing {ticker} orders => {200//close_price} shares", flush=True)
-                order_process = Process(target=try_orders, args=(ticker, 200 // close_price, cur_open, four_bars)) #  submit orders
+                print(f"placing {ticker} orders => {BUY_AMT//close_price} shares", flush=True)
+                order_process = Process(target=try_orders, args=(ticker, BUY_AMT // close_price, cur_open, four_bars)) #  submit orders
                 order_process.start()
-                BOUGHT_AMT+= close_price*(200//close_price)
+                BOUGHT_AMT+= close_price*(BUY_AMT//close_price)
                 BOUGHT_PLAYS.append(ticker)
               
         # single bar 
