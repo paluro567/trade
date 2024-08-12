@@ -71,9 +71,16 @@ def try_orders(ticker, qty, cur_open, bars):
         
         # Wait for the buy order to be filled
         buy_order_filled = False
+        buy_filled_price = 0
+        sell_filled_price = 0
         while not buy_order_filled:
+            
             buy_order_obj = API.get_order(buy_order.id)
             if buy_order_obj.status == 'filled':
+                try:
+                    buy_filled_price = float(buy_order_obj.filled_avg_price)
+                except Exception as e:
+                    print(f"unable to get buy_order_obj filled price with: {e}")
                 buy_fill_time = datetime.now().date()  # Day date
                 buy_order_filled = True
             else:
@@ -90,12 +97,19 @@ def try_orders(ticker, qty, cur_open, bars):
             trailing_order_obj = trailing_order and API.get_order(trailing_order.id)
             stop_order_obj = stop_order and API.get_order(stop_order.id)
             if (trailing_order_obj and trailing_order_obj.status == 'filled') or (stop_order_obj and stop_order_obj.status == 'filled'):
+                try:
+                    if trailing_order_obj.status == 'filled':
+                        sell_filled_price = float(trailing_order_obj.filled_avg_price)
+                    else:
+                        sell_filled_price = float(stop_order_obj.filled_avg_price)
+                except Exception as e:
+                    print(f"unable to get stop_order_obj filled price with: {e}")
                 sell_fill_time = datetime.now().date()  # Day date
                 order_filled = True
             else:
                 time.sleep(1)  # Wait for 1 second before checking again
 
-        text(f"{get_current_timestamp()} - Filled sell: {qty} shares of {ticker}")
+        text(f"{get_current_timestamp()} - Filled sell: {qty} shares of {ticker} \nprofit is ${qty*(sell_filled_price-buy_filled_price)}")
 
         if buy_fill_time == sell_fill_time:
             record_trade(ticker)

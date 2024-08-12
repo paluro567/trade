@@ -98,7 +98,7 @@ def yf_data(ticker, interval_time):
         print("ERROR -  fetching data:", e)
 
 def check_play(ticker, play_type, priority, interval):
-    BUY_AMT=500
+    BUY_AMT=700 # amount to buy at most
     global BOUGHT_AMT  # 0
     global BOUGHT_PLAYS  #[]
 
