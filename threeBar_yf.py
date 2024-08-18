@@ -107,13 +107,14 @@ def check_play(ticker, play_type, priority, interval):
     # DATA
     try:
         df = yf_data(ticker, interval)
+        cur_open = df.iloc[0]['Open']
         close_price = df.iloc[0]['Close']
         cur_vol = df.iloc[0]['Volume']
         time_stmp = df.index[0]  # Extracting datetime from index
         print("time_stmp: ",time_stmp, flush=True)
         avg_vol = df['Volume'].mean()
 
-        cur_open = df.iloc[0]['Open']
+        # bars
         cur_pch = round(df.iloc[0]['percent_change'],2)
         prior_pch = round(df.iloc[1]['percent_change'],2)
         two_prior_pch= round(df.iloc[2]['percent_change'],2)

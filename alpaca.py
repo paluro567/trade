@@ -25,7 +25,7 @@ def place_buy_order(ticker, qty):
         type='market',
         time_in_force='gtc'  # Good till canceled
     )
-    print(f"{get_current_timestamp()} - {ticker} - Buy order placed: {buy_order}")
+    print(f"{get_current_timestamp()} - {ticker} - Buy order placed: {buy_order}", flush=True)
     return buy_order
 
 # Stop loss order
@@ -39,10 +39,10 @@ def place_stop_loss_order(ticker, qty, cur_open):
             time_in_force='gtc',
             stop_price=cur_open
         )
-        print(f"{get_current_timestamp()} - {ticker} - Stop loss order placed: {stop_loss_order}")
+        print(f"{get_current_timestamp()} - {ticker} - Stop loss order placed: {stop_loss_order}", flush=True)
         return stop_loss_order
     except Exception as e:
-        print(f"Unable to place stop loss order => {e}")
+        print(f"Unable to place stop loss order => {e}", flush=True)
         return None
 
 # Trailing stop order
@@ -56,10 +56,10 @@ def place_trailing_stop_order(ticker, qty, trailing_pct):
             trail_percent=trailing_pct,  # 10% trailing stop
             time_in_force='gtc'  # Good till canceled
         )
-        print(f"{get_current_timestamp()} - {ticker} - Trailing stop sell order placed: {trailing_stop_order}")
+        print(f"{get_current_timestamp()} - {ticker} - Trailing stop sell order placed: {trailing_stop_order}", flush=True)
         return trailing_stop_order
     except Exception as e:
-        print(f"Unable to place trailing stop order => {e}")
+        print(f"Unable to place trailing stop order => {e}", flush=True)
         return None
 
 # Place buy and sell orders consecutively
@@ -80,7 +80,7 @@ def try_orders(ticker, qty, cur_open, bars):
                 try:
                     buy_filled_price = float(buy_order_obj.filled_avg_price)
                 except Exception as e:
-                    print(f"unable to get buy_order_obj filled price with: {e}")
+                    print(f"unable to get buy_order_obj filled price with: {e}", flush=True)
                 buy_fill_time = datetime.now().date()  # Day date
                 buy_order_filled = True
             else:
@@ -103,7 +103,7 @@ def try_orders(ticker, qty, cur_open, bars):
                     else:
                         sell_filled_price = float(stop_order_obj.filled_avg_price)
                 except Exception as e:
-                    print(f"unable to get stop_order_obj filled price with: {e}")
+                    print(f"unable to get stop_order_obj filled price with: {e}", flush=True)
                 sell_fill_time = datetime.now().date()  # Day date
                 order_filled = True
             else:
@@ -114,10 +114,10 @@ def try_orders(ticker, qty, cur_open, bars):
         if buy_fill_time == sell_fill_time:
             record_trade(ticker)
     except Exception as e:
-        print(f"{get_current_timestamp()} - Unable to place orders for {ticker}: {e}")
+        print(f"{get_current_timestamp()} - Unable to place orders for {ticker}: {e}", flush=True)
 
 if __name__ == '__main__':
     order_obj = place_trailing_stop_order('AMZN', 5, 5)
     order_obj = API.get_order(order_obj.id)
-    print("order_obj: ", order_obj)
-    print("Order status: ", order_obj.status)
+    print("order_obj: ", order_obj, flush=True)
+    print("Order status: ", order_obj.status, flush=True)
