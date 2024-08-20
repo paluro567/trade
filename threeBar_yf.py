@@ -200,7 +200,7 @@ def get_plays():
         alarm_plays, green_plays  =  get_briefing(curr_date_local)  # get briefing
         
         
-        other_on_radar = ['SLNH','PLTR','AI', 'SFWL', 'MDAI', 'SURG', 'SOFI']
+        other_on_radar = ['SLNH','PLTR','AI', 'MDAI', 'SOFI']
 
         # no briefing yet sleep 5 minutes
         if alarm_plays == [] and green_plays == []:
