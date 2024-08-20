@@ -97,6 +97,14 @@ def yf_data(ticker, interval_time):
     except Exception as e:
         print("ERROR -  fetching data:", e)
 
+def find_resistance_points(data):
+    # Identify points of resistance where both open and close prices are less than the high of the bar.
+    resistance_points = data[(data['Open'] < data['High']) & (data['Close'] < data['High'])]
+    
+    # Convert to list to ensure an empty list is returned if no resistance points are found
+    return resistance_points['High'].tolist()
+
+
 def check_play(ticker, play_type, priority, interval):
     BUY_AMT=700 # amount to buy at most
     global BOUGHT_AMT  # 0
@@ -113,12 +121,18 @@ def check_play(ticker, play_type, priority, interval):
         time_stmp = df.index[0]  # Extracting datetime from index
         print("time_stmp: ",time_stmp, flush=True)
         avg_vol = df['Volume'].mean()
+        resistances=find_resistance_points(df)
 
         # bars
         cur_pch = round(df.iloc[0]['percent_change'],2)
         prior_pch = round(df.iloc[1]['percent_change'],2)
         two_prior_pch= round(df.iloc[2]['percent_change'],2)
         three_prior_pch= round(df.iloc[3]['percent_change'],2)
+
+        #check if breaking resistance
+        for resistance in resistances:
+            if cur_open<resistance and close_price>resistance and cur_pch>5:
+                text(f"{ticker} is breaking resistance at {resistance} and moving {cur_pch}%")
 
         print(f"cur_pch: {cur_pch}, prior_pch: {prior_pch}, two_prior_pch: {two_prior_pch}, three_prior_pch: {three_prior_pch}", flush=True)
 
