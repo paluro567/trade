@@ -86,18 +86,37 @@ def yf_data(ticker, interval_time):
         intraday_data['SMA_180'] = intraday_data['Close'].rolling(window=180).mean()
         intraday_data['percent_change'] = (intraday_data['Close'] - intraday_data['Open']) / intraday_data['Open'] * 100
 
-        return intraday_data  # Return the intraday data
+        # Check for conditions
+        intraday_data['condition_met'] = (
+            (intraday_data['percent_change'] > 5) &
+            (
+                (intraday_data['percent_change'].shift(1) < 0) |
+                (intraday_data['percent_change'].shift(2) < 0)
+            ) &
+            (intraday_data['percent_change'].shift(1) > 5)
+        )
+
+        # Filter the rows where the condition is met
+        condition_data = intraday_data[intraday_data['condition_met']]
+
+        return intraday_data, condition_data  # Return the full data and the filtered data
     except Exception as e:
         print("Error fetching data:", e)
 
 # Example usage
 if __name__ == "__main__":
-    ticker_symbol = "VBIV"
+    ticker_symbol = "MNTS"
     print(f"Checking {ticker_symbol} dataframe")
-    yahoo_data = yf_data(ticker_symbol, '5m')
+    yahoo_data, condition_data = yf_data(ticker_symbol, '5m')
     
     if yahoo_data is not None:
         pd.set_option('display.max_rows', None)  # Display all rows
         print(yahoo_data)
+        
+        if not condition_data.empty:
+            print("\nIntervals where the condition is met:")
+            print(condition_data)
+        else:
+            print("\nNo intervals met the condition.")
     else:
         print("No data returned from Yahoo Finance API.")

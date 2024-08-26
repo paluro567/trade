@@ -132,7 +132,7 @@ def check_play(ticker, play_type, priority, interval):
         #check if breaking resistance
         for resistance in resistances:
             if cur_open<resistance and close_price>resistance and cur_pch>5:
-                text(f"{ticker} is breaking resistance at {resistance} and moving {cur_pch}%")
+                # text(f"{ticker} is breaking resistance at {resistance} and moving {cur_pch}%")
 
         print(f"cur_pch: {cur_pch}, prior_pch: {prior_pch}, two_prior_pch: {two_prior_pch}, three_prior_pch: {three_prior_pch}", flush=True)
 
