@@ -16,7 +16,7 @@ def get_briefing(date):
 
     try:
         resp = requests.get(f"https://discord.com/api/v8/channels/{channel_id}/messages", headers=headers)
-        print("get_briefing status code:", resp.status_code)
+        # print("get_briefing status code:", resp.status_code)
     except Exception as e:
         print("ERROR: get_briefing - unable to connect to Discord!")
         print(f"Exception is: {e}")
@@ -32,7 +32,7 @@ def get_briefing(date):
         if date in value['timestamp']:
             today.append(value)
     formatted_today = json.dumps(today, indent=4)
-    print("formatted_today:", formatted_today)
+    # print("formatted_today:", formatted_today)
     
     # patterns to check for plays
     alarm_pattern = r'🚨(.*?):'

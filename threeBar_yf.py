@@ -166,6 +166,7 @@ def check_play(ticker, play_type, priority, interval):
             message = f"{play_type} - {priority} -  {ticker} 4 bar play\n Confirmation {cur_pch}%\n test: {prior_pch}%\n test: {two_prior_pch}%\nignighting: {three_prior_pch}%"
             text(message)
             TEXTED_PLAYS.append(ticker)
+            
         if three_prior_pch>four_thresh and (two_prior_pch<0 or prior_pch<0) and cur_pch>four_thresh \
             and len(BOUGHT_PLAYS) == 0  and not pdt_rule() and is_before_noon_est():
             print(f"placing {ticker} orders => {BUY_AMT//close_price} shares", flush=True)
