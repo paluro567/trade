@@ -97,14 +97,6 @@ def yf_data(ticker, interval_time):
     except Exception as e:
         print("ERROR -  fetching data:", e)
 
-def find_resistance_points(data):
-    # Identify points of resistance where both open and close prices are less than the high of the bar.
-    resistance_points = data[(data['Open'] < data['High']) & (data['Close'] < data['High'])]
-    
-    # Convert to list to ensure an empty list is returned if no resistance points are found
-    return resistance_points['High'].tolist()
-
-
 def check_play(ticker, play_type, priority, interval):
     BUY_AMT=700 # amount to buy at most
     global BOUGHT_AMT  # 0
@@ -121,19 +113,12 @@ def check_play(ticker, play_type, priority, interval):
         time_stmp = df.index[0]  # Extracting datetime from index
         print("time_stmp: ",time_stmp, flush=True)
         avg_vol = df['Volume'].mean()
-        resistances=find_resistance_points(df)
 
         # bars
         cur_pch = round(df.iloc[0]['percent_change'],2)
         prior_pch = round(df.iloc[1]['percent_change'],2)
         two_prior_pch= round(df.iloc[2]['percent_change'],2)
         three_prior_pch= round(df.iloc[3]['percent_change'],2)
-
-        # check if breaking resistance
-        for resistance in resistances:
-            if cur_open<resistance and close_price>resistance and cur_pch>5 and ticker not in TEXTED_PLAYS:
-                text(f"{ticker} is breaking resistance at {resistance} and moving {cur_pch}%")
-                TEXTED_PLAYS.append(ticker)
 
         print(f"cur_pch: {cur_pch}, prior_pch: {prior_pch}, two_prior_pch: {two_prior_pch}, three_prior_pch: {three_prior_pch}", flush=True)
 
@@ -151,14 +136,13 @@ def check_play(ticker, play_type, priority, interval):
             text(message)
             TEXTED_PLAYS.append(ticker)
 
-        # place orders
-        if two_prior_pch>three_thresh and prior_pch<0 and cur_pch>three_thresh \
-            and len(BOUGHT_PLAYS) == 0  and not pdt_rule() and is_before_noon_est():
-            print(f"placing {ticker} orders => {(BUY_AMT)//close_price} shares", flush=True)
-            order_process = Process(target=try_orders, args=(ticker, BUY_AMT // close_price, cur_open, three_bars)) #  submit orders
-            order_process.start()
-            BOUGHT_AMT+= close_price*(BUY_AMT//close_price)
-            BOUGHT_PLAYS.append(ticker)
+            # place orders
+            if len(BOUGHT_PLAYS) == 0  and not pdt_rule() and is_before_noon_est():
+                print(f"placing {ticker} orders => {(BUY_AMT)//close_price} shares", flush=True)
+                order_process = Process(target=try_orders, args=(ticker, BUY_AMT // close_price, cur_open, three_bars)) #  submit orders
+                order_process.start()
+                BOUGHT_AMT+= close_price*(BUY_AMT//close_price)
+                BOUGHT_PLAYS.append(ticker)
 
         # ********** 4 BAR **********
         four_bars={"ignighting": three_prior_pch, "test1":two_prior_pch, "test2":prior_pch, "confirmation": cur_pch}
@@ -166,14 +150,12 @@ def check_play(ticker, play_type, priority, interval):
             message = f"{play_type} - {priority} -  {ticker} 4 bar play\n Confirmation {cur_pch}%\n test: {prior_pch}%\n test: {two_prior_pch}%\nignighting: {three_prior_pch}%"
             text(message)
             TEXTED_PLAYS.append(ticker)
-            
-        if three_prior_pch>four_thresh and (two_prior_pch<0 or prior_pch<0) and cur_pch>four_thresh \
-            and len(BOUGHT_PLAYS) == 0  and not pdt_rule() and is_before_noon_est():
-            print(f"placing {ticker} orders => {BUY_AMT//close_price} shares", flush=True)
-            order_process = Process(target=try_orders, args=(ticker, BUY_AMT // close_price, cur_open, four_bars)) #  submit orders
-            order_process.start()
-            BOUGHT_AMT+= close_price*(BUY_AMT//close_price)
-            BOUGHT_PLAYS.append(ticker)
+            if len(BOUGHT_PLAYS) == 0  and not pdt_rule() and is_before_noon_est():
+                print(f"placing {ticker} orders => {BUY_AMT//close_price} shares", flush=True)
+                order_process = Process(target=try_orders, args=(ticker, BUY_AMT // close_price, cur_open, four_bars)) #  submit orders
+                order_process.start()
+                BOUGHT_AMT+= close_price*(BUY_AMT//close_price)
+                BOUGHT_PLAYS.append(ticker)
               
         # single bar 
         if cur_pch >bar_thresh and ticker not in TEXTED_PLAYS: 
@@ -204,7 +186,7 @@ def get_plays():
         alarm_plays, green_plays  =  get_briefing(curr_date_local)  # get briefing
         
         
-        other_on_radar = ['PLTR','AI', 'MDAI', 'SOFI']
+        other_on_radar = ['SLNH','PLTR','AI', 'SFWL', 'MDAI', 'SURG', 'SOFI']
 
         # no briefing yet sleep 5 minutes
         if alarm_plays == [] and green_plays == []:
@@ -269,6 +251,7 @@ def watch_zip_plays(interval):
                     print(f"{dashes}Checking {stock} {dashes}", flush=True)
                     check_play(stock, category, priority+1, interval)
 
+                    
                 except Exception as e:
                     print(f"ERROR - watch_zip_plays - unable to check {stock} with error: {e}", flush=True)
         # stock watch plays
@@ -276,8 +259,10 @@ def watch_zip_plays(interval):
             print("test 3", flush=True)
             check_play(stock, "july_august_zip", 5, interval)
             print("test 4", flush=True)
-    
+        
+        
         iteration += 1
+
 
         #reset TEXTED_PLAYS after 6.25 minutes minutes (changed from 50)
         if iteration  == 40:
