@@ -7,8 +7,8 @@ from record_day_trade import pdt_rule, record_trade
 
 # Alpaca API credentials
 BASE_URL = "https://api.alpaca.markets"
-API_SECRET = "WPQhnKIKbs2XIBlwiYze9IoSDmIceMetVdzijvqY"
-API_KEY = 'AKNP95FFF31SO61LUUFA'
+API_SECRET = "wiY23WwNAWdBR36DgsCwhDItu0wKgk9NtmV5UNz2"
+API_KEY = 'AKXLXTP50R0IZ942981I'
 
 # Initialize the Alpaca API
 API = tradeAPI.REST(API_KEY, API_SECRET, BASE_URL, api_version='v2')
