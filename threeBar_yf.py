@@ -95,7 +95,7 @@ def yf_data(ticker, interval_time):
 
         return intraday_data # yahoo data return
     except Exception as e:
-        print("ERROR -  fetching data:", e)
+        print(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR -  fetching data:", e)
 
 def find_resistance_points(data):
     # Identify points of resistance where both open and close prices are less than the high of the bar.
@@ -185,7 +185,7 @@ def check_play(ticker, play_type, priority, interval):
             TEXTED_PLAYS.append(ticker)
 
     except Exception as e:
-        print(f"ERROR - check_play - unable to check {ticker} with error: {e}", flush=True)
+        print(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR - check_play - unable to check {ticker} with error: {e}", flush=True)
 
 
 def get_plays():
@@ -208,7 +208,7 @@ def get_plays():
 
         # no briefing yet sleep 5 minutes
         if alarm_plays == [] and green_plays == []:
-            raise Exception("ERROR - empty alarm & green plays")
+            raise Exception(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR - empty alarm & green plays")
         
         print("today's alarm_plays: ", alarm_plays, flush=True)
         print("today's green_plays: ", green_plays, flush=True)
@@ -223,7 +223,7 @@ def get_plays():
         print("combined play categories: ", plays_categories, flush=True)
 
     except Exception as e:
-        print(f"ERROR - get_plays - unable to get briefing or some error: {e}", flush=True)
+        print(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR - get_plays - unable to get briefing or some error: {e}", flush=True)
         print("sleeping 5 minutes...", flush=True)
         time.sleep(300)  # Sleep for 5 minutes
         print("running watch_zip_plays again", flush=True)
@@ -250,8 +250,8 @@ def watch_zip_plays(interval):
 
 
 
-    # iterative check
     print("test 2", flush=True)
+    # iterative check
     iter_count=0
     while True:
         iter_count+=1
@@ -270,7 +270,7 @@ def watch_zip_plays(interval):
                     check_play(stock, category, priority+1, interval)
 
                 except Exception as e:
-                    print(f"ERROR - watch_zip_plays - unable to check {stock} with error: {e}", flush=True)
+                    print(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR - watch_zip_plays - unable to check {stock} with error: {e}", flush=True)
         # stock watch plays
         for stock in july_august_zip:
             print("test 3", flush=True)
@@ -291,7 +291,7 @@ if __name__  ==  '__main__':
     try:
         watch_zip_plays('5m')
     except Exception as e:
-        print(f"ERROR - unable to run watch_zip_plays with: {e}")
+        print(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR - unable to run watch_zip_plays with: {e}")
         
 
 
