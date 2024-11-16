@@ -91,7 +91,7 @@ def terminate_at_8pm(processes):
         time.sleep(30)  # Check every 30 seconds
 
 if __name__ == '__main__':
-    main_positions = ['PLTR', 'TSLA', 'PYPL', 'AMZN', 'MARA', 'IWM']
+    main_positions = ['PLTR', 'TSLA', 'PYPL', 'AMZN', 'MARA', 'IWM', 'SOFI', 'GOOGL','T']
     interval = '30m'
 
     # Create and start a process for each ticker
