@@ -1,156 +1,109 @@
-import yfinance as yf
-import datetime
-
-from datetime import datetime, timedelta
-from Discord import get_briefing
-from record_day_trade import pdt_rule, record_trade
-from sms import text
-import pandas as pd
-import numpy as np
+from multiprocessing import Process
 import time
-import requests
-from realtimetrade import place_buy, place_sell
-import multiprocessing
-from alpha_vantage.timeseries import TimeSeries
-import ta
+from datetime import datetime, timedelta
+import pytz
+import yfinance as yf
 
+# GLOBALS
+global TEXTED_PLAYS
+TEXTED_PLAYS = {}
 
-# Initialize variables to track API call rate
-global BOUGHT  # bought a stock this day
-BOUGHT=False
-texted={}
-
-
-
-def sleep_until(target_hour, target_minute):
-    # Get the current time
-    current_time = datetime.now()
-
-    # Set the target time
-    target_time = current_time.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
-
-    # If the target time has already passed for today, set it for tomorrow
-    if current_time > target_time:
-        target_time += timedelta(days=1)
-
-    # Calculate the time difference
-    time_difference = (target_time - current_time).total_seconds()
-
-    # Sleep until the target time
-    time.sleep(time_difference)
+global last_time
+last_time = time.time()
 
 def yf_data(ticker, interval_time):
-    from datetime import datetime, timedelta
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=30)
-
+    """Fetch ticker data and calculate SMA indicators."""
     try:
-        # Fetch intraday data using the ticker symbol
-        stock = yf.Ticker(ticker)
-        
-        # Get historical market data for the last trading day with 5-minute intervals
-        intraday_data = yf.download(ticker, start=start_date, end=end_date, interval=interval_time, progress=False, prepost=True)
-        intraday_data=intraday_data[::-1]
+        # Fetch sufficient data for a 180-period MA
+        ticker = yf.Ticker(ticker)
+        required_period = '14d' if interval_time == '30m' else '1d'  # Adjust based on interval
+        intraday_data = ticker.history(period=required_period, interval=interval_time, prepost=True)
 
-        # Calculate EMAs
-        intraday_data=intraday_data[::-1]
-        intraday_data['EMA_5'] = intraday_data['Close'].ewm(span=5, adjust=False).mean()
-        intraday_data['EMA_9'] = intraday_data['Close'].ewm(span=9, adjust=False).mean()
-        intraday_data['EMA_20'] = intraday_data['Close'].ewm(span=20, adjust=False).mean()
-        intraday_data['EMA_180'] = intraday_data['Close'].ewm(span=180, adjust=False).mean()
-        intraday_data=intraday_data[::-1]
-        intraday_data['percent_change'] = (intraday_data['Close']-intraday_data['Open'])/ intraday_data['Open']* 100
-
-        return intraday_data # yahoo data return
+        # Calculate SMAs
+        intraday_data['SMA_30'] = intraday_data['Close'].rolling(window=30).mean()
+        intraday_data['SMA_180'] = intraday_data['Close'].rolling(window=180).mean()
+        return intraday_data
     except Exception as e:
-        print("Error fetching data:", e)
-
-#returns true if texted recently
-def texted_recently(ticker):
-    # Check if the ticker was texted within the last 30 minutes
-    if ticker in texted:
-        time_difference = datetime.now() - texted[ticker]  # Fix: Removed datetime prefix
-        print(f"Time difference for {ticker}: {time_difference}")
-        return time_difference < timedelta(minutes=30)  # Fix: Removed datetime prefix
-    else:
-        return False
+        print(f"Error fetching data for {ticker}: {e}")
+        return None
 
 
+def can_text(ticker):
+    """Check if the ticker was not texted in the last 30 minutes."""
+    global TEXTED_PLAYS
+    current_time = datetime.now()
+    if ticker in TEXTED_PLAYS:
+        last_text_time = TEXTED_PLAYS[ticker]
+        # Allow texting only if 30 minutes have passed since the last text
+        if current_time - last_text_time < timedelta(minutes=30):
+            return False
+    return True
+
+def update_texted_plays(ticker):
+    """Update the last texted time for the ticker."""
+    global TEXTED_PLAYS
+    TEXTED_PLAYS[ticker] = datetime.now()
 
 def check_play(ticker, interval):
+    """Check if the current 30-minute interval begins below and ends above the 180 MA."""
+    print(f"Checking play for {ticker} for interval {interval}")
+    data = yf_data(ticker, interval)
+    
+    if data is not None and len(data) >= 2:  # Ensure there is enough data
+        # Current price and 180 MA
+        current_price = data['Close'].iloc[-1]
+        current_sma_180 = data['SMA_180'].iloc[-1]
 
-    try:
+        # Starting price of the interval and 180 MA
+        start_price = data['Close'].iloc[-2]  # The previous close in the interval
+        start_sma_180 = data['SMA_180'].iloc[-2]
 
-        # DATA
-        df = yf_data(ticker, interval)
-        latest=df.iloc[0]
-        latest df.iloc[-1]['percent_change']
+        # 180MA cross check
+        if start_price < start_sma_180 and current_price > current_sma_180:
+            print(f"{ticker}: 30-minute interval started below and ended above the 180 MA!")
+            if can_text(ticker):
+                print(f"Texting: {ticker} crossed above the 180MA!")
+                update_texted_plays(ticker)
+        elif start_price > start_sma_180 and current_price < current_sma_180:
+            if can_text(ticker):
+                print(f"Texting: {ticker} crossed below the 180MA...")
+                update_texted_plays(ticker)
+    else:
+        print(f"{ticker}: Not enough data or invalid data format.")
 
-        # break above 180EMA
-        if not texted_recently(ticker):
-            if latest['Open']<latest['EMA_180'] and latest['Close']>latest['EMA_180'] and latest['percent_change']>1:
-                print(f"break above 180EMA. open: {latest['Open']}  close: {latest['Close']} pctchng: {latest['percent_change']}")
-                message = (f" {ticker} crossed above 180EMA and latest % change is {latest['percent_change']}% \n")
-                print(f"Texting: {message}")
-                text(message)
-                texted[ticker] = datetime.now()  # Update texted time
+def watch_play(ticker, interval):
+    """Monitor a single ticker."""
+    print(f"Started monitoring: {ticker}")
+    while True:
+        check_play(ticker, interval)
+        time.sleep(60)  # Wait for 1 minute
 
-            # break below 180EMA
-            if latest['Open']>latest['EMA_180'] and latest['Close']<latest['EMA_180'] and latest['percent_change']<-1:
-                print(f"break below 180EMA. open: {latest['Open']}  close: {latest['Close']} pctchng: {latest['percent_change']}")
-                message = (f" {ticker} crossed below 180EMA and latest % change is {latest['percent_change']}% \n")
-                print(f"Texting: {message}")
-                text(message)
-                texted[ticker] = datetime.now()  # Update texted time
+def terminate_at_8pm(processes):
+    """Terminate all processes at 8 PM EST."""
+    est = pytz.timezone('America/New_York')
+    while True:
+        now = datetime.now(est)
+        if now.hour == 20 and now.minute == 0:  # 8:00 PM EST
+            print("Terminating all processes at 8 PM EST.")
+            for process in processes:
+                process.terminate()
+            break
+        time.sleep(30)  # Check every 30 seconds
 
-            #large percent change
-            if latest['percent_change']>3 or latest['percent_change']<-3:
-                print(f"large percent change: {latest['Open']}  close: {latest['Close']} pctchng: {latest['percent_change']}")
-                print("large percent change: ",latest.to_string())
-                message = (f" {ticker} has large percent change: {latest['percent_change']}% \n")
-                print(f"Texting: {message}")
-                text(message)
-                texted[ticker] = datetime.now()  # Update texted time
+if __name__ == '__main__':
+    main_positions = ['PLTR', 'TSLA', 'PYPL', 'AMZN', 'MARA', 'IWM']
+    interval = '30m'
 
-    except Exception as e:
-        print(f"unable to check_play {ticker} with error:{e}")
-        
+    # Create and start a process for each ticker
+    processes = []
+    for ticker in main_positions:
+        process = Process(target=watch_play, args=(ticker, interval))
+        processes.append(process)
+        process.start()
 
-def run_monitor_holdings(interval):
-    # sleep_until(9, 29) # start executing 9:29
+    # Terminate all processes at 8 PM EST
+    terminate_at_8pm(processes)
 
-    iteration = 1
-
-    dashes = '-' * 20 # formatting
-
-    # iterative check
-    main_positions=['AMZN', 'PLTR', 'PYPL', 'TSLA', 'MARA', 'GOOGL']
-    print(f"checking main_positions:\n- " + '\n- '.join(main_positions))
-
-    while True: 
-        print(f"-- Iteration {iteration} {dashes}")
-        for stock in main_positions:
-            try:
-                print(f"{dashes}Checking {stock} {dashes}")
-                check_play(stock,interval)
-            except Exception as e:
-                print(f"run_monitor_holdings - unable to check {stock} with error: {e}")
-        iteration +=1
-        time.sleep(11) #sleep 11 seconds to avoid rate limit of 2000/hour
-        
-        
-if __name__  ==  '__main__':
-    interval="30m"
-    df=yf_data('pltr', interval)
-    print(df)
-    # print("index 0: ", df.iloc[0].to_string())
-    print("percent_change: ", df['percent_change'].dtype)
-    print("df.columns: ",  df.columns)
-    print("df.tail(): ",df.tail())
-
-
-
-    try:
-        run_monitor_holdings('30m')
-    except Exception as e:
-        print(f"unable to run_monitor_holdings: {e}")
+    # Ensure all processes are joined properly
+    for process in processes:
+        process.join()
