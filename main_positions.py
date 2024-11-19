@@ -24,6 +24,8 @@ def yf_data(ticker, interval_time):
         # Calculate SMAs
         intraday_data['SMA_30'] = intraday_data['Close'].rolling(window=30).mean()
         intraday_data['SMA_180'] = intraday_data['Close'].rolling(window=180).mean()
+        intraday_data['Percent_Change'] = intraday_data['Close'].pct_change() * 100
+
         return intraday_data
     except Exception as e:
         print(f"Error fetching data for {ticker}: {e}")
@@ -60,17 +62,21 @@ def check_play(ticker, interval):
         start_price = data['Close'].iloc[-2]  # The previous close in the interval
         start_sma_180 = data['SMA_180'].iloc[-2]
 
+        # Latest percent change
+        latest_percent_change = data['Percent_Change'].iloc[-1]
+
+
         # 180MA cross check
         if start_price < start_sma_180 and current_price > current_sma_180:
             print(f"{ticker}: 30-minute interval started below and ended above the 180 MA!")
             if can_text(ticker):
-                text("{ticker} crossed above the 180MA!")
-                print(f"Texting: {ticker} crossed above the 180MA!")
+                text(f"{ticker} crossed above the 180MA!")
+                print(f"Texting: {ticker} crossed above the 180MA! Current % Change: {latest_percent_change:.2f}%")
                 update_texted_plays(ticker)
         elif start_price > start_sma_180 and current_price < current_sma_180:
             if can_text(ticker):
                 print(f"Texting: {ticker} crossed below the 180MA...")
-                text("{ticker} crossed below the 180MA...")
+                text(f"{ticker} crossed below the 180MA... Current % Change: {latest_percent_change:.2f}%")
                 update_texted_plays(ticker)
     else:
         print(f"{ticker}: Not enough data or invalid data format.")
