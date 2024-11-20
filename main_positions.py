@@ -70,14 +70,14 @@ def check_play(ticker, interval):
         if start_price < start_sma_180 and current_price > current_sma_180:
             print(f"{ticker}: 30-minute interval started below and ended above the 180 MA!")
             if can_text(ticker):
-                msg=f"{ticker} crossed above the 180MA!"
+                msg=f"{ticker} crossed above the 180MA! Current % Change: {latest_percent_change:.2f}%"
+                print(msg)
                 text(msg)
-                print(f"Texting: {ticker} crossed above the 180MA! Current % Change: {latest_percent_change:.2f}%")
                 update_texted_plays(ticker)
         elif start_price > start_sma_180 and current_price < current_sma_180:
             if can_text(ticker):
-                print(f"Texting: {ticker} crossed below the 180MA...")
                 msg=f"{ticker} crossed below the 180MA... Current % Change: {latest_percent_change:.2f}%"
+                print(msg)
                 text(msg)
                 update_texted_plays(ticker)
     else:
