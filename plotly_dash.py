@@ -11,6 +11,7 @@ added_tickers = []
 
 # Layout of the app
 app.layout = html.Div([
+    # App Header/title
     html.H1("Add Tickers to Analyze", style={'textAlign': 'center'}),
     html.Div([
         html.Label("Enter a Stock Ticker:", style={'fontSize': '16px'}),
