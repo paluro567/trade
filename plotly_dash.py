@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 
 # Initialize Dash app
 app = Dash(__name__)
-app.title = "P/E Comparison & Earnings Dates"
+app.title = "P/E Comparison & Financials"
 
 # Store tickers in a global list
 added_tickers = []
@@ -90,53 +90,91 @@ def fetch_pe_ratios(tickers):
             pe_ratios[ticker] = {'current': 0, 'forward': 0}
     return pe_ratios
 
-# Callback to plot P/E ratios
+# Fetch financial data from yfinance
+def fetch_financials(tickers):
+    financials = {}
+    for ticker in tickers:
+        try:
+            stock = yf.Ticker(ticker)
+            info = stock.info
+            financials[ticker] = {
+                'Revenue': info.get('totalRevenue', None),
+                'Net Income': info.get('netIncomeToCommon', None),
+                'Market Cap': info.get('marketCap', None)
+            }
+        except Exception as e:
+            print(f"Error fetching financial data for {ticker}: {e}")
+            financials[ticker] = {
+                'Revenue': None,
+                'Net Income': None,
+                'Market Cap': None
+            }
+    return financials
+
+# Callback to plot P/E ratios and financials
 @app.callback(
     Output('output-div', 'children'),
     Input('plot-button', 'n_clicks')
 )
-def plot_pe_ratios(n_clicks):
+def plot_data(n_clicks):
     if n_clicks > 0 and added_tickers:
+        # Fetch data
         pe_ratios = fetch_pe_ratios(added_tickers)
+        financials = fetch_financials(added_tickers)
 
-        # Calculate differences and sort
-        pe_differences = {
-            ticker: abs(data['current'] - data['forward'])
-            for ticker, data in pe_ratios.items()
-        }
-        sorted_tickers = sorted(
-            pe_ratios.keys(),
-            key=lambda ticker: pe_differences[ticker],
-            reverse=True
-        )
+        # Create P/E bar chart
+        current_pe_values = [pe_ratios[ticker]['current'] for ticker in added_tickers]
+        forward_pe_values = [pe_ratios[ticker]['forward'] for ticker in added_tickers]
 
-        current_pe_values = [pe_ratios[ticker]['current'] for ticker in sorted_tickers]
-        forward_pe_values = [pe_ratios[ticker]['forward'] for ticker in sorted_tickers]
-
-        # Create bar chart
-        fig = go.Figure()
-        fig.add_trace(go.Bar(
-            x=sorted_tickers,
+        pe_fig = go.Figure()
+        pe_fig.add_trace(go.Bar(
+            x=added_tickers,
             y=current_pe_values,
             name='Current P/E',
             marker_color='blue'
         ))
-        fig.add_trace(go.Bar(
-            x=sorted_tickers,
+        pe_fig.add_trace(go.Bar(
+            x=added_tickers,
             y=forward_pe_values,
             name='Forward P/E',
             marker_color='green'
         ))
 
-        fig.update_layout(
-            title="P/E & Forward P/E Comparison (Sorted by Difference)",
+        pe_fig.update_layout(
+            title="P/E & Forward P/E Comparison",
             xaxis_title="Stock Tickers",
             yaxis_title="P/E Ratio",
             barmode='group',
             template='plotly_white'
         )
 
-        return dcc.Graph(figure=fig)
+        # Create financial data table
+        financial_data = [
+            [ticker, 
+             f"{financials[ticker]['Revenue']:,}" if financials[ticker]['Revenue'] else "N/A",
+             f"{financials[ticker]['Net Income']:,}" if financials[ticker]['Net Income'] else "N/A",
+             f"{financials[ticker]['Market Cap']:,}" if financials[ticker]['Market Cap'] else "N/A"]
+            for ticker in added_tickers
+        ]
+        financial_table = go.Figure(data=[
+            go.Table(
+                header=dict(
+                    values=["Ticker", "Revenue", "Net Income", "Market Cap"],
+                    fill_color='paleturquoise',
+                    align='left'
+                ),
+                cells=dict(
+                    values=list(zip(*financial_data)),
+                    fill_color='lavender',
+                    align='left'
+                )
+            )
+        ])
+
+        return html.Div([
+            dcc.Graph(figure=pe_fig),
+            dcc.Graph(figure=financial_table)
+        ])
     return "No tickers to plot. Add tickers and click 'Plot All Tickers'."
 
 # Run the app
