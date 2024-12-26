@@ -106,7 +106,7 @@ def find_resistance_points(data):
 
 
 def check_play(ticker, play_type, priority, interval):
-    BUY_AMT=700 # amount to buy at most
+    BUY_AMT=1400 # amount to buy at most
     global BOUGHT_AMT  # 0
     global BOUGHT_PLAYS  #[]
 
