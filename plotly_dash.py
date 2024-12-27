@@ -1,4 +1,4 @@
-from dash import Dash, dcc, html, Input, Output, State, callback_context
+from dash import Dash, dcc, html, Input, Output, State, callback_context, dash_table
 import yfinance as yf
 import plotly.graph_objects as go
 import pandas as pd
@@ -62,6 +62,27 @@ def fetch_pe_ratios(tickers):
         pe_ratios[ticker] = ratios
     return pe_ratios
 
+# Fetch financial metrics
+def fetch_financial_metrics(tickers):
+    metrics = {
+        "Metric": ["PEG Ratio", "Free Cash Flow Yield", "Price to Book", "Return on Equity"]
+    }
+    for ticker in tickers:
+        try:
+            stock = yf.Ticker(ticker)
+            info = stock.info
+            metrics[ticker] = [
+                info.get("pegRatio", "N/A"),                  # PEG Ratio
+                info.get("freeCashflow", "N/A"),              # Free Cash Flow
+                info.get("priceToBook", "N/A"),               # Price to Book
+                info.get("returnOnEquity", "N/A")             # Return on Equity
+            ]
+        except Exception as e:
+            print(f"Error fetching financial metrics for {ticker}: {e}")
+            metrics[ticker] = ["N/A"] * 4  # Fallback in case of error
+
+    return metrics
+
 # Layout
 app.layout = html.Div([
     html.H1("Stock Analysis Dashboard", style={'textAlign': 'center'}),
@@ -81,7 +102,7 @@ app.layout = html.Div([
             id='ticker-checklist',
             options=[], value=[],
             style={
-                'display': 'flex',  # Use flexbox for vertical alignment of items
+                'display': 'flex',
                 'flexDirection': 'column',
                 'border': '1px solid #ccc',
                 'padding': '10px',
@@ -91,8 +112,8 @@ app.layout = html.Div([
                 'overflowY': 'auto',
                 'textAlign': 'left',
                 'fontSize': '14px',
-                'width': '300px',  # Fixed width
-                'margin': '0 auto'  # Horizontally center
+                'width': '300px',
+                'margin': '0 auto'
             }
         ),
         html.Button('Remove Selected Tickers', id='remove-button', n_clicks=0,
@@ -121,23 +142,24 @@ app.layout = html.Div([
     html.Button('Plot All Tickers', id='plot-button', n_clicks=0,
                 style={'marginTop': '20px', 'backgroundColor': 'green', 'color': 'white'}),
     html.Div(id='pe-output-div', style={'marginTop': '20px'}),
-    html.Div(id='rsi-output-div', style={'marginTop': '20px'})
+    html.Div(id='rsi-output-div', style={'marginTop': '20px'}),
+    html.Div(id='financial-metrics-div', style={'marginTop': '20px'})
 ])
 
-# Callbacks
+# Callback to modify ticker list
 @app.callback(
     [Output('ticker-checklist', 'options'), Output('ticker-input', 'value')],
-    [Input('add-button', 'n_clicks'), Input('ticker-input', 'n_submit'), Input('remove-button', 'n_clicks')],
+    [Input('add-button', 'n_clicks'), Input('remove-button', 'n_clicks')],
     [State('ticker-input', 'value'), State('ticker-checklist', 'value')]
 )
-def modify_ticker_list(add_clicks, n_submit, remove_clicks, ticker_to_add, selected_tickers):
+def modify_ticker_list(add_clicks, remove_clicks, ticker_to_add, selected_tickers):
     ctx = callback_context
     if not ctx.triggered:
         return [{'label': ticker, 'value': ticker} for ticker in added_tickers], ''
 
     triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
 
-    if triggered_id in ['add-button', 'ticker-input'] and ticker_to_add:
+    if triggered_id == 'add-button' and ticker_to_add:
         ticker_to_add = ticker_to_add.strip().upper()
         if ticker_to_add and ticker_to_add not in added_tickers:
             added_tickers.append(ticker_to_add)
@@ -149,58 +171,41 @@ def modify_ticker_list(add_clicks, n_submit, remove_clicks, ticker_to_add, selec
 
     return [{'label': ticker, 'value': ticker} for ticker in added_tickers], ''
 
+# Callback to generate plots
 @app.callback(
-    [Output('pe-output-div', 'children'), Output('rsi-output-div', 'children')],
+    [Output('pe-output-div', 'children'),
+     Output('rsi-output-div', 'children'),
+     Output('financial-metrics-div', 'children')],
     [Input('plot-button', 'n_clicks')],
     [State('period-dropdown', 'value'), State('interval-dropdown', 'value'),
      State('overbought-input', 'value'), State('oversold-input', 'value')]
 )
 def generate_plots(plot_clicks, period, interval, overbought, oversold):
     if plot_clicks == 0 or not added_tickers:
-        return None, None
+        return None, None, None
 
     pe_ratios = fetch_pe_ratios(added_tickers)
 
-    # Define colors for categories
-    current_pe_color = "blue"
-    forward_pe_color = "yellow"
-
     # Create P/E Chart
     pe_fig = go.Figure()
-
-    # Add Current P/E bars
     pe_fig.add_trace(go.Bar(
-        name="Current P/E",  # Single legend entry for Current P/E
-        x=list(pe_ratios.keys()),  # List of tickers
-        y=[ratios['current'] for ratios in pe_ratios.values()],  # Current P/E values
-        marker_color=current_pe_color,
-        legendgroup="Current P/E",  # Group legend entry
-        showlegend=True  # Show legend only for the first trace
+        name="Current P/E",
+        x=list(pe_ratios.keys()),
+        y=[ratios['current'] for ratios in pe_ratios.values()],
+        marker_color="blue"
     ))
-
-    # Add Forward P/E bars
     pe_fig.add_trace(go.Bar(
-        name="Forward P/E",  # Single legend entry for Forward P/E
-        x=list(pe_ratios.keys()),  # List of tickers
-        y=[ratios['forward'] for ratios in pe_ratios.values()],  # Forward P/E values
-        marker_color=forward_pe_color,
-        legendgroup="Forward P/E",  # Group legend entry
-        showlegend=True  # Show legend only for the first trace
+        name="Forward P/E",
+        x=list(pe_ratios.keys()),
+        y=[ratios['forward'] for ratios in pe_ratios.values()],
+        marker_color="yellow"
     ))
-
-    # Update layout
     pe_fig.update_layout(
         title="P/E Ratios",
-        title_x=0.5,  # Center the title
+        title_x=0.5,
         xaxis_title="Tickers",
         yaxis_title="P/E Ratio",
-        barmode="group",  # Group bars side by side
-        legend=dict(
-            x=0.01, y=0.99,  # Position legend
-            bgcolor="rgba(255, 255, 255, 0.8)",  # Semi-transparent background
-            bordercolor="black",
-            borderwidth=1
-        ),
+        barmode="group",
         template="plotly_white"
     )
 
@@ -208,10 +213,7 @@ def generate_plots(plot_clicks, period, interval, overbought, oversold):
     for ticker in added_tickers:
         data = fetch_stock_chart(ticker, period, interval)
         if data is not None:
-            # Create a new figure for each ticker
             fig = go.Figure()
-            
-            # Add stock price line
             fig.add_trace(go.Scatter(
                 x=data.index,
                 y=data['Close'],
@@ -219,67 +221,54 @@ def generate_plots(plot_clicks, period, interval, overbought, oversold):
                 line=dict(color='blue', width=2),
                 name="Stock Price"
             ))
-
-            # Add markers for RSI thresholds
-            fig.add_trace(go.Scatter(
-                x=data.index,
-                y=data['Close'],
-                mode='markers',
-                marker=dict(
-                    color=data['RSI'].apply(lambda x: 'red' if x > overbought else 'green' if x < oversold else 'blue'),
-                    size=6,
-                ),
-                name="RSI Points"
-            ))
-
-            # Add vertical shaded regions for overbought and oversold
-            for i in range(len(data)):
-                if data['RSI'][i] > overbought:
-                    fig.add_shape(
-                        type="rect",
-                        x0=data.index[i],  # Start time
-                        x1=data.index[i + 1] if i + 1 < len(data) else data.index[i],  # End time
-                        y0=0,
-                        y1=1,
-                        xref="x",
-                        yref="paper",
-                        fillcolor="rgba(255, 0, 0, 0.2)",  # Transparent red
-                        layer="below",
-                        line_width=0,
-                    )
-                elif data['RSI'][i] < oversold:
+            for i in range(len(data) - 1):
+                if data['RSI'].iloc[i] > overbought:
                     fig.add_shape(
                         type="rect",
                         x0=data.index[i],
-                        x1=data.index[i + 1] if i + 1 < len(data) else data.index[i],
+                        x1=data.index[i + 1],
                         y0=0,
                         y1=1,
                         xref="x",
                         yref="paper",
-                        fillcolor="rgba(0, 255, 0, 0.2)",  # Transparent green
-                        layer="below",
+                        fillcolor="rgba(255, 0, 0, 0.2)",
                         line_width=0,
                     )
-
-            # Update layout for the chart
-            fig.update_layout(
-                title={
-                    'text': f"<b>— {ticker}</b> RSI Analysis —",  # Bold title with lines
-                    'x': 0.5,  # Center the title
-                    'xanchor': 'center',  # Anchor the title at the center
-                    'yanchor': 'top'
-                },
-                xaxis_title="Date",
-                yaxis_title="Price (USD)",
-                xaxis=dict(showgrid=True, gridcolor='lightgrey'),
-                yaxis=dict(showgrid=True, gridcolor='lightgrey'),
-                template="plotly_white",
-                font=dict(family="Arial", size=12, color="black"),
-            )
-
+                elif data['RSI'].iloc[i] < oversold:
+                    fig.add_shape(
+                        type="rect",
+                        x0=data.index[i],
+                        x1=data.index[i + 1],
+                        y0=0,
+                        y1=1,
+                        xref="x",
+                        yref="paper",
+                        fillcolor="rgba(0, 255, 0, 0.2)",
+                        line_width=0,
+                    )
+                fig.update_layout(
+                    title={
+                        'text': f"{'-'*25}Stock Price/RSI - <b> {ticker}</b>{'-'*25}",  # Bold ticker symbol
+                        'x': 0.5,  # Center the title
+                        'xanchor': 'center',
+                        'yanchor': 'top'
+                    },
+                    xaxis_title="Date",
+                    yaxis_title="Stock Price",
+                    template="plotly_white"
+                )
             rsi_figs.append(dcc.Graph(figure=fig))
 
-    return dcc.Graph(figure=pe_fig), rsi_figs
+    metrics = fetch_financial_metrics(added_tickers)
+    df = pd.DataFrame(metrics)
+    financial_table = dash_table.DataTable(
+        columns=[{"name": col, "id": col} for col in df.columns],
+        data=df.to_dict("records"),
+        style_table={'marginTop': '20px'},
+        style_cell={'textAlign': 'center'}
+    )
+
+    return dcc.Graph(figure=pe_fig), rsi_figs, financial_table
 
 # Run app
 if __name__ == '__main__':
