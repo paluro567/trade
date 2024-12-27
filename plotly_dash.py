@@ -170,11 +170,75 @@ def generate_plots(plot_clicks, period, interval, overbought, oversold):
     for ticker in added_tickers:
         data = fetch_stock_chart(ticker, period, interval)
         if data is not None:
-            color = data['RSI'].apply(lambda x: 'red' if x > overbought else 'green' if x < oversold else 'blue')
+            # Create a new figure for each ticker
             fig = go.Figure()
-            fig.add_trace(go.Scatter(x=data.index, y=data['Close'], line=dict(color='blue')))
-            fig.add_trace(go.Scatter(x=data.index, y=data['Close'], mode='markers', marker=dict(color=color)))
-            fig.update_layout(title=f"{ticker} RSI Analysis")
+            
+            # Add stock price line
+            fig.add_trace(go.Scatter(
+                x=data.index,
+                y=data['Close'],
+                mode='lines',
+                line=dict(color='blue', width=2),
+                name="Stock Price"
+            ))
+
+            # Add markers for RSI thresholds
+            fig.add_trace(go.Scatter(
+                x=data.index,
+                y=data['Close'],
+                mode='markers',
+                marker=dict(
+                    color=data['RSI'].apply(lambda x: 'red' if x > overbought else 'green' if x < oversold else 'blue'),
+                    size=6,
+                ),
+                name="RSI Points"
+            ))
+
+            # Add vertical shaded regions for overbought and oversold
+            for i in range(len(data)):
+                if data['RSI'][i] > overbought:
+                    fig.add_shape(
+                        type="rect",
+                        x0=data.index[i],  # Start time
+                        x1=data.index[i + 1] if i + 1 < len(data) else data.index[i],  # End time
+                        y0=0,
+                        y1=1,
+                        xref="x",
+                        yref="paper",
+                        fillcolor="rgba(255, 0, 0, 0.2)",  # Transparent red
+                        layer="below",
+                        line_width=0,
+                    )
+                elif data['RSI'][i] < oversold:
+                    fig.add_shape(
+                        type="rect",
+                        x0=data.index[i],
+                        x1=data.index[i + 1] if i + 1 < len(data) else data.index[i],
+                        y0=0,
+                        y1=1,
+                        xref="x",
+                        yref="paper",
+                        fillcolor="rgba(0, 255, 0, 0.2)",  # Transparent green
+                        layer="below",
+                        line_width=0,
+                    )
+
+            # Update layout for the chart
+            fig.update_layout(
+                title={
+                    'text': f"<b>— {ticker}</b> RSI Analysis —",  # Bold title with lines
+                    'x': 0.5,  # Center the title
+                    'xanchor': 'center',  # Anchor the title at the center
+                    'yanchor': 'top'
+                },
+                xaxis_title="Date",
+                yaxis_title="Price (USD)",
+                xaxis=dict(showgrid=True, gridcolor='lightgrey'),
+                yaxis=dict(showgrid=True, gridcolor='lightgrey'),
+                template="plotly_white",
+                font=dict(family="Arial", size=12, color="black"),
+            )
+
             rsi_figs.append(dcc.Graph(figure=fig))
 
     return dcc.Graph(figure=pe_fig), rsi_figs
