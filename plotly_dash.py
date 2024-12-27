@@ -80,7 +80,20 @@ app.layout = html.Div([
         dcc.Checklist(
             id='ticker-checklist',
             options=[], value=[],
-            style={'maxHeight': '200px', 'overflowY': 'auto'}
+            style={
+                'display': 'flex',  # Use flexbox for vertical alignment of items
+                'flexDirection': 'column',
+                'border': '1px solid #ccc',
+                'padding': '10px',
+                'borderRadius': '5px',
+                'backgroundColor': '#f9f9f9',
+                'maxHeight': '200px',
+                'overflowY': 'auto',
+                'textAlign': 'left',
+                'fontSize': '14px',
+                'width': '300px',  # Fixed width
+                'margin': '0 auto'  # Horizontally center
+            }
         ),
         html.Button('Remove Selected Tickers', id='remove-button', n_clicks=0,
                     style={'marginTop': '10px', 'backgroundColor': 'red', 'color': 'white'}),
