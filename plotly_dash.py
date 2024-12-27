@@ -160,11 +160,49 @@ def generate_plots(plot_clicks, period, interval, overbought, oversold):
         return None, None
 
     pe_ratios = fetch_pe_ratios(added_tickers)
+
+    # Define colors for categories
+    current_pe_color = "blue"
+    forward_pe_color = "yellow"
+
+    # Create P/E Chart
     pe_fig = go.Figure()
-    for ticker, ratios in pe_ratios.items():
-        pe_fig.add_trace(go.Bar(name=f"{ticker} Current", x=[ticker], y=[ratios['current']], marker_color='blue'))
-        pe_fig.add_trace(go.Bar(name=f"{ticker} Forward", x=[ticker], y=[ratios['forward']], marker_color='orange'))
-    pe_fig.update_layout(title="P/E Ratios", barmode='group')
+
+    # Add Current P/E bars
+    pe_fig.add_trace(go.Bar(
+        name="Current P/E",  # Single legend entry for Current P/E
+        x=list(pe_ratios.keys()),  # List of tickers
+        y=[ratios['current'] for ratios in pe_ratios.values()],  # Current P/E values
+        marker_color=current_pe_color,
+        legendgroup="Current P/E",  # Group legend entry
+        showlegend=True  # Show legend only for the first trace
+    ))
+
+    # Add Forward P/E bars
+    pe_fig.add_trace(go.Bar(
+        name="Forward P/E",  # Single legend entry for Forward P/E
+        x=list(pe_ratios.keys()),  # List of tickers
+        y=[ratios['forward'] for ratios in pe_ratios.values()],  # Forward P/E values
+        marker_color=forward_pe_color,
+        legendgroup="Forward P/E",  # Group legend entry
+        showlegend=True  # Show legend only for the first trace
+    ))
+
+    # Update layout
+    pe_fig.update_layout(
+        title="P/E Ratios",
+        title_x=0.5,  # Center the title
+        xaxis_title="Tickers",
+        yaxis_title="P/E Ratio",
+        barmode="group",  # Group bars side by side
+        legend=dict(
+            x=0.01, y=0.99,  # Position legend
+            bgcolor="rgba(255, 255, 255, 0.8)",  # Semi-transparent background
+            bordercolor="black",
+            borderwidth=1
+        ),
+        template="plotly_white"
+    )
 
     rsi_figs = []
     for ticker in added_tickers:
