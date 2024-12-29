@@ -185,11 +185,11 @@ def update_charts(plot_clicks, tickers_to_display, price_period, interval):
                 if data.iloc[i]['high_volume']:
                     stock_fig.add_vrect(
                         x0=x_start,
-                        x1=x_end,
+                        x1=x_end,   
                         fillcolor="red",
                         opacity=0.2,
                         layer="below",
-                        line_width=0,
+                        line_width=0,  
                     )
                 else:
                     stock_fig.add_vrect(
@@ -200,6 +200,12 @@ def update_charts(plot_clicks, tickers_to_display, price_period, interval):
                         layer="below",
                         line_width=0,
                     )
+                stock_fig.update_layout(
+                    title=f"{ticker} Stock Price Chart",
+                    xaxis_title="Date",
+                    yaxis_title="Price",
+                    legend_title="Legend"
+                )
 
             # Add key statistics to the data table
             table_data.append({
