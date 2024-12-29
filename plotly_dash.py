@@ -1,8 +1,9 @@
-from dash import Dash, dcc, html, Input, Output, State, callback_context, dash_table
-import yfinance as yf
+from dash import Dash, dcc, html, Input, Output, State, dash_table
+from dash.exceptions import PreventUpdate
+from yahooquery import Ticker
 import plotly.graph_objects as go
 import pandas as pd
-from concurrent.futures import ThreadPoolExecutor
+import dash
 
 # Initialize Dash app
 app = Dash(__name__)
@@ -11,264 +12,223 @@ app.title = "Stock Analysis Dashboard"
 # Store tickers in memory
 added_tickers = []
 
-# Default options for period, interval, and RSI thresholds
-default_period = '1mo'
-default_interval = '30m'
-default_overbought = 70
-default_oversold = 30
-
-# Function to calculate RSI
-def calculate_rsi(data, period=14):
-    delta = data['Close'].diff()
-    gain = delta.where(delta > 0, 0)
-    loss = -delta.where(delta < 0, 0)
-
-    avg_gain = gain.rolling(window=period).mean()
-    avg_loss = loss.rolling(window=period).mean()
-
-    rs = avg_gain / avg_loss
-    rsi = 100 - (100 / (1 + rs))
-    return rsi
-
-# Fetch stock data and calculate RSI
-def fetch_stock_chart(ticker, period, interval):
-    try:
-        stock = yf.Ticker(ticker)
-        data = stock.history(period=period, interval=interval)
-        if not data.empty:
-            data['RSI'] = calculate_rsi(data)
+# Fetch stock data using yahooquery
+def fetch_stock_data(ticker, period='6mo', interval='1d'):
+    stock = Ticker(ticker)
+    data = stock.history(period=period, interval=interval).reset_index()
+    if not data.empty and 'volume' in data:
+        data.set_index('date', inplace=True)
+        data.index = pd.to_datetime(data.index)
+        data['average_volume'] = data['volume'].mean()
+        data['current_volume'] = data['volume']
+        data['volume_millions'] = data['volume'] / 1_000_000
+        data['high_volume'] = data['volume'] > data['average_volume']  # Identify high-volume regions
         return data
-    except Exception as e:
-        print(f"Error fetching data for {ticker}: {e}")
-        return None
+    else:
+        return None  # Return None if data is empty or missing required columns
 
-# Fetch P/E ratios
+# Fetch P/E ratios using yahooquery
 def fetch_pe_ratios(tickers):
-    def fetch_single_pe(ticker):
-        try:
-            stock = yf.Ticker(ticker)
-            return {
-                'current': stock.info.get('trailingPE', None),
-                'forward': stock.info.get('forwardPE', None)
-            }
-        except Exception as e:
-            print(f"Error fetching P/E ratios for {ticker}: {e}")
-            return {'current': None, 'forward': None}
-
     pe_ratios = {}
-    with ThreadPoolExecutor() as executor:
-        results = executor.map(fetch_single_pe, tickers)
-    for ticker, ratios in zip(tickers, results):
-        pe_ratios[ticker] = ratios
+    stock = Ticker(tickers)
+    summary = stock.summary_detail
+    for ticker in tickers:
+        if ticker in summary:
+            pe_ratios[ticker] = {
+                'current': summary[ticker].get('trailingPE', None),
+                'forward': summary[ticker].get('forwardPE', None)
+            }
     return pe_ratios
 
-# Fetch financial metrics
-def fetch_financial_metrics(tickers):
-    metrics = {
-        "Metric": ["PEG Ratio", "Free Cash Flow Yield", "Price to Book", "Return on Equity"]
-    }
-    for ticker in tickers:
-        try:
-            stock = yf.Ticker(ticker)
-            info = stock.info
-            metrics[ticker] = [
-                info.get("pegRatio", "N/A"),                  # PEG Ratio
-                info.get("freeCashflow", "N/A"),              # Free Cash Flow
-                info.get("priceToBook", "N/A"),               # Price to Book
-                info.get("returnOnEquity", "N/A")             # Return on Equity
-            ]
-        except Exception as e:
-            print(f"Error fetching financial metrics for {ticker}: {e}")
-            metrics[ticker] = ["N/A"] * 4  # Fallback in case of error
-
-    return metrics
+# Format numbers in millions with commas
+def format_millions(value):
+    return f"{value:,.2f}M"
 
 # Layout
-app.layout = html.Div([
-    html.H1("Stock Analysis Dashboard", style={'textAlign': 'center'}),
-    html.Div([
-        html.Label("Enter a Stock Ticker:"),
-        dcc.Input(
-            id='ticker-input', type='text', placeholder='e.g., AAPL',
-            style={'width': '50%', 'padding': '10px'}
-        ),
-        html.Button('Add Ticker', id='add-button', n_clicks=0,
-                    style={'marginLeft': '10px', 'backgroundColor': 'blue', 'color': 'white'}),
-    ], style={'textAlign': 'center', 'marginBottom': '10px'}),
-
-    html.Div([
-        html.Label("Added Tickers:"),
-        dcc.Checklist(
-            id='ticker-checklist',
-            options=[], value=[],
+app.layout = html.Div(
+    style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'center', 'justifyContent': 'start', 'height': '100vh', 'overflow': 'auto'},
+    children=[
+        html.Div(
             style={
-                'display': 'flex',
-                'flexDirection': 'column',
-                'border': '1px solid #ccc',
-                'padding': '10px',
-                'borderRadius': '5px',
-                'backgroundColor': '#f9f9f9',
-                'maxHeight': '200px',
-                'overflowY': 'auto',
-                'textAlign': 'left',
-                'fontSize': '14px',
-                'width': '300px',
-                'margin': '0 auto'
-            }
+                'position': 'sticky', 'top': '0', 'zIndex': '1000', 'backgroundColor': 'white',
+                'width': '100%', 'padding': '20px', 'boxShadow': '0px 2px 5px rgba(0,0,0,0.1)'
+            },
+            children=[
+                html.H1("Stock Analysis Dashboard", style={'textAlign': 'center'}),
+                html.Div([
+                    html.Label("Enter a Stock Ticker:"),
+                    dcc.Input(
+                        id='ticker-input', type='text', placeholder='e.g., AAPL',
+                        style={'width': '50%', 'padding': '10px'},
+                        n_submit=0  # Track Enter key presses
+                    ),
+                    html.Button('Add Ticker', id='add-button', n_clicks=0, style={'marginLeft': '10px'}),
+                ], style={'textAlign': 'center', 'marginBottom': '20px'}),
+                html.Div(
+                    style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'center', 'justifyContent': 'center'},
+                    children=[
+                        dcc.Checklist(
+                            id='ticker-list',
+                            options=[],
+                            value=[],
+                            inline=False,
+                            labelStyle={'marginRight': '10px'}
+                        ),
+                        html.Button('Remove Selected', id='remove-button', n_clicks=0, style={'marginTop': '10px'}),
+                    ]
+                ),
+                html.Div([
+                    html.Label("Select Price Period:"),
+                    dcc.Dropdown(
+                        id='price-period',
+                        options=[{'label': p, 'value': p} for p in ['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', '10y', 'ytd', 'max']],
+                        value='6mo',  # Default value
+                        style={'width': '50%', 'marginBottom': '20px'}
+                    ),
+                    html.Label("Select Interval:"),
+                    dcc.Dropdown(
+                        id='interval',
+                        options=[{'label': i, 'value': i} for i in ['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1h', '1d', '5d', '1wk', '1mo', '3mo']],
+                        value='1d',  # Default value
+                        style={'width': '50%', 'marginBottom': '20px'}
+                    ),
+                ], style={'textAlign': 'center'}),
+                html.Button('Plot Charts', id='plot-button', n_clicks=0, style={'marginTop': '20px'}),
+            ]
         ),
-        html.Button('Remove Selected Tickers', id='remove-button', n_clicks=0,
-                    style={'marginTop': '10px', 'backgroundColor': 'red', 'color': 'white'}),
-    ], style={'textAlign': 'center'}),
-
-    html.Div([
-        html.Label("Select Period:"),
-        dcc.Dropdown(
-            id='period-dropdown',
-            options=[{'label': p, 'value': p} for p in ['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', '10y', 'ytd', 'max']],
-            value=default_period, style={'width': '50%', 'margin': 'auto'}
-        ),
-        html.Label("Select Interval:"),
-        dcc.Dropdown(
-            id='interval-dropdown',
-            options=[{'label': i, 'value': i} for i in ['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1h', '1d', '5d', '1wk', '1mo', '3mo']],
-            value=default_interval, style={'width': '50%', 'margin': 'auto'}
-        ),
-        html.Label("RSI Overbought Threshold:"),
-        dcc.Input(id='overbought-input', type='number', value=default_overbought),
-        html.Label("RSI Oversold Threshold:"),
-        dcc.Input(id='oversold-input', type='number', value=default_oversold),
-    ], style={'textAlign': 'center'}),
-
-    html.Button('Plot All Tickers', id='plot-button', n_clicks=0,
-                style={'marginTop': '20px', 'backgroundColor': 'green', 'color': 'white'}),
-    html.Div(id='pe-output-div', style={'marginTop': '20px'}),
-    html.Div(id='rsi-output-div', style={'marginTop': '20px'}),
-    html.Div(id='financial-metrics-div', style={'marginTop': '20px'})
-])
-
-# Callback to modify ticker list
-@app.callback(
-    [Output('ticker-checklist', 'options'), Output('ticker-input', 'value')],
-    [Input('add-button', 'n_clicks'), Input('remove-button', 'n_clicks')],
-    [State('ticker-input', 'value'), State('ticker-checklist', 'value')]
+        html.Div(id='charts-div', style={'marginTop': '20px', 'width': '90%'})
+    ]
 )
-def modify_ticker_list(add_clicks, remove_clicks, ticker_to_add, selected_tickers):
-    ctx = callback_context
+
+# Callback to manage ticker addition and removal
+@app.callback(
+    [Output('ticker-input', 'value'),
+     Output('ticker-list', 'options'),
+     Output('ticker-list', 'value')],
+    [Input('add-button', 'n_clicks'),
+     Input('ticker-input', 'n_submit'),
+     Input('remove-button', 'n_clicks')],
+    [State('ticker-input', 'value'),
+     State('ticker-list', 'value')]
+)
+def update_ticker_list(add_clicks, enter_presses, remove_clicks, ticker_input, tickers_to_remove):
+    global added_tickers
+    ctx = dash.callback_context
+
     if not ctx.triggered:
-        return [{'label': ticker, 'value': ticker} for ticker in added_tickers], ''
+        raise PreventUpdate
 
-    triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    # Determine which event triggered the callback
+    trigger = ctx.triggered[0]['prop_id']
 
-    if triggered_id == 'add-button' and ticker_to_add:
-        ticker_to_add = ticker_to_add.strip().upper()
-        if ticker_to_add and ticker_to_add not in added_tickers:
-            added_tickers.append(ticker_to_add)
+    # Add a ticker via the "Add" button or "Enter" key
+    if trigger in ['add-button.n_clicks', 'ticker-input.n_submit']:
+        if ticker_input and ticker_input.strip():
+            ticker = ticker_input.strip().upper()
+            if ticker not in added_tickers:
+                added_tickers.append(ticker)
 
-    if triggered_id == 'remove-button' and selected_tickers:
-        for ticker in selected_tickers:
-            if ticker in added_tickers:
-                added_tickers.remove(ticker)
+    # Remove selected tickers
+    elif trigger == 'remove-button.n_clicks':
+        added_tickers = [t for t in added_tickers if t not in tickers_to_remove]
 
-    return [{'label': ticker, 'value': ticker} for ticker in added_tickers], ''
+    # Update the ticker list options and clear the input field
+    ticker_options = [{'label': t, 'value': t} for t in added_tickers]
+    return "", ticker_options, added_tickers
 
-# Callback to generate plots
+# Callback to update charts when the Plot button is clicked
 @app.callback(
-    [Output('pe-output-div', 'children'),
-     Output('rsi-output-div', 'children'),
-     Output('financial-metrics-div', 'children')],
+    Output('charts-div', 'children'),
     [Input('plot-button', 'n_clicks')],
-    [State('period-dropdown', 'value'), State('interval-dropdown', 'value'),
-     State('overbought-input', 'value'), State('oversold-input', 'value')]
+    [State('ticker-list', 'value'),
+     State('price-period', 'value'),
+     State('interval', 'value')]
 )
-def generate_plots(plot_clicks, period, interval, overbought, oversold):
-    if plot_clicks == 0 or not added_tickers:
-        return None, None, None
+def update_charts(plot_clicks, tickers_to_display, price_period, interval):
+    if not plot_clicks or not tickers_to_display:
+        raise PreventUpdate
 
-    pe_ratios = fetch_pe_ratios(added_tickers)
-
-    # Create P/E Chart
+    # Update P/E ratios
+    pe_ratios = fetch_pe_ratios(tickers_to_display)
     pe_fig = go.Figure()
-    pe_fig.add_trace(go.Bar(
-        name="Current P/E",
-        x=list(pe_ratios.keys()),
-        y=[ratios['current'] for ratios in pe_ratios.values()],
-        marker_color="blue"
-    ))
-    pe_fig.add_trace(go.Bar(
-        name="Forward P/E",
-        x=list(pe_ratios.keys()),
-        y=[ratios['forward'] for ratios in pe_ratios.values()],
-        marker_color="yellow"
-    ))
-    pe_fig.update_layout(
-        title="P/E Ratios",
-        title_x=0.5,
-        xaxis_title="Tickers",
-        yaxis_title="P/E Ratio",
-        barmode="group",
-        template="plotly_white"
-    )
+    for metric, color in zip(['current', 'forward'], ['blue', 'orange']):
+        pe_fig.add_trace(go.Bar(
+            name=f"{metric.capitalize()} P/E",
+            x=list(pe_ratios.keys()),
+            y=[ratios[metric] for ratios in pe_ratios.values()],
+            marker_color=color
+        ))
+    pe_fig.update_layout(title="P/E Ratios", barmode='group')
 
-    rsi_figs = []
-    for ticker in added_tickers:
-        data = fetch_stock_chart(ticker, period, interval)
+    # Stock price charts with volume highlighting
+    stock_charts = []
+    table_data = []
+
+    for ticker in tickers_to_display:
+        data = fetch_stock_data(ticker, period=price_period, interval=interval)
         if data is not None:
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(
-                x=data.index,
-                y=data['Close'],
-                mode='lines',
-                line=dict(color='blue', width=2),
-                name="Stock Price"
-            ))
-            for i in range(len(data) - 1):
-                if data['RSI'].iloc[i] > overbought:
-                    fig.add_shape(
-                        type="rect",
-                        x0=data.index[i],
-                        x1=data.index[i + 1],
-                        y0=0,
-                        y1=1,
-                        xref="x",
-                        yref="paper",
-                        fillcolor="rgba(255, 0, 0, 0.2)",
-                        line_width=0,
-                    )
-                elif data['RSI'].iloc[i] < oversold:
-                    fig.add_shape(
-                        type="rect",
-                        x0=data.index[i],
-                        x1=data.index[i + 1],
-                        y0=0,
-                        y1=1,
-                        xref="x",
-                        yref="paper",
-                        fillcolor="rgba(0, 255, 0, 0.2)",
-                        line_width=0,
-                    )
-                fig.update_layout(
-                    title={
-                        'text': f"{'-'*25}Stock Price/RSI - <b> {ticker}</b>{'-'*25}",  # Bold ticker symbol
-                        'x': 0.5,  # Center the title
-                        'xanchor': 'center',
-                        'yanchor': 'top'
-                    },
-                    xaxis_title="Date",
-                    yaxis_title="Stock Price",
-                    template="plotly_white"
-                )
-            rsi_figs.append(dcc.Graph(figure=fig))
+            stock_fig = go.Figure()
 
-    metrics = fetch_financial_metrics(added_tickers)
-    df = pd.DataFrame(metrics)
-    financial_table = dash_table.DataTable(
-        columns=[{"name": col, "id": col} for col in df.columns],
-        data=df.to_dict("records"),
-        style_table={'marginTop': '20px'},
-        style_cell={'textAlign': 'center'}
+            # Line for close prices
+            stock_fig.add_trace(go.Scatter(
+                x=data.index,
+                y=data['close'],
+                mode='lines',
+                name='Close Price',
+                line=dict(color='blue')
+            ))
+
+            # Add shaded regions for high/low volume
+            for i in range(len(data)):
+                x_start = data.index[i]
+                x_end = data.index[i] + pd.Timedelta(days=1)  # Extend to cover the full day
+                if data.iloc[i]['high_volume']:
+                    stock_fig.add_vrect(
+                        x0=x_start,
+                        x1=x_end,
+                        fillcolor="red",
+                        opacity=0.2,
+                        layer="below",
+                        line_width=0,
+                    )
+                else:
+                    stock_fig.add_vrect(
+                        x0=x_start,
+                        x1=x_end,
+                        fillcolor="blue",
+                        opacity=0.2,
+                        layer="below",
+                        line_width=0,
+                    )
+
+            # Add key statistics to the data table
+            table_data.append({
+                'Ticker': ticker,
+                'Average Volume (M)': format_millions(data['average_volume'].iloc[-1]),
+                'Current Volume (M)': format_millions(data['current_volume'].iloc[-1]),
+                'Trailing P/E': pe_ratios.get(ticker, {}).get('current', 'N/A'),
+                'Forward P/E': pe_ratios.get(ticker, {}).get('forward', 'N/A')
+            })
+
+            # Append the stock price chart
+            stock_charts.append(dcc.Graph(figure=stock_fig))
+
+    # Create the data table
+    data_table = dash_table.DataTable(
+        columns=[
+            {"name": "Ticker", "id": "Ticker"},
+            {"name": "Average Volume (M)", "id": "Average Volume (M)"},
+            {"name": "Current Volume (M)", "id": "Current Volume (M)"},
+            {"name": "Trailing P/E", "id": "Trailing P/E"},
+            {"name": "Forward P/E", "id": "Forward P/E"},
+        ],
+        data=table_data,
+        style_table={'width': '100%', 'marginTop': '20px'},
+        style_cell={'textAlign': 'center', 'padding': '10px'},
+        style_header={'fontWeight': 'bold'}
     )
 
-    return dcc.Graph(figure=pe_fig), rsi_figs, financial_table
+    return [dcc.Graph(figure=pe_fig)] + stock_charts + [data_table]
 
 # Run app
 if __name__ == '__main__':
