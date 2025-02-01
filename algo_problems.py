@@ -300,7 +300,7 @@ def max_depth(root):
     right_depth = max_depth(root.right)
     return 1 + max(left_depth, right_depth)
 
-# Example Usage:
+# Example 
 # Binary Tree:
 #         1
 #        / \
@@ -316,7 +316,160 @@ def solution4():
 
     print("Maximum Depth:", max_depth(root))  # Output: 3
 
-solution4()
+# solution4()
+
+
+
+def kth_largest(arr, k):
+    mid_ind= len(arr)//2
+    mid_num=arr[mid_ind]
+    smaller=[]
+    larger=[]
+    for num in arr:
+        if num<mid_num:
+            smaller.append(num)
+        else:
+            larger.append(mid_num)
+    pivot_count = arr.count(mid_num)
+    if k <= len(larger):
+        # If k is within the larger elements, recurse into the larger list
+        return kth_largest(larger, k)
+    elif k <= len(larger) + pivot_count:
+        # If k falls within the range of pivot duplicates, return the pivot
+        return mid_num
+    else:
+        # Otherwise, recurse into the smaller list
+        return kth_largest(smaller, k - len(larger) - pivot_count)
+    
+def kth_largest_example():
+    arr = [3, 2, 1, 5, 6, 4]
+    k = 2
+    print(kth_largest(arr, k))  # Output: 5
+
+    #HEAP solution
+    
+
+def kth_largest_heap(arr, k):
+    import heapq
+    if not arr or k < 1 or k > len(arr):
+        raise ValueError("Invalid input or k out of range")
+    
+    # Step 1: Build a min-heap of size k
+    min_heap = arr[:k]
+    heapq.heapify(min_heap)  # O(k)
+
+    # Step 2: Iterate through the remaining elements
+    for num in arr[k:]:
+        if num > min_heap[0]:  # Only consider elements larger than the smallest in the heap
+            heapq.heappushpop(min_heap, num)  # Push new element and pop the smallest (O(log k))
+
+    # Step 3: The root of the heap is the kth largest element
+    return min_heap[0]
+
+# Example usage:
+def min_heap_ex():
+    arr = [3, 2, 1, 5, 6, 4]
+    k = 2
+    print(kth_largest_heap(arr, k))  # Output: 5
+
+# min_heap_ex()
+
+
+
+class MinHeap:
+    def __init__(self):
+        # Internal storage for the heap
+        self.heap = []
+
+    def push(self, val):
+        """
+        Add a new value to the heap.
+        """
+        self.heap.append(val)  # Add the value at the end
+        self._heapify_up(len(self.heap) - 1)  # Restore the heap property
+
+    def pop(self):
+        """
+        Remove and return the smallest value (root) from the heap.
+        """
+        if len(self.heap) == 0:
+            raise IndexError("Heap is empty")
+
+        # Swap the root with the last element
+        root = self.heap[0]
+        self.heap[0] = self.heap[-1]
+        self.heap.pop()  # Remove the last element
+        self._heapify_down(0)  # Restore the heap property
+
+        return root
+
+    def peek(self):
+        """
+        Return the smallest value (root) without removing it.
+        """
+        if len(self.heap) == 0:
+            raise IndexError("Heap is empty")
+        return self.heap[0]
+
+    def _heapify_up(self, index):
+        """
+        Restore the heap property by moving the element at index up.
+        """
+        parent = (index - 1) // 2
+        if index > 0 and self.heap[index] < self.heap[parent]:
+            # Swap the current node with its parent
+            self.heap[index], self.heap[parent] = self.heap[parent], self.heap[index]
+            # Recursively heapify up
+            self._heapify_up(parent)
+
+    def _heapify_down(self, index):
+        """
+        Restore the heap property by moving the element at index down.
+        """
+        smallest = index
+        left = 2 * index + 1
+        right = 2 * index + 2
+
+        # Check if the left child exists and is smaller
+        if left < len(self.heap) and self.heap[left] < self.heap[smallest]:
+            smallest = left
+
+        # Check if the right child exists and is smaller
+        if right < len(self.heap) and self.heap[right] < self.heap[smallest]:
+            smallest = right
+
+        # If the smallest isn't the current index, swap and recurse
+        if smallest != index:
+            self.heap[index], self.heap[smallest] = self.heap[smallest], self.heap[index]
+            self._heapify_down(smallest)
+
+    def __len__(self):
+        """
+        Return the number of elements in the heap.
+        """
+        return len(self.heap)
+
+# Example Usage
+def heap_impl():
+    heap = MinHeap()
+    heap.push(5)
+    heap.push(3)
+    heap.push(8)
+    heap.push(1)
+
+    print("Heap contents:", heap.heap)
+    print("Smallest element:", heap.peek())
+    print("Removed element:", heap.pop())
+    print("Heap after removal:", heap.heap)
+
+
+heap_impl()
+
+
+
+    
+
+
 
 
 

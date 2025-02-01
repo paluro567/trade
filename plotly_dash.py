@@ -49,54 +49,65 @@ app.layout = html.Div(
     style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'center', 'justifyContent': 'start', 'height': '100vh', 'overflow': 'auto'},
     children=[
         html.Div(
+            id='inputs-container',
             style={
                 'position': 'sticky', 'top': '0', 'zIndex': '1000', 'backgroundColor': 'white',
                 'width': '100%', 'padding': '20px', 'boxShadow': '0px 2px 5px rgba(0,0,0,0.1)'
             },
             children=[
                 html.H1("Stock Analysis Dashboard", style={'textAlign': 'center'}),
-                html.Div([
-                    html.Label("Enter a Stock Ticker:"),
-                    dcc.Input(
-                        id='ticker-input', type='text', placeholder='e.g., AAPL',
-                        style={'width': '50%', 'padding': '10px'},
-                        n_submit=0  # Track Enter key presses
-                    ),
-                    html.Button('Add Ticker', id='add-button', n_clicks=0, style={'marginLeft': '10px'}),
-                ], style={'textAlign': 'center', 'marginBottom': '20px'}),
-                html.Div(
-                    style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'center', 'justifyContent': 'center'},
-                    children=[
-                        dcc.Checklist(
-                            id='ticker-list',
-                            options=[],
-                            value=[],
-                            inline=False,
-                            labelStyle={'marginRight': '10px'}
+                dcc.Loading(
+                    id="loading-top",
+                    type="circle",
+                    children=html.Div([
+                        html.Div([
+                            html.Label("Enter a Stock Ticker:"),
+                            dcc.Input(
+                                id='ticker-input', type='text', placeholder='e.g., AAPL',
+                                style={'width': '50%', 'padding': '10px'},
+                                n_submit=0  # Track Enter key presses
+                            ),
+                            html.Button('Add Ticker', id='add-button', n_clicks=0, style={'marginLeft': '10px'}),
+                        ], style={'textAlign': 'center', 'marginBottom': '20px'}),
+                        html.Div(
+                            style={'display': 'flex', 'flexDirection': 'column', 'alignItems': 'center', 'justifyContent': 'center'},
+                            children=[
+                                dcc.Checklist(
+                                    id='ticker-list',
+                                    options=[],
+                                    value=[],
+                                    inline=False,
+                                    labelStyle={'marginRight': '10px'}
+                                ),
+                                html.Button('Remove Selected', id='remove-button', n_clicks=0, style={'marginTop': '10px'}),
+                            ]
                         ),
-                        html.Button('Remove Selected', id='remove-button', n_clicks=0, style={'marginTop': '10px'}),
-                    ]
-                ),
-                html.Div([
-                    html.Label("Select Price Period:"),
-                    dcc.Dropdown(
-                        id='price-period',
-                        options=[{'label': p, 'value': p} for p in ['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', '10y', 'ytd', 'max']],
-                        value='6mo',  # Default value
-                        style={'width': '50%', 'marginBottom': '20px'}
-                    ),
-                    html.Label("Select Interval:"),
-                    dcc.Dropdown(
-                        id='interval',
-                        options=[{'label': i, 'value': i} for i in ['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1h', '1d', '5d', '1wk', '1mo', '3mo']],
-                        value='1d',  # Default value
-                        style={'width': '50%', 'marginBottom': '20px'}
-                    ),
-                ], style={'textAlign': 'center'}),
-                html.Button('Plot Charts', id='plot-button', n_clicks=0, style={'marginTop': '20px'}),
+                        html.Div([
+                            html.Label("Select Price Period:"),
+                            dcc.Dropdown(
+                                id='price-period',
+                                options=[{'label': p, 'value': p} for p in ['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', '10y', 'ytd', 'max']],
+                                value='6mo',  # Default value
+                                style={'width': '50%', 'marginBottom': '20px'}
+                            ),
+                            html.Label("Select Interval:"),
+                            dcc.Dropdown(
+                                id='interval',
+                                options=[{'label': i, 'value': i} for i in ['1m', '2m', '5m', '15m', '30m', '60m', '90m', '1h', '1d', '5d', '1wk', '1mo', '3mo']],
+                                value='1d',  # Default value
+                                style={'width': '50%', 'marginBottom': '20px'}
+                            ),
+                        ], style={'textAlign': 'center'}),
+                        html.Button('Plot Charts', id='plot-button', n_clicks=0, style={'marginTop': '20px'}),
+                    ])
+                )
             ]
         ),
-        html.Div(id='charts-div', style={'marginTop': '20px', 'width': '90%'})
+        dcc.Loading(
+            id="loading-charts",
+            type="circle",
+            children=html.Div(id='charts-div', style={'marginTop': '20px', 'width': '90%'})
+        )
     ]
 )
 
