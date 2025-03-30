@@ -59,12 +59,13 @@ def get_briefing(date):
 if __name__ == "__main__":
 
     # Set the desired date for testing
+    year=input("year: ")
     day=input("day: ")
     month=input("month: ")
-    march_date = f"2024-{month}-{day}"  #YYYY-MM-DD
+    str_date = f"{year}-{month}-{day}"  #YYYY-MM-DD
 
     # Call the get_briefing function with the test date
-    alarm_plays, green_plays = get_briefing(march_date)
+    alarm_plays, green_plays = get_briefing(str_date)
 
     if alarm_plays == [] and green_plays == []:
         print("No briefing available for the given date.")

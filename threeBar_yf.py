@@ -1,5 +1,7 @@
 import yfinance as yf
 import datetime
+from datetime import timezone
+import pytz
 
 from datetime import datetime, timedelta
 from Discord import get_briefing
@@ -9,9 +11,7 @@ import pandas as pd
 import numpy as np
 import time
 import requests
-from realtimetrade import place_buy, place_sell
 from multiprocessing import Process
-from alpha_vantage.timeseries import TimeSeries
 import ta
 from alpaca import try_orders
 import pytz
@@ -60,42 +60,48 @@ def sleep_until(target_hour, target_minute):
     time.sleep(time_difference)
 
 def yf_data(ticker, interval_time):
-     # rate limit 
     global calls_made, last_time, shortest_interval
-    
-    elapsed_time = time.time() - last_time
 
-    if elapsed_time<shortest_interval: # calls are being made too fast
-        sleep_time=shortest_interval - elapsed_time
+    elapsed_time = time.time() - last_time
+    if elapsed_time < shortest_interval:
+        sleep_time = shortest_interval - elapsed_time
         print(f"rate limit sleep: {sleep_time}")
         time.sleep(sleep_time)
 
     last_time = time.time()
-    calls_made+=1
-    # track every 50'th call
-    if calls_made%50==0:
-        print("calls made: {calls_made} at {last_time}")
-    
+    calls_made += 1
+    if calls_made % 50 == 0:
+        print(f"calls made: {calls_made} at {last_time}")
+
     try:
-        # Fetch intraday data using the ticker symbol
         stock = yf.Ticker(ticker)
-        
-        # Get market data 
-        intraday_data = stock.history(period="1d", interval=interval_time, prepost=True)
-        intraday_data=intraday_data[::-1]  # reverse for calculating the EMA values
-        
+        df = stock.history(period="1d", interval=interval_time, prepost=True)
+        print(f"{ticker} raw data shape: {df.shape}")
+        if df.empty:
+            print(f"{ticker} returned empty DataFrame.")
+            return df
 
-        # Calculate EMAs
-        intraday_data['SMA_5'] = intraday_data['Close'].rolling(window=5).mean()
-        intraday_data['SMA_9'] = intraday_data['Close'].rolling(window=9).mean()
-        intraday_data['SMA_20'] = intraday_data['Close'].rolling(window=20).mean()
-        intraday_data['SMA_180'] = intraday_data['Close'].rolling(window=180).mean()
-        intraday_data['percent_change'] = (intraday_data['Close']-intraday_data['Open'])/ intraday_data['Open']* 100
-        print("percent_change data: ", intraday_data['percent_change'])
+        print(f"{ticker} raw data head:\n{df.head()}")
+        if df.index.tz is None:
+            print(f"{ticker}: Data index has no timezone info, localizing to UTC.")
+            df.index = df.index.tz_localize('UTC')
 
-        return intraday_data # yahoo data return
+        df.index = df.index.tz_convert('America/New_York')
+
+        df = df[::-1]  # Reverse
+        df['SMA_5'] = df['Close'].rolling(window=5).mean()
+        df['SMA_9'] = df['Close'].rolling(window=9).mean()
+        df['SMA_20'] = df['Close'].rolling(window=20).mean()
+        df['SMA_180'] = df['Close'].rolling(window=180).mean()
+        df['percent_change'] = (df['Close'] - df['Open']) / df['Open'] * 100
+        print("percent_change data:\n", df['percent_change'])
+
+        return df
+
     except Exception as e:
-        print(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR -  fetching data:", e)
+        print(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR -  fetching data for {ticker}: {e}")
+        return pd.DataFrame()
+
 
 def find_resistance_points(data):
     # Identify points of resistance where both open and close prices are less than the high of the bar.
@@ -104,88 +110,87 @@ def find_resistance_points(data):
     # Convert to list to ensure an empty list is returned if no resistance points are found
     return resistance_points['High'].tolist()
 
-
 def check_play(ticker, play_type, priority, interval):
-    BUY_AMT=1400 # amount to buy at most
-    global BOUGHT_AMT  # 0
-    global BOUGHT_PLAYS  #[]
+    BUY_AMT = 1400
+    global BOUGHT_AMT, BOUGHT_PLAYS
 
-    print(f" {ticker} check play pdt_rule(): ",  pdt_rule())
-
-    # DATA
+    print(f"Checking {ticker} play (type: {play_type}, priority: {priority}) PDT rule: {pdt_rule()}")
     try:
         df = yf_data(ticker, interval)
+
+        if df.empty or len(df) < 4:
+            print(f"{ticker}: Data not usable (empty or too short). Skipping play check.")
+            return
+
+        print(f"{ticker}: Using first 4 rows for bar logic.")
         cur_open = df.iloc[0]['Open']
         close_price = df.iloc[0]['Close']
         cur_vol = df.iloc[0]['Volume']
-        time_stmp = df.index[0]  # Extracting datetime from index
-        print("time_stmp: ",time_stmp, flush=True)
+        time_stmp = df.index[0]
+        print("time_stmp:", time_stmp)
+
         avg_vol = df['Volume'].mean()
-        resistances=find_resistance_points(df)
+        resistances = find_resistance_points(df)
 
-        # bars
-        cur_pch = round(df.iloc[0]['percent_change'],2)
-        prior_pch = round(df.iloc[1]['percent_change'],2)
-        two_prior_pch= round(df.iloc[2]['percent_change'],2)
-        three_prior_pch= round(df.iloc[3]['percent_change'],2)
+        cur_pch = round(df.iloc[0]['percent_change'], 2)
+        prior_pch = round(df.iloc[1]['percent_change'], 2)
+        two_prior_pch = round(df.iloc[2]['percent_change'], 2)
+        three_prior_pch = round(df.iloc[3]['percent_change'], 2)
 
-        # check if breaking resistance
+        print(f"cur_pch: {cur_pch}, prior_pch: {prior_pch}, two_prior_pch: {two_prior_pch}, three_prior_pch: {three_prior_pch}")
+
+        # Resistance check
         for resistance in resistances:
-            if cur_open<resistance and close_price>resistance and cur_pch>5 and ticker not in TEXTED_PLAYS:
-                text(f"{ticker} is breaking resistance at {resistance} and moving {cur_pch}%")
+            if cur_open < resistance < close_price and cur_pch > 5 and ticker not in TEXTED_PLAYS:
+                message = f"{ticker} is breaking resistance at {resistance} and moving {cur_pch}%"
+                text(message)
                 TEXTED_PLAYS.append(ticker)
 
-        print(f"cur_pch: {cur_pch}, prior_pch: {prior_pch}, two_prior_pch: {two_prior_pch}, three_prior_pch: {three_prior_pch}", flush=True)
-
-        # Threshholds
-        three_thresh=5
-        four_thresh=5
-        bar_thresh=10
-
-        # ********** 3 BAR **********
-        three_bars={"ignighting": two_prior_pch, "test":prior_pch, "confirmation": cur_pch}
-        if two_prior_pch>three_thresh and prior_pch<0 and cur_pch>three_thresh and ticker not in TEXTED_PLAYS:
-
+        # 3 Bar
+        if two_prior_pch > 5 and prior_pch < 0 and cur_pch > 5 and ticker not in TEXTED_PLAYS:
             message = f"{play_type} - {priority} -  {ticker} 3 bar play \n Confirmation {cur_pch}%\n test: {prior_pch}%\nignighting: {two_prior_pch}%"
-            print(f"Texting: {message}", flush=True)
+            print(f"Texting: {message}")
             text(message)
             TEXTED_PLAYS.append(ticker)
 
-        # place orders
-        if two_prior_pch>three_thresh and prior_pch<0 and cur_pch>three_thresh \
-            and len(BOUGHT_PLAYS) == 0  and not pdt_rule() and is_before_noon_est():
-            print(f"placing {ticker} orders => {(BUY_AMT)//close_price} shares", flush=True)
-            order_process = Process(target=try_orders, args=(ticker, BUY_AMT // close_price, cur_open, three_bars)) #  submit orders
+        if two_prior_pch > 5 and prior_pch < 0 and cur_pch > 5 and len(BOUGHT_PLAYS) == 0 and not pdt_rule() and is_before_noon_est():
+            print(f"placing {ticker} orders => {BUY_AMT // close_price} shares")
+            order_process = Process(target=try_orders, args=(ticker, BUY_AMT // close_price, cur_open, {
+                "ignighting": two_prior_pch,
+                "test": prior_pch,
+                "confirmation": cur_pch
+            }))
             order_process.start()
-            BOUGHT_AMT+= close_price*(BUY_AMT//close_price)
+            BOUGHT_AMT += close_price * (BUY_AMT // close_price)
             BOUGHT_PLAYS.append(ticker)
 
-        # ********** 4 BAR **********
-        four_bars={"ignighting": three_prior_pch, "test1":two_prior_pch, "test2":prior_pch, "confirmation": cur_pch}
-        if three_prior_pch>four_thresh and (two_prior_pch<0 or prior_pch<0) and cur_pch>four_thresh and ticker not in TEXTED_PLAYS:
+        # 4 Bar
+        if three_prior_pch > 5 and (two_prior_pch < 0 or prior_pch < 0) and cur_pch > 5 and ticker not in TEXTED_PLAYS:
             message = f"{play_type} - {priority} -  {ticker} 4 bar play\n Confirmation {cur_pch}%\n test: {prior_pch}%\n test: {two_prior_pch}%\nignighting: {three_prior_pch}%"
             text(message)
             TEXTED_PLAYS.append(ticker)
-            
-        if three_prior_pch>four_thresh and (two_prior_pch<0 or prior_pch<0) and cur_pch>four_thresh \
-            and len(BOUGHT_PLAYS) == 0  and not pdt_rule() and is_before_noon_est():
-            print(f"placing {ticker} orders => {BUY_AMT//close_price} shares", flush=True)
-            order_process = Process(target=try_orders, args=(ticker, BUY_AMT // close_price, cur_open, four_bars)) #  submit orders
+
+        if three_prior_pch > 5 and (two_prior_pch < 0 or prior_pch < 0) and cur_pch > 5 and len(BOUGHT_PLAYS) == 0 and not pdt_rule() and is_before_noon_est():
+            print(f"placing {ticker} orders => {BUY_AMT // close_price} shares")
+            order_process = Process(target=try_orders, args=(ticker, BUY_AMT // close_price, cur_open, {
+                "ignighting": three_prior_pch,
+                "test1": two_prior_pch,
+                "test2": prior_pch,
+                "confirmation": cur_pch
+            }))
             order_process.start()
-            BOUGHT_AMT+= close_price*(BUY_AMT//close_price)
+            BOUGHT_AMT += close_price * (BUY_AMT // close_price)
             BOUGHT_PLAYS.append(ticker)
-              
-        # single bar 
-        if cur_pch >bar_thresh and ticker not in TEXTED_PLAYS: 
-    
-            message = f"{play_type} - {priority} -  {ticker} is breaking out by {cur_pch}"
-          
-            print(f"Texting: {message}", flush=True)
+
+        # Single bar
+        if cur_pch > 10 and ticker not in TEXTED_PLAYS:
+            message = f"{play_type} - {priority} -  {ticker} is breaking out by {cur_pch}%"
+            print(f"Texting: {message}")
             text(message)
             TEXTED_PLAYS.append(ticker)
 
     except Exception as e:
-        print(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR - check_play - unable to check {ticker} with error: {e}", flush=True)
+        print(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR - check_play - unable to check {ticker} with error: {e}")
 
 
 def get_plays():
@@ -193,8 +198,7 @@ def get_plays():
     # Morning briefing
     try:
         
-        from datetime import timezone
-        import pytz
+        
 
         # Get current UTC time
         desired_timezone = 'America/New_York'

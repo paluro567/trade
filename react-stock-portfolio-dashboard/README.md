@@ -1,6 +1,7 @@
 # how to run stock dashboard application
-(base) peterluro@Peters-Laptop server % PORT=5001 node proxyserver.js
-(base) peterluro@Peters-Laptop react-stock-portfolio-dashboard % npm start
+
+From server directory: PORT=5001 node proxyserver.js
+From server root: % npm start
 
 ## Available Scripts
 
