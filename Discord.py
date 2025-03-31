@@ -1,10 +1,14 @@
 import requests
 import json
 import re
+from datetime import datetime  # ✅ ADD THIS IMPORT
+
 
 
 # get Ziptrader plays -- Date format: YYYY-MM-DD
 def get_briefing(date):
+    if isinstance(date, datetime):
+        date = date.strftime('%Y-%m-%d')
     print ("running get_briefing for date: ", date)
 
     channel_id = "634554429689036830"  # ZT discord channel ID

@@ -194,36 +194,31 @@ def check_play(ticker, play_type, priority, interval):
 
 
 def get_plays():
-
     # Morning briefing
     try:
-        
-        
-
         # Get current UTC time
         desired_timezone = 'America/New_York'
         current_utc_time = datetime.now(timezone.utc)
         current_local_time = current_utc_time.astimezone(pytz.timezone(desired_timezone))
-        curr_date_local = current_local_time.strftime('%Y-%m-%d')
-        alarm_plays, green_plays  =  get_briefing(curr_date_local)  # get briefing
-        
-        
-        other_on_radar = ['PLTR','AI', 'MDAI', 'SOFI']
 
-        # no briefing yet sleep 5 minutes
+        # Pass datetime directly instead of a string
+        alarm_plays, green_plays = get_briefing(current_local_time)  # get briefing
+        
+        other_on_radar = ['PLTR', 'AI', 'MDAI', 'SOFI']
+
+        # no briefing yet — sleep 5 minutes
         if alarm_plays == [] and green_plays == []:
             raise Exception(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR - empty alarm & green plays")
-        
+
         print("today's alarm_plays: ", alarm_plays, flush=True)
         print("today's green_plays: ", green_plays, flush=True)
 
-
-        plays_categories  =  {
+        plays_categories = {
             'NORMAL PLAY': green_plays,
             'ALARM PLAY': alarm_plays,
             'OTHER ON RADAR': other_on_radar
         }
-        
+
         print("combined play categories: ", plays_categories, flush=True)
 
     except Exception as e:
@@ -232,6 +227,7 @@ def get_plays():
         time.sleep(300)  # Sleep for 5 minutes
         print("running watch_zip_plays again", flush=True)
         return get_plays()
+    
     return plays_categories
 
 def watch_zip_plays(interval):
