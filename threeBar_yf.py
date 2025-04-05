@@ -59,47 +59,57 @@ def sleep_until(target_hour, target_minute):
     # Sleep until the target time
     time.sleep(time_difference)
 
+
 def yf_data(ticker, interval_time):
     global calls_made, last_time, shortest_interval
 
     elapsed_time = time.time() - last_time
     if elapsed_time < shortest_interval:
         sleep_time = shortest_interval - elapsed_time
-        print(f"rate limit sleep: {sleep_time}")
+        print(f"[{ticker}] rate limit sleep: {sleep_time:.2f}s")
         time.sleep(sleep_time)
 
     last_time = time.time()
     calls_made += 1
     if calls_made % 50 == 0:
-        print(f"calls made: {calls_made} at {last_time}")
+        print(f"[{ticker}] calls made: {calls_made}")
 
     try:
         stock = yf.Ticker(ticker)
-        df = stock.history(period="1d", interval=interval_time, prepost=True)
-        print(f"{ticker} raw data shape: {df.shape}")
-        if df.empty:
-            print(f"{ticker} returned empty DataFrame.")
-            return df
 
-        print(f"{ticker} raw data head:\n{df.head()}")
+        max_retries = 3
+        for attempt in range(1, max_retries + 1):
+            df = stock.history(period="1d", interval=interval_time, prepost=True)
+
+            if not df.empty and len(df) > 1:
+                break
+
+            print(f"[{ticker}] Attempt {attempt}/{max_retries}: 5m data empty. Retrying in 3s...")
+            time.sleep(3)
+
+        if df.empty or len(df) <= 1:
+            print(f"[{ticker}] ❌ Failed to get 5m data after {max_retries} attempts. Skipping.")
+            return pd.DataFrame()
+
+        # Timezone localization
         if df.index.tz is None:
-            print(f"{ticker}: Data index has no timezone info, localizing to UTC.")
             df.index = df.index.tz_localize('UTC')
-
         df.index = df.index.tz_convert('America/New_York')
 
-        df = df[::-1]  # Reverse
+        df = df[::-1]  # Reverse: newest bar first
+
+        # Calculate technicals
         df['SMA_5'] = df['Close'].rolling(window=5).mean()
         df['SMA_9'] = df['Close'].rolling(window=9).mean()
         df['SMA_20'] = df['Close'].rolling(window=20).mean()
         df['SMA_180'] = df['Close'].rolling(window=180).mean()
         df['percent_change'] = (df['Close'] - df['Open']) / df['Open'] * 100
-        print("percent_change data:\n", df['percent_change'])
 
+        print(f"[{ticker}] ✅ Fetched {len(df)} bars of 5m data.")
         return df
 
     except Exception as e:
-        print(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR -  fetching data for {ticker}: {e}")
+        print(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR - yf_data({ticker}): {e}")
         return pd.DataFrame()
 
 
