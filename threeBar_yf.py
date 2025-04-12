@@ -16,6 +16,11 @@ import ta
 from alpaca import try_orders
 import pytz
 
+print(f"[Startup] Time (ET): {datetime.now(pytz.timezone('America/New_York')).strftime('%Y-%m-%d %H:%M:%S %Z')}")
+print(f"[Startup] Executable: {os.sys.executable}")
+print(f"[Startup] PATH: {os.environ.get('PATH')}")
+
+
 
 
 # GLOBALS
@@ -65,47 +70,46 @@ def yf_data(ticker, interval_time):
 
     elapsed_time = time.time() - last_time
     if elapsed_time < shortest_interval:
-        sleep_time = shortest_interval - elapsed_time
-        print(f"[{ticker}] rate limit sleep: {sleep_time:.2f}s")
-        time.sleep(sleep_time)
+        time.sleep(shortest_interval - elapsed_time)
 
     last_time = time.time()
     calls_made += 1
-    if calls_made % 50 == 0:
-        print(f"[{ticker}] calls made: {calls_made}")
 
     try:
         stock = yf.Ticker(ticker)
 
         max_retries = 3
+        df = pd.DataFrame()
+
         for attempt in range(1, max_retries + 1):
-            df = stock.history(period="1d", interval=interval_time, prepost=True)
+            print(f"[{ticker}] Attempt {attempt}/{max_retries} to fetch 5m data...")
+            try:
+                df = stock.history(period="1d", interval=interval_time, prepost=True)
+                print(f"[{ticker}] Fetched {len(df)} rows")
+                if not df.empty and len(df) > 1:
+                    break
+            except Exception as e:
+                print(f"[{ticker}] Error during .history(): {e}")
 
-            if not df.empty and len(df) > 1:
-                break
-
-            print(f"[{ticker}] Attempt {attempt}/{max_retries}: 5m data empty. Retrying in 3s...")
             time.sleep(3)
 
         if df.empty or len(df) <= 1:
-            print(f"[{ticker}] ❌ Failed to get 5m data after {max_retries} attempts. Skipping.")
+            print(f"[{ticker}] ❌ Failed to get usable 5m data after {max_retries} attempts.")
             return pd.DataFrame()
 
-        # Timezone localization
+        # Timezone correction
         if df.index.tz is None:
             df.index = df.index.tz_localize('UTC')
         df.index = df.index.tz_convert('America/New_York')
 
         df = df[::-1]  # Reverse: newest bar first
-
-        # Calculate technicals
         df['SMA_5'] = df['Close'].rolling(window=5).mean()
         df['SMA_9'] = df['Close'].rolling(window=9).mean()
         df['SMA_20'] = df['Close'].rolling(window=20).mean()
         df['SMA_180'] = df['Close'].rolling(window=180).mean()
         df['percent_change'] = (df['Close'] - df['Open']) / df['Open'] * 100
 
-        print(f"[{ticker}] ✅ Fetched {len(df)} bars of 5m data.")
+        print(f"[{ticker}] ✅ Final DataFrame has {len(df)} bars")
         return df
 
     except Exception as e:
