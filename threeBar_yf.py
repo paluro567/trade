@@ -9,6 +9,7 @@ from record_day_trade import pdt_rule, record_trade
 from sms import text
 import pandas as pd
 import numpy as np
+import os
 import time
 import requests
 from multiprocessing import Process
