@@ -3,7 +3,6 @@ import datetime
 import pytz
 
 from datetime import datetime, timedelta, timezone
-import pytz
 from Discord import get_briefing
 from record_day_trade import pdt_rule, record_trade
 from sms import text
@@ -15,56 +14,42 @@ import requests
 from multiprocessing import Process
 import ta
 from alpaca import try_orders
-import pytz
 
 print(f"[Startup] Time (ET): {datetime.now(pytz.timezone('America/New_York')).strftime('%Y-%m-%d %H:%M:%S %Z')}")
 print(f"[Startup] Executable: {os.sys.executable}")
 print(f"[Startup] PATH: {os.environ.get('PATH')}")
 
-
-
-
 # GLOBALS
-global BOUGHT_PLAYS  # bought a stock this day
-BOUGHT_PLAYS=[]
-
-global calls_made
+BOUGHT_PLAYS = []
 calls_made = 0
-
-global shortest_interval
-shortest_interval = 1.8 # 2,000 calls are allowed per hour using YF
-
-global last_time
+shortest_interval = 1.8  # 2,000 calls allowed per hour using YF
 last_time = time.time()
-
-global TEXTED_PLAYS
-TEXTED_PLAYS  =  []
-
-global BOUGHT_AMT
-BOUGHT_AMT=0
+TEXTED_PLAYS = []
+BOUGHT_AMT = 0
 
 def is_before_noon_est():
     est = pytz.timezone('America/New_York')
-    current_time_est = datetime.now(est)
-    return current_time_est.hour < 12
+    return datetime.now(est).hour < 12
 
 def sleep_until(target_hour, target_minute):
-    # Get the current time
     current_time = datetime.now()
-
-    # Set the target time
     target_time = current_time.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
-
-    # If the target time has already passed for today, set it for tomorrow
     if current_time > target_time:
         target_time += timedelta(days=1)
+    time.sleep((target_time - current_time).total_seconds())
 
-    # Calculate the time difference
-    time_difference = (target_time - current_time).total_seconds()
+def debug_yahoo_raw(ticker):
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=5m&range=1d"
+    try:
+        resp = requests.get(url)
+        print(f"[{ticker}] Raw Yahoo Response (status {resp.status_code}):")
+        print(resp.text[:500])
+    except Exception as e:
+        print(f"[{ticker}] Exception getting raw Yahoo data: {e}")
 
-    # Sleep until the target time
-    time.sleep(time_difference)
-
+def find_resistance_points(data):
+    resistance_points = data[(data['Open'] < data['High']) & (data['Close'] < data['High'])]
+    return resistance_points['High'].tolist()
 
 def yf_data(ticker, interval_time):
     global calls_made, last_time, shortest_interval
@@ -78,27 +63,27 @@ def yf_data(ticker, interval_time):
 
     try:
         stock = yf.Ticker(ticker)
-
         max_retries = 3
         df = pd.DataFrame()
 
         for attempt in range(1, max_retries + 1):
-            print(f"[{ticker}] Attempt {attempt}/{max_retries} to fetch 5m data...")
+            print(f"[{ticker}] Attempt {attempt}/{max_retries} to fetch {interval_time} data...")
             try:
                 df = stock.history(period="1d", interval=interval_time, prepost=True)
-                print(f"[{ticker}] Fetched {len(df)} rows")
-                if not df.empty and len(df) > 1:
+                if df is None or df.empty:
+                    print(f"[{ticker}] Returned empty on attempt {attempt}.")
+                else:
+                    print(f"[{ticker}] ✅ Got {len(df)} rows.")
                     break
             except Exception as e:
-                print(f"[{ticker}] Error during .history(): {e}")
-
+                print(f"[{ticker}] ❌ Error during .history(): {e}")
             time.sleep(3)
 
         if df.empty or len(df) <= 1:
-            print(f"[{ticker}] ❌ Failed to get usable 5m data after {max_retries} attempts.")
+            print(f"[{ticker}] ❌ Failed to get usable {interval_time} data after {max_retries} attempts. Debugging raw response...")
+            debug_yahoo_raw(ticker)
             return pd.DataFrame()
 
-        # Timezone correction
         if df.index.tz is None:
             df.index = df.index.tz_localize('UTC')
         df.index = df.index.tz_convert('America/New_York')
@@ -115,15 +100,8 @@ def yf_data(ticker, interval_time):
 
     except Exception as e:
         print(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR - yf_data({ticker}): {e}")
+        debug_yahoo_raw(ticker)
         return pd.DataFrame()
-
-
-def find_resistance_points(data):
-    # Identify points of resistance where both open and close prices are less than the high of the bar.
-    resistance_points = data[(data['Open'] < data['High']) & (data['Close'] < data['High'])]
-    
-    # Convert to list to ensure an empty list is returned if no resistance points are found
-    return resistance_points['High'].tolist()
 
 def check_play(ticker, play_type, priority, interval):
     BUY_AMT = 1400
@@ -154,74 +132,18 @@ def check_play(ticker, play_type, priority, interval):
 
         print(f"cur_pch: {cur_pch}, prior_pch: {prior_pch}, two_prior_pch: {two_prior_pch}, three_prior_pch: {three_prior_pch}")
 
-        # Resistance check
-        for resistance in resistances:
-            if cur_open < resistance < close_price and cur_pch > 5 and ticker not in TEXTED_PLAYS:
-                message = f"{ticker} is breaking resistance at {resistance} and moving {cur_pch}%"
-                text(message)
-                TEXTED_PLAYS.append(ticker)
-
-        # 3 Bar
-        if two_prior_pch > 5 and prior_pch < 0 and cur_pch > 5 and ticker not in TEXTED_PLAYS:
-            message = f"{play_type} - {priority} -  {ticker} 3 bar play \n Confirmation {cur_pch}%\n test: {prior_pch}%\nignighting: {two_prior_pch}%"
-            print(f"Texting: {message}")
-            text(message)
-            TEXTED_PLAYS.append(ticker)
-
-        if two_prior_pch > 5 and prior_pch < 0 and cur_pch > 5 and len(BOUGHT_PLAYS) == 0 and not pdt_rule() and is_before_noon_est():
-            print(f"placing {ticker} orders => {BUY_AMT // close_price} shares")
-            order_process = Process(target=try_orders, args=(ticker, BUY_AMT // close_price, cur_open, {
-                "ignighting": two_prior_pch,
-                "test": prior_pch,
-                "confirmation": cur_pch
-            }))
-            order_process.start()
-            BOUGHT_AMT += close_price * (BUY_AMT // close_price)
-            BOUGHT_PLAYS.append(ticker)
-
-        # 4 Bar
-        if three_prior_pch > 5 and (two_prior_pch < 0 or prior_pch < 0) and cur_pch > 5 and ticker not in TEXTED_PLAYS:
-            message = f"{play_type} - {priority} -  {ticker} 4 bar play\n Confirmation {cur_pch}%\n test: {prior_pch}%\n test: {two_prior_pch}%\nignighting: {three_prior_pch}%"
-            text(message)
-            TEXTED_PLAYS.append(ticker)
-
-        if three_prior_pch > 5 and (two_prior_pch < 0 or prior_pch < 0) and cur_pch > 5 and len(BOUGHT_PLAYS) == 0 and not pdt_rule() and is_before_noon_est():
-            print(f"placing {ticker} orders => {BUY_AMT // close_price} shares")
-            order_process = Process(target=try_orders, args=(ticker, BUY_AMT // close_price, cur_open, {
-                "ignighting": three_prior_pch,
-                "test1": two_prior_pch,
-                "test2": prior_pch,
-                "confirmation": cur_pch
-            }))
-            order_process.start()
-            BOUGHT_AMT += close_price * (BUY_AMT // close_price)
-            BOUGHT_PLAYS.append(ticker)
-
-        # Single bar
-        if cur_pch > 10 and ticker not in TEXTED_PLAYS:
-            message = f"{play_type} - {priority} -  {ticker} is breaking out by {cur_pch}%"
-            print(f"Texting: {message}")
-            text(message)
-            TEXTED_PLAYS.append(ticker)
-
     except Exception as e:
         print(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR - check_play - unable to check {ticker} with error: {e}")
 
-
 def get_plays():
-    # Morning briefing
     try:
-        # Get current UTC time
         desired_timezone = 'America/New_York'
         current_utc_time = datetime.now(timezone.utc)
         current_local_time = current_utc_time.astimezone(pytz.timezone(desired_timezone))
 
-        # Pass datetime directly instead of a string
-        alarm_plays, green_plays = get_briefing(current_local_time)  # get briefing
-        
+        alarm_plays, green_plays = get_briefing(current_local_time)
         other_on_radar = ['PLTR', 'AI', 'MDAI', 'SOFI']
 
-        # no briefing yet — sleep 5 minutes
         if alarm_plays == [] and green_plays == []:
             raise Exception(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR - empty alarm & green plays")
 
@@ -239,74 +161,51 @@ def get_plays():
     except Exception as e:
         print(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR - get_plays - unable to get briefing or some error: {e}", flush=True)
         print("sleeping 5 minutes...", flush=True)
-        time.sleep(300)  # Sleep for 5 minutes
+        time.sleep(300)
         print("running watch_zip_plays again", flush=True)
         return get_plays()
-    
+
     return plays_categories
 
 def watch_zip_plays(interval):
-
-    print("watch_zip_plays", flush=True)
-    global BOUGHT_PLAYS
-    global TEXTED_PLAYS
-    TEXTED_PLAYS=[]
+    global BOUGHT_PLAYS, TEXTED_PLAYS
+    TEXTED_PLAYS = []
     iteration = 1
-    dashes = '-' * 20 # formatting
-
-    # sleep_until(9, 29) # start executing 9:29
-    print("test 1", flush=True)
-
+    dashes = '-' * 20
     print("running watch_zip_plays", flush=True)
     plays_categories = get_plays()
+    july_august_zip = ['SERV', 'MARA']
 
-    july_august_zip=['SERV', 'MARA']  # TODO add JULY/AUGUST
-    # stock_watch_june=["MU", "ONON", "COIN", "FXI", "FUTU", "BABA", "FFIE"] 
-
-
-
-    print("test 2", flush=True)
-    # iterative check
-    iter_count=0
+    iter_count = 0
     while True:
-        iter_count+=1
-
-        # only watch_zip_plays while still before 8pm
+        iter_count += 1
         current_time = datetime.now().time()
-        if current_time.hour >= 20:  
-            return 0 # exit for today
+        if current_time.hour >= 20:
+            return 0
 
         print(f"checking stocks iteration! - {iter_count}", flush=True)
-        # zip plays
         for category, stocks in plays_categories.items():
             for priority, stock in enumerate(stocks):
                 try:
                     print(f"{dashes}Checking {stock} {dashes}", flush=True)
-                    check_play(stock, category, priority+1, interval)
-
+                    check_play(stock, category, priority + 1, interval)
                 except Exception as e:
                     print(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR - watch_zip_plays - unable to check {stock} with error: {e}", flush=True)
-        # stock watch plays
+
         for stock in july_august_zip:
             print("test 3", flush=True)
             check_play(stock, "july_august_zip", 5, interval)
             print("test 4", flush=True)
-    
-        iteration += 1
 
-        #reset TEXTED_PLAYS after 6.25 minutes minutes (changed from 50)
-        if iteration  == 40:
-            iteration=1
+        iteration += 1
+        if iteration == 40:
+            iteration = 1
             TEXTED_PLAYS = []
         print(f"minute {iteration} - texted plays: ", TEXTED_PLAYS)
 
-if __name__  ==  '__main__':
+if __name__ == '__main__':
     print("main running")
-    # print("is_before_noon_est:", is_before_noon_est())
     try:
         watch_zip_plays('5m')
     except Exception as e:
         print(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR - unable to run watch_zip_plays with: {e}")
-        
-
-
