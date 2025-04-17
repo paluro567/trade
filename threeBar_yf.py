@@ -38,14 +38,46 @@ def sleep_until(target_hour, target_minute):
         target_time += timedelta(days=1)
     time.sleep((target_time - current_time).total_seconds())
 
-def debug_yahoo_raw(ticker):
-    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=5m&range=1d"
+def fallback_yahoo_data(ticker, interval='5m'):
+    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval={interval}&range=1d"
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/122.0.0.0 Safari/537.36"
+        )
+    }
     try:
-        resp = requests.get(url)
-        print(f"[{ticker}] Raw Yahoo Response (status {resp.status_code}):")
-        print(resp.text[:500])
+        resp = requests.get(url, headers=headers)
+        if resp.status_code == 429:
+            print(f"[{ticker}] ⚠️ Rate limit hit (429). Sleeping 60 seconds before retry...")
+            time.sleep(60)
+            return pd.DataFrame()
+        elif resp.status_code != 200:
+            print(f"[{ticker}] ❌ Unexpected status code: {resp.status_code}")
+            return pd.DataFrame()
+
+        data = resp.json()
+        timestamps = data["chart"]["result"][0]["timestamp"]
+        indicators = data["chart"]["result"][0]["indicators"]["quote"][0]
+        df = pd.DataFrame(indicators)
+        df["timestamp"] = pd.to_datetime(timestamps, unit="s")
+        df.set_index("timestamp", inplace=True)
+        df.index = df.index.tz_localize("UTC").tz_convert("America/New_York")
+
+        df = df.rename(columns={"open": "Open", "high": "High", "low": "Low", "close": "Close", "volume": "Volume"})
+        df['SMA_5'] = df['Close'].rolling(window=5).mean()
+        df['SMA_9'] = df['Close'].rolling(window=9).mean()
+        df['SMA_20'] = df['Close'].rolling(window=20).mean()
+        df['SMA_180'] = df['Close'].rolling(window=180).mean()
+        df['percent_change'] = (df['Close'] - df['Open']) / df['Open'] * 100
+
+        print(f"[{ticker}] ✅ Fallback DataFrame with {len(df)} bars")
+        return df[::-1]  # reverse: newest bar first
+
     except Exception as e:
-        print(f"[{ticker}] Exception getting raw Yahoo data: {e}")
+        print(f"[{ticker}] ❌ Exception in fallback_yahoo_data: {e}")
+        return pd.DataFrame()
 
 def find_resistance_points(data):
     resistance_points = data[(data['Open'] < data['High']) & (data['Close'] < data['High'])]
@@ -82,7 +114,7 @@ def yf_data(ticker, interval_time):
         if df.empty or len(df) <= 1:
             print(f"[{ticker}] ❌ Failed to get usable {interval_time} data after {max_retries} attempts. Debugging raw response...")
             debug_yahoo_raw(ticker)
-            return pd.DataFrame()
+            return fallback_yahoo_data(ticker, interval_time)
 
         if df.index.tz is None:
             df.index = df.index.tz_localize('UTC')
