@@ -93,47 +93,15 @@ def yf_data(ticker, interval_time):
     last_time = time.time()
     calls_made += 1
 
-    try:
-        stock = yf.Ticker(ticker)
-        max_retries = 3
-        df = pd.DataFrame()
+    print(f"[{ticker}] Fetching {interval_time} data using fallback approach...")
+    df = fallback_yahoo_data(ticker, interval_time)
 
-        for attempt in range(1, max_retries + 1):
-            print(f"[{ticker}] Attempt {attempt}/{max_retries} to fetch {interval_time} data...")
-            try:
-                df = stock.history(period="1d", interval=interval_time, prepost=True)
-                if df is None or df.empty:
-                    print(f"[{ticker}] Returned empty on attempt {attempt}.")
-                else:
-                    print(f"[{ticker}] ✅ Got {len(df)} rows.")
-                    break
-            except Exception as e:
-                print(f"[{ticker}] ❌ Error during .history(): {e}")
-            time.sleep(3)
+    if df.empty or len(df) <= 1:
+        print(f"[{ticker}] ❌ Fallback also returned empty or insufficient data.")
+    else:
+        print(f"[{ticker}] ✅ Final fallback DataFrame has {len(df)} bars")
 
-        if df.empty or len(df) <= 1:
-            print(f"[{ticker}] ❌ Failed to get usable {interval_time} data after {max_retries} attempts. Debugging raw response...")
-            debug_yahoo_raw(ticker)
-            return fallback_yahoo_data(ticker, interval_time)
-
-        if df.index.tz is None:
-            df.index = df.index.tz_localize('UTC')
-        df.index = df.index.tz_convert('America/New_York')
-
-        df = df[::-1]  # Reverse: newest bar first
-        df['SMA_5'] = df['Close'].rolling(window=5).mean()
-        df['SMA_9'] = df['Close'].rolling(window=9).mean()
-        df['SMA_20'] = df['Close'].rolling(window=20).mean()
-        df['SMA_180'] = df['Close'].rolling(window=180).mean()
-        df['percent_change'] = (df['Close'] - df['Open']) / df['Open'] * 100
-
-        print(f"[{ticker}] ✅ Final DataFrame has {len(df)} bars")
-        return df
-
-    except Exception as e:
-        print(f"{datetime.now():%Y-%m-%d %H:%M:%S} - ERROR - yf_data({ticker}): {e}")
-        debug_yahoo_raw(ticker)
-        return pd.DataFrame()
+    return df
 
 def check_play(ticker, play_type, priority, interval):
     BUY_AMT = 1400
