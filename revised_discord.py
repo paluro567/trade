@@ -9,7 +9,7 @@ def get_briefing(date):
 
     # Discord request headers
     headers = {
-        'authorization': 'Nzg5MjUwODgyNzg1MTE2MjAw.GFphV0.43MS6ul4zEDlBGJ-iz-3CfouHjB5r6RcliF_Mo'
+        'authorization': 'READD_AUTHORIZATION'
     }
     try:
         resp = requests.get(f"https://discord.com/api/v8/channels/{channel_id}/messages", headers=headers)
