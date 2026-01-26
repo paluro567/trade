@@ -15,7 +15,7 @@ def get_briefing(date):
 
     # Authorization
     headers = {
-        'authorization': 'Nzg5MjUwODgyNzg1MTE2MjAw.GFphV0.43MS6ul4zEDlBGJ-iz-3CfouHjB5r6RcliF_Mo'
+        'authorization': 'READD_AUTHORIZATION_FROM_DISCORD_SECURITY'
     }
 
     try:
