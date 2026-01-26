@@ -14,7 +14,7 @@ import ta
 
 
 # constants
-API_KEY  =  'XB2M6HD2DQMJA5Z1'
+API_KEY  =  'READD_API_KEY'
 texted_plays  =  []
 
 
