@@ -1,2 +1,33 @@
+# Credentials & secrets
 secret.py
+.env
+*.key
+*.pem
+
+# Cache & generated output
 todays-briefings.txt
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Data & logs
+*.csv
+*.pkl
+*.json
+trades.txt
+day_trades.txt
+
+# Audio assets
+*.wav
+*.mp3
+
+# IDE & OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
+
+# React build artifacts
+react-stock-portfolio-dashboard/node_modules/
+react-stock-portfolio-dashboard/build/

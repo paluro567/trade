@@ -3,7 +3,7 @@ import datetime
 import pytz
 
 from datetime import datetime, timedelta, timezone
-from Discord import get_briefing
+from revised_discord import get_briefing
 from record_day_trade import pdt_rule, record_trade
 from sms import text
 import pandas as pd

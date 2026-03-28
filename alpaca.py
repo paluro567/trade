@@ -116,6 +116,21 @@ def try_orders(ticker, qty, cur_open, bars):
     except Exception as e:
         print(f"{get_current_timestamp()} - Unable to place orders for {ticker}: {e}", flush=True)
 
+# Simplified buy/sell helpers (market orders, GTC)
+def place_buy(ticker, qty):
+    return place_buy_order(ticker, qty)
+
+def place_sell(ticker, qty):
+    sell_order = API.submit_order(
+        symbol=ticker,
+        qty=qty,
+        side='sell',
+        type='market',
+        time_in_force='gtc'
+    )
+    print(f"{get_current_timestamp()} - {ticker} - Sell order placed: {sell_order}", flush=True)
+    return sell_order
+
 if __name__ == '__main__':
     order_obj = place_trailing_stop_order('AMZN', 5, 5)
     order_obj = API.get_order(order_obj.id)

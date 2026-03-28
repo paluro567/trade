@@ -12,7 +12,7 @@ from secret import *
 # from resistance import *
 import time
 import json
-from Discord import *
+from revised_discord import get_briefing, getnum
 # from three_bar_play import *
 # from resistance import breakout
 
@@ -276,7 +276,7 @@ def main():
     #--------------------------------- GET BRIEFING -------------------------------------------
     today = str(date.today())
     try:
-        from Discord import get_briefing
+        from revised_discord import get_briefing
         print("today:",today)
 
         resistances, supports, retail, alarm_plays = get_briefing(today)  # get briefing

@@ -9,9 +9,9 @@ def text(message):
 
 
     resp = requests.post('https://textbelt.com/text', {
-        'phone': '9786219450',
+        'phone': os.environ.get('SMS_PHONE'),
         'message': message,
-        'key': 'ab8202f42c7b7aae633e8a80b56e1d58b98456d3Y9ohGTmXAqSRAIeH6levq0F47',
+        'key': os.environ.get('TEXTBELT_API_KEY'),
     })
 
     print(resp.json())

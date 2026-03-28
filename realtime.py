@@ -1,12 +1,12 @@
 import yfinance as yf
 from datetime import datetime, timedelta
-from Discord import get_briefing
+from revised_discord import get_briefing
 from sms import text
 import datetime
 import pandas as pd
 import time
 import requests
-from realtimetrade import place_buy, place_sell
+from alpaca import place_buy, place_sell
 import multiprocessing
 from alpha_vantage.timeseries import TimeSeries
 import ta
