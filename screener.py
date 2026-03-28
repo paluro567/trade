@@ -259,7 +259,7 @@ def breakout_check(stock, resistance):
     # Check if the last Close price is greater than the 200-day MA
     return ( 
     last_pct_change,  # percent change
-    resistance is not 0 and open_price<resistance and close_price>resistance and ((last_pct_change>5) or (second_last_pct_change+last_pct_change)>5 ),  # ziptrader resistance bo
+    resistance != 0 and open_price<resistance and close_price>resistance and ((last_pct_change>5) or (second_last_pct_change+last_pct_change)>5 ),  # ziptrader resistance bo
     (short_initial<medium_initial) and (short_final>medium_final),  # 10EMA crosses above 20EMA
     open_price<long_initial and close_price>long_final,  # price crosses 200 EMA
     third_last_pct_change>=2 and second_last_pct_change<0 and last_pct_change>=1, #three bar play (boolean)
